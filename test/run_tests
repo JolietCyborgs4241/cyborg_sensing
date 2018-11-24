@@ -1,0 +1,50 @@
+#!/bin/bash
+
+if [ "$#" -lt 2 ]
+then
+    echo "$0: usage: $0 host port"
+    exit 1
+fi
+
+HOST=$1
+PORT=$2
+INTERVAL=0
+DELAY=0
+
+declare -a MSGS=(
+"L N2 thing 300 200 100 100"
+"R N2 thing 450 180 100 100"
+"L N2 thing 300 200 100 100"
+"L N2 thing 300 200 100 100"
+"R N2 thing 450 180 100 100"
+"R N2 thing 450 180 100 100"
+"R N2 thing 450 180 100 100"
+"R N2 thing 450 180 100 100"
+"L N2 thing 300 200 100 100"
+"R N2 thing 450 180 100 100"
+"R N2 thing 450 180 100 100"
+"L N2 thing 300 200 100 100"
+"L N2 thing 300 200 100 100"
+"L N2 thing 300 200 100 100"
+"R N2 thing 450 180 100 100"
+"L N2 thing 300 200 100 100"
+"R N2 thing 450 180 100 100"
+"L N2 thing 300 200 100 100"
+)
+
+MSG_COUNT=${#MSGS[@]}
+
+echo $0: $MSG_COUNT messages to be sent
+echo
+
+for (( i=0; i <${MSG_COUNT}; i++ ));
+do
+    echo -n "Sending MSGS[${i}]: \"${MSGS[$i]}\"..."
+    echo "${MSGS[$i]}" > /dev/udp/$HOST/$PORT
+    echo "  sent."
+
+    # do a random delay from 0 to .999 seconds
+    DELAY=`printf %03d $((RANDOM % 1000))`
+    echo "Delaying for 0.${DELAY}s ..."
+    sleep "0.${DELAY}"
+done
