@@ -11,34 +11,16 @@ PORT=$2
 INTERVAL=0
 DELAY=0
 
-declare -a MSGS=(
-"L N2 thing 300 200 100 100"
-"R N2 stuff 450 180 100 100"
-"L N2 stuff 300 200 100 100"
-"L N2 ball 300 200 100 100"
-"R N2 thing 450 180 100 100"
-"R N2 stuff 450 180 100 100"
-"L N2 ball 300 200 100 100"
-"R N2 stuff 450 180 100 100"
-"R N2 ball 450 180 100 100"
-"R N2 square 450 180 100 100"
-"R N2 stuff 450 180 100 100"
-"L N2 thing 300 200 100 100"
-"R N2 ball 450 180 100 100"
-"R N2 stuff 450 180 100 100"
-"L N2 stuff 300 200 100 100"
-"L N2 ball 300 200 100 100"
-"L N2 square 300 200 100 100"
-"R N2 square 450 180 100 100"
-"R N2 stuff 450 180 100 100"
-"L N2 stuff 300 200 100 100"
-"L N2 thing 300 200 100 100"
-"L N2 ball 300 200 100 100"
-"R N2 thing 450 180 100 100"
-"L N2 stuff 300 200 100 100"
-"R N2 square 450 180 100 100"
-"L N2 stuff 300 200 100 100"
+CAMERA_DATA=camera_records.out
+
+OLD_IFS=${IFS}
+IFS=$'\n'
+
+MSGS=(
+`cat ${CAMERA_DATA}`
 )
+
+IFS=${OLD_IFS}
 
 MSG_COUNT=${#MSGS[@]}
 
