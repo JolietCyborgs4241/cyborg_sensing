@@ -10,30 +10,16 @@
 #include <sys/time.h>
 
 
+/// Maximum camera read size
 #define	MAX_CAMERA_READ     (2*1024)    // largest record from cameras
 
-#define	MAX_CAMERAS         2           // "Left" and "Right"
+/// Minimum correct camera message size
+#define MIN_CAM_REC_SIZE    14          // "L N2 x n n n n"
 
-#define MAX_CAMERA_RECORDS  5           // save this many of the latest records
-
-#define MIN_CAM_REC_SZ      14          // "L N2 x n n n n"
-
-#define MAX_CAMERA_RECTYP_SZ 8          // really only need 3 (2 + '\0')
-#define MAX_CAMERA_ID_SZ    100         // length of id for target
-
-typedef struct {
-    time_t      secs;                   // arrival time
-    suseconds_t usecs;
-    char        recType[MAX_CAMERA_RECTYP_SZ];
-    char        id[MAX_CAMERA_ID_SZ];   // matched object
-    int         x, y, w, h;             // location and bounding box
-} CAM_RECORD;
-
-
-#define	CAM_LEFT        0
-#define	CAM_RIGHT       1
-extern  CAM_RECORD  *Cameras[];
-
+/// "Left" camera ID
+#define CAMERA_LEFT         'L'
+/// "Right" camera ID
+#define CAMERA_RIGHT        'R'
 
 #endif  /* cv_cam.h */
 

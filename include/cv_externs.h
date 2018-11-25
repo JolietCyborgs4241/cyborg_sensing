@@ -4,11 +4,19 @@
 //
 
 
+/// program name (set directly from argv[0])
 extern  char        *MyName;
 
+/// network connection for incoming camera messages
 extern  HOST_INFO   HostInfo;
 
-extern  CAM_RECORD  *Cameras[MAX_CAMERAS];                  // camera record lists
-
+/// \brief Global debug level
+///
+/// 0 - OFF
+/// 1 - INFO
+/// 2 - DETAILED
 extern  int         DebugLevel;
+/// Global FP for Debug output
+extern  FILE        *DebugFP;
+
 

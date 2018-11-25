@@ -1,4 +1,4 @@
-//	vision.c
+//	cv_proc.c
 //
 //	main driver for vision communications
 
@@ -15,14 +15,14 @@
 #include "cv.h"
 #include "cv_net.h"
 #include "cv_cam.h"
+#include "cv_lists.h"
 #include "cv_externs.h"
 
 
 
-static int  camerasLatest[MAX_CAMERAS] = {0, 0};    // index to latest recvd, wraps as needed
+void    process(int);
 
-
-void        process(int);
+void    init(int, char **);
 
 
 
@@ -34,7 +34,9 @@ main(int argc, char **argv)
 {
 	MyName = argv[0];
 
-	cvProcInit(argc, argv);
+    DebugFP = stderr;           // unless overridden on the command line
+
+	init(argc, argv);
 
 	while (1) {
 
@@ -50,13 +52,12 @@ void
 process(int sock)
 
 {
-	char	        buffer[MAX_CAMERA_READ];
-	int 	        readRet, cam, scanRet;
-    struct timeval  tv;
+	char    buffer[MAX_CAMERA_READ], id[MAX_CAMERA_READ], camera;
+	int     readRet, scanRet, x, y, w, h;
 
     if ((readRet = recvfrom(sock, buffer, MAX_CAMERA_READ, 0, (struct sockaddr *)NULL, 0)) > 0) {
 
-        if (readRet < MIN_CAM_REC_SZ) {
+        if (readRet < MIN_CAM_REC_SIZE) {
             fprintf(stderr, "%s: warning: undersize record recevied (%d bytes)\n", MyName, readRet);
             return;
         }
@@ -64,25 +65,17 @@ process(int sock)
         buffer[readRet] = '\0';
 
         if (DebugLevel == DEBUG_DETAIL) {
-            printf("Message:\t\"%s\"\n", buffer);
-            printf("Next (L / R):\t%d / %d\n", camerasLatest[CAM_LEFT], camerasLatest[CAM_RIGHT]);
+            fprintf(DebugFP, "Message:\t\"%s\"\n", buffer);
         }
     }
 
-    // which camera
-    switch (*buffer) {
-
-        case 'L':
-            cam = CAM_LEFT;
-            break;
-
-        case 'R':
-            cam = CAM_RIGHT;
-            break;
-
-        default:
-            fprintf(stderr, "%s: error: unknown camera '%c'\n", MyName, *buffer);
-            return;
+    // validate and set camera
+    // should be "[RL] N2 " at head
+    if (*buffer == CAMERA_LEFT || *buffer == CAMERA_RIGHT) {
+        camera = *buffer;
+    } else {
+        fprintf(stderr, "%s: error: unknown camera '%c'\n", MyName, *buffer);
+        return;
     }
 
     if (*(buffer+1) != ' ') {
@@ -90,38 +83,27 @@ process(int sock)
         return;
     }
 
-    // set arrival time of message
-    gettimeofday(&tv, (struct timezone *)NULL);
-    Cameras[cam][camerasLatest[cam]].secs  = tv.tv_sec;
-    Cameras[cam][camerasLatest[cam]].usecs = tv.tv_usec;
-
-    if (DebugLevel == DEBUG_DETAIL) {
-        printf("Timestamp:\t%ld.%ld\n", tv.tv_sec, tv.tv_usec);
+    if(*(buffer+2) != 'N' && *(buffer+3) != '2' && *(buffer+4) != ' ') {
+        fprintf(stderr, "%s: error: invalid record type \'%c%c\'\n",
+                MyName, *(buffer+2), *(buffer+3));
+        return;
     }
 
-    // start scan after first 2 chars (camera id and space)
-    scanRet = sscanf(buffer+2, "%s %s %d %d %d %d", Cameras[cam][camerasLatest[cam]].id,
-                     Cameras[cam][camerasLatest[cam]].recType,
-                     &Cameras[cam][camerasLatest[cam]].x, &Cameras[cam][camerasLatest[cam]].y,
-                     &Cameras[cam][camerasLatest[cam]].w, &Cameras[cam][camerasLatest[cam]].h);
+    // seems OK start scan after first 2 chars (camera, space, type, space)
+    scanRet = sscanf(buffer+5, "%s %d %d %d %d",
+                     id, &x, &y, &w, &h);
 
-    if (scanRet != 6) {         // scanning error
+    if (scanRet != 5) {         // scanning error
         if (DebugLevel == DEBUG_DETAIL) {
-            printf("scanf() error: ret %d\n", scanRet);
+            fprintf(DebugFP, "scanf() error: ret %d\n", scanRet);
         }
         return;
     }
 
     if (DebugLevel == DEBUG_DETAIL) {
-        printf("Cam: '%c' (%d) (%d)\n\tTimestamp:\t%ld.%08ld\n\tRecType:\t\"%s\"\n\tID:\t\t\"%s\"\n\tX, Y:\t\t%d, %d\n\tW, H:\t\t%d, %d\n\n",
-               *buffer, cam, camerasLatest[cam],
-               Cameras[cam][camerasLatest[cam]].secs, Cameras[cam][camerasLatest[cam]].usecs,
-               Cameras[cam][camerasLatest[cam]].recType, Cameras[cam][camerasLatest[cam]].id,
-               Cameras[cam][camerasLatest[cam]].x, Cameras[cam][camerasLatest[cam]].y,
-               Cameras[cam][camerasLatest[cam]].w, Cameras[cam][camerasLatest[cam]].x);
+        fprintf(DebugFP, "Cam: '%c'\n\tID:\t\t\"%s\"\n\tX, Y:\t\t%d, %d\n\tW, H:\t\t%d, %d\n\n",
+               camera, id, x, y, w, h);
     }
 
-    if (++camerasLatest[cam] >= MAX_CAMERA_RECORDS) {
-        camerasLatest[cam] = 0;
-    }
+    camRecAdd(id, camera, x, y, w, h);
 }

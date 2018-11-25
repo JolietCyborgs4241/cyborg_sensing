@@ -2,7 +2,7 @@
 
 if [ "$#" -lt 2 ]
 then
-    echo "$0: usage: $0 host port"
+    echo "`basename $0`: usage: $0 host port"
     exit 1
 fi
 
@@ -13,34 +13,42 @@ DELAY=0
 
 declare -a MSGS=(
 "L N2 thing 300 200 100 100"
+"R N2 stuff 450 180 100 100"
+"L N2 stuff 300 200 100 100"
+"L N2 ball 300 200 100 100"
 "R N2 thing 450 180 100 100"
+"R N2 stuff 450 180 100 100"
+"L N2 ball 300 200 100 100"
+"R N2 stuff 450 180 100 100"
+"R N2 ball 450 180 100 100"
+"R N2 square 450 180 100 100"
+"R N2 stuff 450 180 100 100"
 "L N2 thing 300 200 100 100"
+"R N2 ball 450 180 100 100"
+"R N2 stuff 450 180 100 100"
+"L N2 stuff 300 200 100 100"
+"L N2 ball 300 200 100 100"
+"L N2 square 300 200 100 100"
+"R N2 square 450 180 100 100"
+"R N2 stuff 450 180 100 100"
+"L N2 stuff 300 200 100 100"
 "L N2 thing 300 200 100 100"
+"L N2 ball 300 200 100 100"
 "R N2 thing 450 180 100 100"
-"R N2 thing 450 180 100 100"
-"R N2 thing 450 180 100 100"
-"R N2 thing 450 180 100 100"
-"L N2 thing 300 200 100 100"
-"R N2 thing 450 180 100 100"
-"R N2 thing 450 180 100 100"
-"L N2 thing 300 200 100 100"
-"L N2 thing 300 200 100 100"
-"L N2 thing 300 200 100 100"
-"R N2 thing 450 180 100 100"
-"L N2 thing 300 200 100 100"
-"R N2 thing 450 180 100 100"
-"L N2 thing 300 200 100 100"
+"L N2 stuff 300 200 100 100"
+"R N2 square 450 180 100 100"
+"L N2 stuff 300 200 100 100"
 )
 
 MSG_COUNT=${#MSGS[@]}
 
-echo $0: $MSG_COUNT messages to be sent
+echo `basename $0`: $MSG_COUNT messages to be sent to ${HOST}:${PORT} via UDP
 echo
 
 for (( i=0; i <${MSG_COUNT}; i++ ));
 do
     echo -n "Sending MSGS[${i}]: \"${MSGS[$i]}\"..."
-    echo "${MSGS[$i]}" > /dev/udp/$HOST/$PORT
+    echo -n "${MSGS[$i]}" > /dev/udp/$HOST/$PORT
     echo "  sent."
 
     # do a random delay from 0 to .999 seconds

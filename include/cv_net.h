@@ -22,9 +22,12 @@
 #define DEF_HOST_PORT       12345
 
 typedef struct {
+    /// host interface to listen for incoming UDP packets from cameras
     char    *hostIPString;
     struct  sockaddr_in hostIP;
+    /// host port to listen for incoming UDP packets from cameras
     int     hostPort;
+    /// socket to recieve camera packets on
     int     sock;
 } HOST_INFO;
 

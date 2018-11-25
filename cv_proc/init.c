@@ -26,12 +26,20 @@
 static  void        usage(), openIncomingPort(HOST_INFO *),
                     dumpConfig();
 
-static  CAM_RECORD  *initCameraRecords(int);
 
-
-
+/// \brief process command line and perform other initializations
+///
+/// -h Host IP
+///
+/// -p Host port
+///
+/// -d Debug output file
+///
+/// -D Debug level
+///
+/// Also opens UDP socket for receiving camera messages
 void
-cvProcInit(int argc, char **argv)
+init(int argc, char **argv)
 
 {
     int c;
@@ -40,7 +48,7 @@ cvProcInit(int argc, char **argv)
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
     HostInfo.hostPort     = DEF_HOST_PORT;
 
-    while ((c = getopt(argc, argv, "h:p:D:")) != -1) {
+    while ((c = getopt(argc, argv, "h:p:D:d:")) != -1) {
 
         switch (c) {
 
@@ -80,93 +88,72 @@ cvProcInit(int argc, char **argv)
             }
             break;
 
+        case 'd':
+            if ((DebugFP = fopen(optarg, "w")) == (FILE *)NULL) {
+                fprintf(stderr, "%s: error: cannot open debug file \"%s\"\n", MyName, optarg);
+                exit(1);
+            }
+
+            setbuf(DebugFP, (char *)NULL);
+
+            break;
+
         case '?':
             usage();
             exit(1);
             break;
 
        default:
-            printf("?? getopt returned character code 0x%x ??\n", c);
+            fprintf(stderr, "?? getopt returned character code 0x%x ??\n", c);
         }
     }
-
-    Cameras[CAM_LEFT]  = initCameraRecords(MAX_CAMERA_RECORDS);
-    Cameras[CAM_RIGHT] = initCameraRecords(MAX_CAMERA_RECORDS);
 
     openIncomingPort(&HostInfo);
 
     if (DebugLevel) {   // any debug level
         dumpConfig();
     }
-
 }
 
 
 
-static CAM_RECORD *
-initCameraRecords(int count)
-{
-    int         i;
-    CAM_RECORD  *set, *ptr;
-
-    if ((set = (CAM_RECORD *)malloc(count * sizeof(CAM_RECORD))) == (CAM_RECORD *)NULL) {
-        fprintf(stderr, "%s: error: malloc() failure on initializing camera structures\n",
-                MyName);
-        exit(1);
-    }
-
-    ptr = set;
-
-    for (i = 0 ; i < count ; i++) {
-
-        ptr->secs  = 0;
-        ptr->usecs = 0;
-
-        ptr->id[0]     = '\0';
-        ptr->x         = 0;
-        ptr->y         = 0;
-        ptr->w         = 0;
-        ptr->h         = 0;
-
-        ptr++;
-    }
-
-    return set;
-}
-
-
-
-
+/// Dump command line settings
 static void
 dumpConfig()
 {
-    printf("DumpConfig():\n");
-    printf("Network:\n\tListening @:\t%s:%d\n\tSock fd:\t%d\n",
+    fprintf(DebugFP, "DumpConfig():\n");
+    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
 
-    printf("\nDebug:\t%d ", DebugLevel);
+    fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
     switch (DebugLevel) {
     case 0:
-        printf("(OFF)\n");
+        fprintf(DebugFP, "(OFF)\n");
         break;
 
     case 1:
-        printf("(INFO)\n");
+        fprintf(DebugFP, "(INFO)\n");
         break;
 
     case 2:
-        printf("(DETAIL)\n");
+        fprintf(DebugFP, "(DETAIL)\n");
         break;
     }
 
-    printf("--------------------------------------\n\n");
+    fprintf(DebugFP, "--------------------------------------\n\n");
 }
 
 
 
-
+/// \brief Open UDP port for receiving camera messages
+///
+/// Create socket
+///
+/// Bind to appropriate address
+///
+/// Socket is set in HOST_INFO structure
 static void
 openIncomingPort(HOST_INFO *host)
 {
@@ -191,12 +178,14 @@ openIncomingPort(HOST_INFO *host)
 
 
 
-
+/// \brief Usage message
+///
+/// Shown is any invalid parameters specvified or '-?' on command line
 static void
 usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s -h Host IP -p Host Port [-D 0|1|2]\n",
+            "%s: usage: %s -h IP -p Port [-d debug file ] [-D 0|1|2]\n",
             MyName, MyName);
 }
