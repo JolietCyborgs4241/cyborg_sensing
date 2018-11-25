@@ -21,6 +21,11 @@
 /// "Right" camera ID
 #define CAMERA_RIGHT        'R'
 
+/// "Left" array offset
+#define CAM_LEFT_OFF        0
+/// ""Right" array offset
+#define CAM_RIGHT_OFF       1
+
 #endif  /* cv_cam.h */
 
 

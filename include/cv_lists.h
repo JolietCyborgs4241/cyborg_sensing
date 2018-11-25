@@ -56,6 +56,9 @@ int camRecGetLatest(char *, CAM_RECORD *);
 /// get average x, y, w, h, values for a specific (both cameras)
 int camRecGetAvg(char *, CAM_RECORD *);
 
+/// zero-out a CAM_RECORD object
+void zeroCamRecord(CAM_RECORD *);
+
 /// walks and dumps entire object and camera lists
 void dumpLists();
 

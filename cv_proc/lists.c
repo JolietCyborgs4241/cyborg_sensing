@@ -131,11 +131,79 @@ camRecDeleteById(char *id)
 
 
 
-    // get latest record for an id (both cameras)
+/// \brief get the latest right / left camera records for a specific id
+///
+/// Returns the latest right and left camera records for the specified id
+/// via a 2-element array
+///
+/// returns the number of records found
+///
+/// -1 - object id not found
+///
+/// 0 - no records found (return array zeroed)
+///
+/// 1 - 1 record found (missing record returns 0s for all fields
+///
+/// 2 - 2 records found
 int
 camRecGetLatest(char *id, CAM_RECORD *rlCamArray)
 {
+    CAM_LIST_HDR    *hdrPtr;
+    CAM_RECORD      *camPtr;
+    int             foundLeft, foundRight;
 
+    if (DebugLevel == DEBUG_INFO) {
+        fprintf(DebugFP, "camRecGetLatest(\"%s\", 0x%lx[])\n",
+                id, (long)rlCamArray);
+    }
+
+    // first record for any ids?
+    if ( ! camLists) {
+        return -1;       // no records of any kind
+    }
+
+    hdrPtr     = camLists;
+
+    foundLeft  = 0;
+    foundRight = 0;
+
+    while (hdrPtr) {
+        if (strcmp(id, hdrPtr->id) == 0) {  // found object
+            zeroCamRecord(&rlCamArray[0]);
+            zeroCamRecord(&rlCamArray[1]);
+
+            if ( ! hdrPtr->recs) {          // but no camera records
+                return 0;
+            }
+
+            camPtr = hdrPtr->recs;
+
+            while (camPtr && (! foundLeft || ! foundRight)) {
+
+                if (camPtr->camera == CAMERA_LEFT) {
+                    if ( ! foundLeft) {     // got a 'left' now
+                        rlCamArray[CAM_LEFT_OFF] = *camPtr;
+                        foundLeft = 1;
+                    }
+                }
+
+                if (camPtr->camera == CAMERA_RIGHT) {
+                    if ( ! foundRight) {     // got a 'right' now
+                        rlCamArray[CAM_RIGHT_OFF] = *camPtr;
+                        foundRight = 1;
+                    }
+                }
+            }
+
+            if (! foundLeft || ! foundRight) {  // didn't find both
+                return 1;
+            }
+
+            return 2;
+        }    
+    }
+
+    return -1;          // object not found
 }
 
 
@@ -148,6 +216,21 @@ camRecGetAvg(char *id, CAM_RECORD *rlCamArray)
 {
 
 }
+
+
+void
+zeroCamRecord(CAM_RECORD *rec)
+{
+    rec->secs   = 0;
+    rec->usecs  = 0;
+    rec->camera = ' ';
+    rec->x      = 0;
+    rec->y      = 0;
+    rec->w      = 0;
+    rec->h      = 0;
+    rec->next   = 0;
+}
+
 
 
 
