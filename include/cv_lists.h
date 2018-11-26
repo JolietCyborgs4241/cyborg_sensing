@@ -18,6 +18,15 @@ typedef struct  {
 } CAM_LIST_HDR;
 
 
+/// Get cam list record for a specific object id
+CAM_LIST_HDR    *camListGetHdr(char *);
+
+/// dump an individual CAM_LIST_HDR
+void dumpCamListHdr(CAM_LIST_HDR *);
+
+
+
+
 
 typedef struct {
     /// arrival of camera message (actually inserion time in list)
@@ -71,8 +80,5 @@ void dumpCamRecord(CAM_RECORD *);
 
 /// zero an individual CAM_RECORD
 void zeroCamRecord(CAM_RECORD *);
-
-/// dump an individual CAM_LIST_HDR
-void dumpCamListHdr(CAM_LIST_HDR *);
 
 #endif  /* cv_list.h */
