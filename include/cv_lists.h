@@ -57,7 +57,7 @@ int  camRecAdd(char *, char, int, int, int, int);
 void  camRecPruneById(char *, int);
 
 /// TTL - prune all camera records older than TTL (regardless of camera or object id)
-int  camRecPruneAll(int);
+void  camRecPruneAll(int);
 
 /// ID - delete all records for an id (all cameras)
 int  camRecDeleteById(char *);

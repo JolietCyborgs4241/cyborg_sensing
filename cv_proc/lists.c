@@ -179,7 +179,7 @@ camRecPruneById(char *id, int ttl)
 /// so once we find one that is past the TTL, they are all past the TTL from
 /// that point onward
 void
-camRecPrune(int ttl)
+camRecPruneAll(int ttl)
 {
     CAMERA_LIST_HDR    *hdrPtr;
 
