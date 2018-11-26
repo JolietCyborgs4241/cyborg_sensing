@@ -1,9 +1,0 @@
-DumpConfig():
-Network:
-	Listening @:	127.0.0.1:12345
-	Sock fd:	4
-
-TTL:	5 
-Debug:	2 (DETAIL)
---------------------------------------
-
