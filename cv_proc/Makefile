@@ -7,7 +7,8 @@ CFLAGS	+= $(INC)
 
 LDFLAGS	+= 
 
-SRCS	= cv_proc.c init.c globals.c lists.c utility.c
+SRCS	= cv_proc.c init.c globals.c lists.c utility.c threads.c
+
 OBJS	= ${SRCS:.c=.o}
 
 TARGETS	= cv_proc
@@ -22,13 +23,20 @@ cv_proc:	$(OBJS)
 
 cv_proc.o:	cv_proc.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
 
-init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h $(CV_INC_DIR)/cv_externs.h
+init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
+			$(CV_INC_DIR)/cv_externs.h
 
-globals.o:	globals.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h $(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/cv_externs.h
+globals.o:	globals.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
+			$(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/cv_externs.h
 
-lists.o:	lists.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h $(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/cv_externs.h $(CV_INC_DIR)/cv_lists.h
+lists.o:	lists.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
+			$(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/cv_externs.h \
+			$(CV_INC_DIR)/cv_lists.h
 
 utility.o:	utility.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
+
+threads.o:	threads.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h \
+			$(CV_INC_DIR)/cv_threads.h
 
 
 

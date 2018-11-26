@@ -16,15 +16,17 @@
 /// Minimum correct camera message size
 #define MIN_CAM_REC_SIZE    14          // "L N2 x n n n n"
 
+#define NUM_OF_CAMERAS      2           // "Right" and "Left"
+
 /// "Left" camera ID
-#define CAMERA_LEFT         'L'
+#define CAMERA_LEFT_ID      'L'
 /// "Right" camera ID
-#define CAMERA_RIGHT        'R'
+#define CAMERA_RIGHT_ID     'R'
 
 /// "Left" array offset
-#define CAM_LEFT_OFF        0
+#define CAMERA_LEFT_IDX     0
 /// ""Right" array offset
-#define CAM_RIGHT_OFF       1
+#define CAMERA_RIGHT_IDX    1
 
 #endif  /* cv_cam.h */
 
