@@ -11,6 +11,9 @@
 #include "cv_externs.h"
 
 
+/// \brief  cyborg vision malloc front end
+///
+/// exits with an error to stderr if malloc() fails
 void *
 cvAlloc(size_t bytes)
 
@@ -27,7 +30,9 @@ cvAlloc(size_t bytes)
 
 
 
-
+/// \brief  cyborg vision free front end
+///
+/// doesn't do anything special rifht now - calls free() directly
 void
 cvFree(void *ptr)
 {

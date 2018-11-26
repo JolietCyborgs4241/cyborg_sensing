@@ -18,7 +18,8 @@
 
 static  CAMERA_LIST_HDR *camLists = (CAMERA_LIST_HDR *)NULL;
 
-static void freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
+static void pruneByHdr(CAMERA_LIST_HDR *, int),
+            freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
 
 
 
@@ -141,13 +142,33 @@ camRecAdd(char *id, char camera, int x, int y, int w, int h)
 
 
 
-    // ID, TTL - delete old records for an id (all cameras)
-int
+/// \brief  remove any camera records that are beyond the ttl (in secs) for a specific object only
+///
+/// The list of camera records is ordered with the newest at the front
+/// so once we find one that is past the TTL, they are all past the TTL from
+/// that point onward
+void
 camRecPruneById(char *id, int ttl)
 {
+    CAMERA_LIST_HDR *hdrPtr;
 
+    if (ttl == 0) {
+        return;         // no pruning if TTL is 0
+    }
+
+    if ((hdrPtr = camListGetHdrById(id)) == 0) {
+        return;         // specified object not found
+    }
+
+    while (hdrPtr) {
+        if (strcmp(id, hdrPtr->id) == 0) {  // found it
+            pruneByHdr(hdrPtr, ttl);
+            return;
+        }
+
+        hdrPtr = hdrPtr->next;
+    }
 }
-
 
 
 
@@ -157,61 +178,75 @@ camRecPruneById(char *id, int ttl)
 /// The list of camera records is ordered with the newest at the front
 /// so once we find one that is past the TTL, they are all past the TTL from
 /// that point onward
-int
+void
 camRecPrune(int ttl)
 {
     CAMERA_LIST_HDR    *hdrPtr;
-    CAMERA_RECORD      *camPtr, *camPtrPrev;;
-    struct timeval  tvNow, tvDiff;
-    int             i;
+
+    if (ttl == 0) {
+        return;         // no pruning if TTL is 0
+    }
 
     if ((hdrPtr = camListGetHdr()) == (CAMERA_LIST_HDR *)NULL) {
-        return 0;             // the whole list is empty
+        return;               // the whole list is empty
     }
-    
-    gettimeofday(&tvNow, (struct timezone *)NULL);     // timestamp it
 
-    
+
     // walk the list of headers
     while (hdrPtr) {
-        // walk down the camera recs (if there are any)
-        // need to go down the right and the left camera lists
-        for (i = 0 ; i < NUM_OF_CAMERAS ; i++) {
-            
-            camPtr = camPtrPrev = hdrPtr->recs[i];
-
-            while (camPtr) {
-
-                timersub(&tvNow, &(camPtr->time), &tvDiff);
-
-                if (tvDiff.tv_sec >= ttl) {     // too old and so is the rest
-
-                    if (camPtr == hdrPtr->recs[i]) {
- 
-                        // all of them starting from the newest are old so just
-                        // unhook them all
-                        hdrPtr->recs[i] = (CAMERA_RECORD *)NULL;
-
-                    } else {
-
-                        // unhook from the previous record
-                        camPtrPrev->next = (CAMERA_RECORD *)NULL;
-                    }
-
-                    // now do a little recursion to free all of them
-                    // from the end
-
-                    freeCamRecsFromEnd(camPtr);
-                }
-
-                camPtrPrev = camPtr;
-                camPtr = camPtr->next;
-            }
-        }
+        // check each object header and prune as needed
+        pruneByHdr(hdrPtr, ttl);
 
         hdrPtr = hdrPtr->next;
     }
-    return 1000;
+}
+
+
+/// \brief  prune both cameras for a given header record
+///
+void
+pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
+{
+    CAMERA_RECORD   *camPtr, *camPtrPrev;;
+    struct timeval  tvNow, tvDiff;
+    int             i;
+
+    gettimeofday(&tvNow, (struct timezone *)NULL);     // time now
+
+    // walk down the camera recs (if there are any)
+    // need to go down the right and the left camera lists
+    for (i = 0 ; i < NUM_OF_CAMERAS ; i++) {
+            
+        camPtr = camPtrPrev = hdrPtr->recs[i];
+
+        while (camPtr) {
+
+            timersub(&tvNow, &(camPtr->time), &tvDiff);
+
+            if (tvDiff.tv_sec >= ttl) {     // too old and so are the rest
+
+                if (camPtr == hdrPtr->recs[i]) {
+ 
+                    // all of them starting from the newest are old so just
+                    // unhook them all
+                    hdrPtr->recs[i] = (CAMERA_RECORD *)NULL;
+
+                } else {
+
+                    // unhook from the previous record
+                    camPtrPrev->next = (CAMERA_RECORD *)NULL;
+                }
+
+                // now do a little recursion to free all of them
+                // from the end backwards
+
+                freeCamRecsFromEnd(camPtr);
+            }
+
+            camPtrPrev = camPtr;
+            camPtr = camPtr->next;
+        }
+    }
 }
 
 

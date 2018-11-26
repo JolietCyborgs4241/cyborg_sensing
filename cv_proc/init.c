@@ -33,6 +33,8 @@ static  void        usage(), openIncomingPort(HOST_INFO *),
 ///
 /// -p Host port
 ///
+/// -t TTL (seconds - 0 disables any purging)
+///
 /// -d Debug output file
 ///
 /// -D Debug level
@@ -72,8 +74,8 @@ init(int argc, char **argv)
 
         case 't':
             Ttl = atoi(optarg);
-            if (Ttl < 1) {
-                fprintf(stderr, "%s: error: TTL value must be >= 1\n",
+            if (Ttl < 0) {
+                fprintf(stderr, "%s: error: TTL value must be >= 0\n",
                         MyName);
                 exit(1);
             }

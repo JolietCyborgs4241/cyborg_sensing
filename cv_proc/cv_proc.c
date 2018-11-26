@@ -41,6 +41,8 @@ main(int argc, char **argv)
 
 		process(HostInfo.sock);
 
+        camRecPruneById("thing", Ttl);
+
         int         ret;
         CAMERA_RECORD  results[2];
 
@@ -50,6 +52,7 @@ main(int argc, char **argv)
 
         dumpCamRecord(&results[0]);
         dumpCamRecord(&results[1]);
+        dumpLists();
 	}
 
 }
