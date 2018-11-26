@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <getopt.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -43,7 +42,7 @@ main(int argc, char **argv)
 		process(HostInfo.sock);
 
         int         ret;
-        CAM_RECORD  results[2];
+        CAMERA_RECORD  results[2];
 
         ret = camRecGetAvg("thing", results);
 
@@ -81,7 +80,7 @@ process(int sock)
 
     // validate and set camera
     // should be "[RL] N2 " at head
-    if (*buffer == CAMERA_LEFT || *buffer == CAMERA_RIGHT) {
+    if (*buffer == CAMERA_LEFT_ID || *buffer == CAMERA_RIGHT_ID) {
         camera = *buffer;
     } else {
         fprintf(stderr, "%s: error: unknown camera '%c'\n", MyName, *buffer);
