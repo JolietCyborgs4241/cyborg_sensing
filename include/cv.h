@@ -12,6 +12,8 @@
 #define	DEBUG_INFO      1
 #define	DEBUG_DETAIL    2
 
+#define TTL_DEFAULT     3   // secs
+
 
 
 /// \brief General purpose memory allocator

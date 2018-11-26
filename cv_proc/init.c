@@ -48,7 +48,7 @@ init(int argc, char **argv)
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
     HostInfo.hostPort     = DEF_HOST_PORT;
 
-    while ((c = getopt(argc, argv, "h:p:D:d:")) != -1) {
+    while ((c = getopt(argc, argv, "h:p:D:d:t:")) != -1) {
 
         switch (c) {
 
@@ -66,6 +66,15 @@ init(int argc, char **argv)
             if (HostInfo.hostPort < 1 || HostInfo.hostPort > (64*1024 - 1)) {
                 fprintf(stderr, "%s: error: invalid port value (%d)\n",
                         MyName, HostInfo.hostPort);
+                exit(1);
+            }
+            break;
+
+        case 't':
+            Ttl = atoi(optarg);
+            if (Ttl < 1) {
+                fprintf(stderr, "%s: error: TTL value must be >= 1\n",
+                        MyName);
                 exit(1);
             }
             break;
@@ -125,6 +134,8 @@ dumpConfig()
     fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
+
+    fprintf(DebugFP, "\nTTL:\t%d ", Ttl);
 
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
@@ -186,6 +197,6 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s -h IP -p Port [-d debug file ] [-D 0|1|2]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2]\n",
             MyName, MyName);
 }

@@ -10,6 +10,9 @@ extern  char        *MyName;
 /// network connection for incoming camera messages
 extern  HOST_INFO   HostInfo;
 
+/// time-to-live for camera messages
+extern  int         Ttl;
+
 /// \brief Global debug level
 ///
 /// 0 - OFF

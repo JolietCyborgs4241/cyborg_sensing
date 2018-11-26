@@ -15,6 +15,8 @@ char        *MyName;
 
 HOST_INFO   HostInfo;
 
+int         Ttl = TTL_DEFAULT;
+
 int         DebugLevel = DEBUG_OFF;
 FILE        *DebugFP;                               // set to stderr at startup
 
