@@ -80,16 +80,12 @@ int camRecAdd(char *id, char camera, int x, int y, int w, int h)
     newCamPtr->w      = w;
     newCamPtr->h      = h;
 
-    if ( hdrPtr->recs ) {                       // there already is a set of records for this id
+    if ( hdrPtr->recs ) {       // there already is a set of records for this id
         newCamPtr->next = hdrPtr->recs;
         hdrPtr->recs = newCamPtr;
-    } else {                                    // this is the first one so terminate it
+    } else {                    // this is the first one so terminate it
         newCamPtr->next = (CAM_RECORD *)NULL;
         hdrPtr->recs = newCamPtr;
-    }
-
-    if (DebugLevel == DEBUG_DETAIL) {
-        dumpLists();
     }
 
     return 1;
@@ -152,7 +148,7 @@ camRecGetLatest(char *id, CAM_RECORD *rlCamArray)
     CAM_RECORD      *camPtr;
     int             foundLeft, foundRight;
 
-    if (DebugLevel == DEBUG_INFO) {
+    if (DebugLevel >= DEBUG_INFO) {
         fprintf(DebugFP, "camRecGetLatest(\"%s\", 0x%lx[])\n",
                 id, (long)rlCamArray);
     }
@@ -168,15 +164,25 @@ camRecGetLatest(char *id, CAM_RECORD *rlCamArray)
     foundRight = 0;
 
     while (hdrPtr) {
+
         if (strcmp(id, hdrPtr->id) == 0) {  // found object
+
             zeroCamRecord(&rlCamArray[0]);
             zeroCamRecord(&rlCamArray[1]);
 
             if ( ! hdrPtr->recs) {          // but no camera records
+                if (DebugLevel == DEBUG_DETAIL) {
+                    fprintf(DebugFP, "camRecGetLatest(): no camera records.\n");
+                }
                 return 0;
             }
 
             camPtr = hdrPtr->recs;
+
+            if (DebugLevel == DEBUG_DETAIL) {
+                fprintf(DebugFP, "camRecGetLatest(): searching recs starting at (0x%lx)\n",
+                        (long)camPtr);
+            }
 
             while (camPtr && (! foundLeft || ! foundRight)) {
 
@@ -193,14 +199,14 @@ camRecGetLatest(char *id, CAM_RECORD *rlCamArray)
                         foundRight = 1;
                     }
                 }
+
+                camPtr = camPtr->next;
             }
 
-            if (! foundLeft || ! foundRight) {  // didn't find both
-                return 1;
-            }
-
-            return 2;
+            return (foundLeft + foundRight);
         }    
+
+        hdrPtr = hdrPtr->next;
     }
 
     return -1;          // object not found
@@ -210,26 +216,120 @@ camRecGetLatest(char *id, CAM_RECORD *rlCamArray)
 
 
 
-    // get average x, y, w, h, values for an id (both cameras)
+/// \brief get average x, y, w, h, values for a specific id (both cameras)
+///
+/// Returns the average right and left camera records for the specified id
+/// via a 2-element array
+///
+/// Averages x, y, w, and h values for each camera
+///
+/// returns the number of records found
+///
+/// -1 - object id not found
+///
+/// 0 - no records found (return array zeroed)
+///
+/// 1 - 1 record found (missing record returns 0s for all fields
+///
+/// 2 - 2 records found
 int
 camRecGetAvg(char *id, CAM_RECORD *rlCamArray)
 {
+    CAM_LIST_HDR    *hdrPtr;
+    CAM_RECORD      *camPtr;
+    int             rCount, lCount, foundLeft, foundRight;
 
+    if (DebugLevel >= DEBUG_INFO) {
+        fprintf(DebugFP, "camRecGetAvg(\"%s\", 0x%lx[])\n",
+                id, (long)rlCamArray);
+    }
+
+    rCount    = lCount     = 0;
+    foundLeft = foundRight = 0;
+
+    // first record for any ids?
+    if ( ! camLists) {
+        return -1;       // no records of any kind
+    }
+
+    hdrPtr     = camLists;
+
+    while (hdrPtr) {
+
+        if (strcmp(id, hdrPtr->id) == 0) {  // found object
+
+            zeroCamRecord(&rlCamArray[CAM_LEFT_OFF]);
+            zeroCamRecord(&rlCamArray[CAM_RIGHT_OFF]);
+
+            rlCamArray[CAM_LEFT_OFF].camera =  'L';
+            rlCamArray[CAM_RIGHT_OFF].camera = 'R';
+
+            if ( ! hdrPtr->recs) {          // but no camera records
+                if (DebugLevel == DEBUG_DETAIL) {
+                    fprintf(DebugFP, "camRecGetAvg(): no camera records.\n");
+                }
+                return 0;
+            }
+
+            camPtr = hdrPtr->recs;
+
+            if (DebugLevel == DEBUG_DETAIL) {
+                fprintf(DebugFP, "camRecGetAvg(): searching recs starting at (0x%lx)\n",
+                        (long)camPtr);
+            }
+
+            while (camPtr) {
+
+                if (camPtr->camera == CAMERA_LEFT) {
+                    rlCamArray[CAM_LEFT_OFF].x += camPtr->x;
+                    rlCamArray[CAM_LEFT_OFF].y += camPtr->y;
+                    rlCamArray[CAM_LEFT_OFF].w += camPtr->w;
+                    rlCamArray[CAM_LEFT_OFF].h += camPtr->h;
+
+                    lCount++;
+                    foundLeft = 1;
+                }
+
+                if (camPtr->camera == CAMERA_RIGHT) {
+                    rlCamArray[CAM_RIGHT_OFF].x += camPtr->x;
+                    rlCamArray[CAM_RIGHT_OFF].y += camPtr->y;
+                    rlCamArray[CAM_RIGHT_OFF].w += camPtr->w;
+                    rlCamArray[CAM_RIGHT_OFF].h += camPtr->h;
+
+                    rCount++;
+                    foundRight = 1;
+                }
+
+                camPtr = camPtr->next;
+            }
+
+            // been through the whole list do calculate the averages for each
+            if (foundLeft) {
+                rlCamArray[CAM_LEFT_OFF].x  /= lCount;
+                rlCamArray[CAM_LEFT_OFF].y  /= lCount;
+                rlCamArray[CAM_LEFT_OFF].w  /= lCount;
+                rlCamArray[CAM_LEFT_OFF].h  /= lCount;
+            }
+
+            if (foundRight) {
+                rlCamArray[CAM_RIGHT_OFF].x /= rCount;
+                rlCamArray[CAM_RIGHT_OFF].y /= rCount;
+                rlCamArray[CAM_RIGHT_OFF].w /= rCount;
+                rlCamArray[CAM_RIGHT_OFF].h /= rCount;
+            }
+
+            return (foundLeft + foundRight);
+        }    
+
+        hdrPtr = hdrPtr->next;
+    }
+
+    return -1;          // object not found
 }
 
 
-void
-zeroCamRecord(CAM_RECORD *rec)
-{
-    rec->secs   = 0;
-    rec->usecs  = 0;
-    rec->camera = ' ';
-    rec->x      = 0;
-    rec->y      = 0;
-    rec->w      = 0;
-    rec->h      = 0;
-    rec->next   = 0;
-}
+
+
 
 
 
@@ -248,22 +348,61 @@ dumpLists()
     }
 
     while (camListHdr) {
-        fprintf(DebugFP, "\t(0x%lx) ID: \"%s\"  recs: (0x%lx)  next: (0x%lx)\n",
-                (long)camListHdr, camListHdr->id, (long)camListHdr->recs,
-                (long)camListHdr->next);
+        if (DebugLevel == DEBUG_DETAIL) {
+            dumpCamListHdr(camListHdr);
+        }
 
         CAM_RECORD  *camRecs = camListHdr->recs;
 
         while (camRecs) {
-            fprintf(DebugFP, "\t\t(0x%lx) Time: %ld.%08ld  Camera: %c  x,y: %d,%d  w,h: %d, %d  next: (0x%lx)\n",
-                    (long)camRecs, camRecs->secs, camRecs->usecs,
-                    camRecs->camera,
-                    camRecs->x, camRecs->y, camRecs->w, camRecs->h,
-                    (long)camRecs->next);
+            if (DebugLevel == DEBUG_DETAIL) {
+                dumpCamRecord(camRecs);
+            }
 
             camRecs = camRecs->next;
         }
         camListHdr = camListHdr->next;
     }
     fprintf(DebugFP, "^------------^\n");
+}
+
+
+/// \brief dump an individual CAM_LIST_HDR object to the debug output
+///
+void
+dumpCamListHdr(CAM_LIST_HDR *ptr)
+{
+    fprintf(DebugFP, "CAM_LIST_HDR @ (0x%lx):\n", (long)ptr);
+
+    fprintf(DebugFP, "\tID:\t\"%s\"\n\tRecs:\t(0x%lx\n\tNext:\t(0x%lx)\n",
+            ptr->id, (long)ptr->recs, (long)ptr->next);
+}
+
+
+
+/// \brief dump an individual CAM_RECORD object to the debug output
+///
+void
+dumpCamRecord(CAM_RECORD *ptr)
+{
+    fprintf(DebugFP, "CAM_RECORD @ (0x%lx):\n", (long)ptr);
+
+    fprintf(DebugFP, "\tTime:\t%ld.%08ld\n\tCamera:\t%c\n\tx, y:\t%d, %d\n\tw, h:\t%d, %d\n\tNext:\t(0x%lx)\n",
+            ptr->secs, ptr->usecs, ptr->camera,
+            ptr->x, ptr->y, ptr->w, ptr->h,
+            (long)ptr->next);
+}
+
+
+
+
+/// \brief zero all fields in an individual CAM_RECORD object to the debug output
+///
+void
+zeroCamRecord(CAM_RECORD *ptr)
+{
+    ptr->secs = ptr->usecs = 0;
+    ptr->camera = ' ';
+    ptr->x = ptr->y = ptr->w = ptr->h = 0;
+    ptr->next = (CAM_RECORD *)NULL;
 }

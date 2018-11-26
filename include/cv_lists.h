@@ -51,6 +51,10 @@ int  camRecPrune(int);
 int  camRecDeleteById(char *);
 
 /// get latest record for an id (both cameras)
+///
+/// pointer to a 2-element CAM_RECORD array
+///
+/// CAM_RECORD array is zeroed
 int camRecGetLatest(char *, CAM_RECORD *);
 
 /// get average x, y, w, h, values for a specific (both cameras)
@@ -62,5 +66,13 @@ void zeroCamRecord(CAM_RECORD *);
 /// walks and dumps entire object and camera lists
 void dumpLists();
 
+/// dump an individual CAM_RECORD
+void dumpCamRecord(CAM_RECORD *);
+
+/// zero an individual CAM_RECORD
+void zeroCamRecord(CAM_RECORD *);
+
+/// dump an individual CAM_LIST_HDR
+void dumpCamListHdr(CAM_LIST_HDR *);
 
 #endif  /* cv_list.h */

@@ -41,6 +41,16 @@ main(int argc, char **argv)
 	while (1) {
 
 		process(HostInfo.sock);
+
+        int         ret;
+        CAM_RECORD  results[2];
+
+        ret = camRecGetAvg("thing", results);
+
+        fprintf(DebugFP, "%d = camRecGetAvg(\"thing\", array) results)\n", ret);
+
+        dumpCamRecord(&results[0]);
+        dumpCamRecord(&results[1]);
 	}
 
 }
@@ -98,11 +108,6 @@ process(int sock)
             fprintf(DebugFP, "scanf() error: ret %d\n", scanRet);
         }
         return;
-    }
-
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "Cam: '%c'\n\tID:\t\t\"%s\"\n\tX, Y:\t\t%d, %d\n\tW, H:\t\t%d, %d\n\n",
-               camera, id, x, y, w, h);
     }
 
     camRecAdd(id, camera, x, y, w, h);

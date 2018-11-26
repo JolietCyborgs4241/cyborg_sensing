@@ -19,6 +19,11 @@
 /// Will always return success; exits with a warning message otherwise
 void    *cvAlloc(size_t);
 
+/// \brief General purpose memory free
+///
+void    cvFree(void *);
+
+
 
 
 #endif  /* cv.h */

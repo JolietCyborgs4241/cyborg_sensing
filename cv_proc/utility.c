@@ -24,3 +24,12 @@ cvAlloc(size_t bytes)
 
     return ptr;
 }
+
+
+
+
+void
+cvFree(void *ptr)
+{
+    free(ptr);
+}
