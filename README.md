@@ -7,6 +7,6 @@ The processor maintains lists per camera, per identified object with timestamps 
 
 A seperate thread prunes the lists based on an overall TTL.
 
-Another thread processes the records per identified object (on request) and creates direction commands an calculates distances to the identified object.
+Another thread processes the records per identified object (on request) and creates direction commands and calculates distances to the identified object.
 
 The overall system is designed to operate around a pair of JeVois smart cameras using both the CLI API to control and configure the camers and the serial output providing object-based information.  Overall, the system is farily indepenent of the visual processis strategy used.
