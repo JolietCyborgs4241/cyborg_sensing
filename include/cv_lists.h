@@ -36,14 +36,8 @@ typedef struct camListHdr {
 } CAMERA_LIST_HDR;
 
 
-/// Get cam list ptr for the list
-CAMERA_LIST_HDR    *camListGetHdr();
-
 /// Get cam list record for a specific object id
 CAMERA_LIST_HDR    *camListGetHdrById(char *);
-
-/// dump an individual CAM_LIST_HDR
-void dumpCamListHdr(CAMERA_LIST_HDR *);
 
 
 
@@ -83,5 +77,11 @@ void dumpCamRecord(CAMERA_RECORD *);
 
 /// zero an individual CAMERA_RECORD
 void zeroCamRecord(CAMERA_RECORD *);
+
+
+
+#define LOCK_MAX_ATTEMPTS   20
+
+#define LOCK_USLEEP_TIME    100
 
 #endif  /* cv_list.h */

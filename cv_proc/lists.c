@@ -1,6 +1,6 @@
 //    cv_lists.c
 //
-//    manipulation functiosn for camera data lists
+//    manipulation functions for camera data lists
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,6 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <pthread.h>
 
 #include "cv.h"
 #include "cv_net.h"
@@ -16,17 +17,33 @@
 #include "cv_lists.h"
 
 
-static  CAMERA_LIST_HDR *camLists = (CAMERA_LIST_HDR *)NULL;
 
-static void pruneByHdr(CAMERA_LIST_HDR *, int),
-            freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
-
+#define LOCK_CAMLIST    getLock(&camListLock)
+#define UNLOCK_CAMLIST  releaseLock(&camListLock)
 
 
+static int              getLock(pthread_mutex_t *),
+                        releaseLock(pthread_mutex_t *);
+                    
 
-/// \brief  Get a CAMERA_LIST_HDR for the list
+static pthread_mutex_t  camListLock;
+
+static CAMERA_LIST_HDR  *camLists = (CAMERA_LIST_HDR *)NULL;
+
+static CAMERA_LIST_HDR  *camListGetHdr();
+
+static void             pruneByHdr(CAMERA_LIST_HDR *, int),
+                        dumpCamListHdr(CAMERA_LIST_HDR *),
+                        freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
+
+
+
+/// \brief  return the camList hdr
 ///
-CAMERA_LIST_HDR *
+/// internal support routine
+///
+/// doesn't lock camList - assumes caller has locked it (if needed)
+static CAMERA_LIST_HDR *
 camListGetHdr()
 {
     return(camLists);
@@ -38,6 +55,11 @@ camListGetHdr()
 /// \brief  Get a CAMERA_LIST_HDR for a specific object id
 ///
 /// id
+///
+/// doesn't lock the camlist - at worst it will miss the first entry
+/// which could be added while we are traversing
+///
+/// no elements ever get removed from the camList headers
 CAMERA_LIST_HDR *
 camListGetHdrById(char *id)
 {
@@ -68,6 +90,8 @@ camListGetHdrById(char *id)
 /// \brief  Add a new camera record
 ///
 /// id, camera, x, y, w, h
+///
+/// locks the camList
 int
 camRecAdd(char *id, char camera, int x, int y, int w, int h)
 {
@@ -79,6 +103,8 @@ camRecAdd(char *id, char camera, int x, int y, int w, int h)
         fprintf(DebugFP, "camRecAdd(\"%s\", \'%c\', %d, %d, %d, %d)\n",
                 id, camera, x, y, w, h);
     }
+
+    LOCK_CAMLIST;
 
     // first record for any ids?
     if ( ! camLists) {
@@ -136,6 +162,8 @@ camRecAdd(char *id, char camera, int x, int y, int w, int h)
         hdrPtr->recs[idx] = newCamPtr;
     }
 
+    UNLOCK_CAMLIST;
+
     return 1;
 }
 
@@ -147,6 +175,8 @@ camRecAdd(char *id, char camera, int x, int y, int w, int h)
 /// The list of camera records is ordered with the newest at the front
 /// so once we find one that is past the TTL, they are all past the TTL from
 /// that point onward
+///
+/// locks the camlist
 void
 camRecPruneById(char *id, int ttl)
 {
@@ -160,14 +190,21 @@ camRecPruneById(char *id, int ttl)
         return;         // specified object not found
     }
 
+    LOCK_CAMLIST;
+
     while (hdrPtr) {
         if (strcmp(id, hdrPtr->id) == 0) {  // found it
             pruneByHdr(hdrPtr, ttl);
+
+            UNLOCK_CAMLIST;
+
             return;
         }
 
         hdrPtr = hdrPtr->next;
     }
+
+    UNLOCK_CAMLIST;
 }
 
 
@@ -178,6 +215,8 @@ camRecPruneById(char *id, int ttl)
 /// The list of camera records is ordered with the newest at the front
 /// so once we find one that is past the TTL, they are all past the TTL from
 /// that point onward
+///
+/// locaks the camList
 void
 camRecPruneAll(int ttl)
 {
@@ -191,6 +230,7 @@ camRecPruneAll(int ttl)
         return;               // the whole list is empty
     }
 
+    LOCK_CAMLIST;
 
     // walk the list of headers
     while (hdrPtr) {
@@ -199,12 +239,17 @@ camRecPruneAll(int ttl)
 
         hdrPtr = hdrPtr->next;
     }
+
+    UNLOCK_CAMLIST;
 }
 
 
 /// \brief  prune both cameras for a given header record
 ///
-void
+/// internal list support routine
+///
+/// doesn't lock camList - assumes caller locked it
+static void
 pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
 {
     CAMERA_RECORD   *camPtr, *camPtrPrev;;
@@ -250,6 +295,15 @@ pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
 }
 
 
+
+/// \brief frees all camera records starting at some location in the list
+///
+/// records are freed from the end of the list popping back towards the first
+/// on to be purged
+///
+/// internal list support routine
+///
+/// doesn't lock camList - assumes caller did
 static void
 freeCamRecsFromEnd(CAMERA_RECORD *ptr)
 {
@@ -263,13 +317,17 @@ freeCamRecsFromEnd(CAMERA_RECORD *ptr)
 
 
 
-     // ID - delete all records for an id (all cameras)
+/// \brief  removes all camera recors for a specific object id
+///
+/// locks camList
 int
 camRecDeleteById(char *id)
 {
 
-}
+    LOCK_CAMLIST;
 
+    UNLOCK_CAMLIST;
+}
 
 
 
@@ -288,6 +346,8 @@ camRecDeleteById(char *id)
 /// 1 - 1 record found (missing record returns 0s for all fields
 ///
 /// 2 - 2 records found
+///
+/// locks camList
 int
 camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
 {
@@ -369,9 +429,12 @@ camRecGetAvg(char *id, CAMERA_RECORD *rlCamArray)
         return -1;       // no records of any kind
     }
 
+    LOCK_CAMLIST;
+
     hdrPtr = camListGetHdrById(id);
 
     if ( ! hdrPtr) {
+        UNLOCK_CAMLIST;
         return -1;      // that id not found
     }
 
@@ -416,12 +479,15 @@ camRecGetAvg(char *id, CAMERA_RECORD *rlCamArray)
     }
 
     if (counts[CAMERA_LEFT_IDX] && counts[CAMERA_RIGHT_IDX]) {
+        UNLOCK_CAMLIST;
         return 2;
     }
 
     if (counts[CAMERA_LEFT_IDX] || counts[CAMERA_RIGHT_IDX]) {
+        UNLOCK_CAMLIST;
         return 1;
     } else {
+        UNLOCK_CAMLIST;
         return 0;
     }
 }    
@@ -470,7 +536,7 @@ dumpLists()
 
 /// \brief dump an individual CAMERA_LIST_HDR object to the debug output
 ///
-void
+static void
 dumpCamListHdr(CAMERA_LIST_HDR *ptr)
 {
     fprintf(DebugFP, "CAMERA_LIST_HDR @ (0x%lx):\n", (long)ptr);
@@ -501,6 +567,7 @@ dumpCamRecord(CAMERA_RECORD *ptr)
 
 /// \brief zero all fields in an individual CAMERA_RECORD object to the debug output
 ///
+/// general utility function - useful for testing as well
 void
 zeroCamRecord(CAMERA_RECORD *ptr)
 {
@@ -508,4 +575,50 @@ zeroCamRecord(CAMERA_RECORD *ptr)
     ptr->camera = ' ';
     ptr->x = ptr->y = ptr->w = ptr->h = 0;
     ptr->next = (CAMERA_RECORD *)NULL;
+}
+
+
+
+
+
+/// \brief try to get the specified lock
+///
+/// try to get the lock
+/// if unsuccesful, try configured nbumber of times with configured
+/// msec sleep between locks
+///
+/// returns 0 if successful - non-zero if unsuccessful
+///
+static int
+getLock(pthread_mutex_t *lock)
+{
+    int i;
+
+    for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
+        if (pthread_mutex_lock(lock) == 0) {    // locked
+            return 0;
+        }
+        
+        usleep ((useconds_t) LOCK_USLEEP_TIME);
+    }
+
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s: warning: could not get lock (0x%lx)\n",
+                MyName, (long)lock);
+    }
+
+    return 1;                                   // couldn't get lock
+}
+
+
+
+
+/// \brief try release the specified lock
+///
+/// returns 0 if successful - non-zero if unsuccessful
+///
+static int
+releaseLock(pthread_mutex_t *lock)
+{
+    return pthread_mutex_unlock(lock);
 }
