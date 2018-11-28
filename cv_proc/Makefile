@@ -3,9 +3,9 @@
 
 CV_INC_DIR	= ../include
 INC		= -I$(CV_INC_DIR)
-CFLAGS	+= $(INC)
+CFLAGS	+= $(INC) -DDEBUG -pthread -g
 
-LDFLAGS	+= 
+LDFLAGS	+= -pthread
 
 SRCS	= cv_proc.c init.c globals.c lists.c utility.c threads.c
 

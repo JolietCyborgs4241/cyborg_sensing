@@ -18,13 +18,27 @@
 
 
 
+#ifdef  DEBUG           // show function and line in debug output
+
+#define LOCK_CAMLIST    if (DebugLevel == DEBUG_DETAIL) {\
+                            fprintf(DebugFP, "Line %d in %s: getLock(0x%lx)\n", \
+                                    __LINE__, __func__, (long)&camListLock); \
+                        } getLock(&camListLock)
+#define UNLOCK_CAMLIST  if (DebugLevel == DEBUG_DETAIL) {\
+                            fprintf(DebugFP, "Line %d in %s: releaseLock(0x%lx)\n", \
+                                    __LINE__, __func__, (long)&camListLock); \
+                        } releaseLock(&camListLock)
+
+#else   //  ! DEBUG
+
 #define LOCK_CAMLIST    getLock(&camListLock)
 #define UNLOCK_CAMLIST  releaseLock(&camListLock)
+
+#endif  //  DEBUG
 
 
 static int              getLock(pthread_mutex_t *),
                         releaseLock(pthread_mutex_t *);
-                    
 
 static pthread_mutex_t  camListLock;
 
@@ -186,18 +200,18 @@ camRecPruneById(char *id, int ttl)
         return;         // no pruning if TTL is 0
     }
 
+    LOCK_CAMLIST;
+
     if ((hdrPtr = camListGetHdrById(id)) == 0) {
+        UNLOCK_CAMLIST;
         return;         // specified object not found
     }
-
-    LOCK_CAMLIST;
 
     while (hdrPtr) {
         if (strcmp(id, hdrPtr->id) == 0) {  // found it
             pruneByHdr(hdrPtr, ttl);
 
             UNLOCK_CAMLIST;
-
             return;
         }
 
@@ -225,12 +239,20 @@ camRecPruneAll(int ttl)
     if (ttl == 0) {
         return;         // no pruning if TTL is 0
     }
-
-    if ((hdrPtr = camListGetHdr()) == (CAMERA_LIST_HDR *)NULL) {
-        return;               // the whole list is empty
+#ifdef  DEBUG
+    // This locks the list so it must precede the LOCK_CAMLIST below
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(%d): prior to prune\n", __func__, ttl);
+        dumpLists();
     }
+#endif  // DEBUG
 
     LOCK_CAMLIST;
+
+    if ((hdrPtr = camListGetHdr()) == (CAMERA_LIST_HDR *)NULL) {
+        UNLOCK_CAMLIST;
+        return;               // the whole list is empty
+    }
 
     // walk the list of headers
     while (hdrPtr) {
@@ -257,6 +279,12 @@ pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
     int             i;
 
     gettimeofday(&tvNow, (struct timezone *)NULL);     // time now
+#ifdef  DEBUG
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(0x%lx, %d): time is now %ld.%ld\n",
+                __func__, (long)hdrPtr, ttl, tvNow.tv_sec, tvNow.tv_usec);
+    }
+#endif  // DEBUG
 
     // walk down the camera recs (if there are any)
     // need to go down the right and the left camera lists
@@ -291,6 +319,12 @@ pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
             camPtrPrev = camPtr;
             camPtr = camPtr->next;
         }
+
+        if (camPtr = hdrPtr->recs[i]) {
+            // they were all aged out, right from the first one so the list
+            // shoud now be completely empty - clear the point in the header
+            hdrPtr->recs[i] = (CAMERA_RECORD *)NULL;
+        }
     }
 }
 
@@ -308,11 +342,17 @@ static void
 freeCamRecsFromEnd(CAMERA_RECORD *ptr)
 {
 
+#ifdef  DEBUG
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(0x%lx) entered\n", __func__, (long)ptr);
+    }
+#endif  // DEBUG
+
     if (ptr->next) {    // keep going
         freeCamRecsFromEnd(ptr->next);  // RECURSIVE!!!
-    } else {
-        cvFree(ptr);    // free ME!
     }
+
+    cvFree(ptr);    // free ME!
 }
 
 
@@ -365,6 +405,8 @@ camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
         return -1;       // no records of any kind
     }
 
+    LOCK_CAMLIST;
+
     hdrPtr     = camListGetHdrById(id);
 
     if ( ! hdrPtr) {
@@ -388,6 +430,7 @@ camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
         }
     }
 
+    UNLOCK_CAMLIST;
     return count;
 }    
 
@@ -412,6 +455,8 @@ camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
 /// 1 - 1 record found (missing record returns 0s for all fields
 ///
 /// 2 - 2 records found
+///
+/// locks camlist
 int
 camRecGetAvg(char *id, CAMERA_RECORD *rlCamArray)
 {
@@ -505,9 +550,12 @@ dumpLists()
 
     fprintf(DebugFP, "dumpLists():\nv----------------------v\n");
 
+    LOCK_CAMLIST;
+
     if (! camLists ) {
         fprintf(DebugFP, "\tNO CAMERA RECORDS\n");
         fprintf(DebugFP, "^------------^\n");
+        UNLOCK_CAMLIST;
         return;
     }
 
@@ -530,8 +578,13 @@ dumpLists()
         }
         camListHdr = camListHdr->next;
     }
+
+    UNLOCK_CAMLIST;
+
     fprintf(DebugFP, "^----------------------^\n");
 }
+
+
 
 
 /// \brief dump an individual CAMERA_LIST_HDR object to the debug output
@@ -594,8 +647,20 @@ getLock(pthread_mutex_t *lock)
 {
     int i;
 
+#ifdef  DEBUG
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(0x%lx): entered\n", __func__, (long)lock);
+    }
+#endif  // DEBUG
+
     for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
         if (pthread_mutex_lock(lock) == 0) {    // locked
+#ifdef  DEBUG
+            if (DebugLevel == DEBUG_DETAIL) {
+                fprintf(DebugFP, "%s(0x%lx): took %d attempts to get lock\n",
+                        __func__, (long)lock, i);
+            }
+#endif  // DEBUG
             return 0;
         }
         
@@ -603,8 +668,8 @@ getLock(pthread_mutex_t *lock)
     }
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s: warning: could not get lock (0x%lx)\n",
-                MyName, (long)lock);
+        fprintf(DebugFP, "%s(0x%lx): warning: could not get lock after %d attempts\n",
+                MyName, (long)lock, i);
     }
 
     return 1;                                   // couldn't get lock
@@ -620,5 +685,11 @@ getLock(pthread_mutex_t *lock)
 static int
 releaseLock(pthread_mutex_t *lock)
 {
+#ifdef  DEBUG
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(0x%lx): entered\n", __func__, (long)lock);
+    }
+#endif  // DEBUG
+
     return pthread_mutex_unlock(lock);
 }

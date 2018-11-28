@@ -9,12 +9,12 @@
 /// Start the purging thread
 ///
 /// ttl
-void    startThreadPurge(int);
+void    startPruneThread(int);
 
 /// start the receiving thread
 ///
 /// socket fd
-void    startThreadRecv(int);
+void    startReceiveThread(int);
 
 
 #endif  /* cv_threads.h */
