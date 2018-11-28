@@ -14,7 +14,7 @@ void    startPruneThread(int);
 /// start the receiving thread
 ///
 /// socket fd
-void    startReceiveThread(int);
+void    startCamDataThread(int);
 
 
 #endif  /* cv_threads.h */

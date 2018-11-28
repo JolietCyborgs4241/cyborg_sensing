@@ -3,7 +3,7 @@
 
 CV_INC_DIR	= ../include
 INC		= -I$(CV_INC_DIR)
-CFLAGS	+= $(INC) -DDEBUG -pthread -g
+CFLAGS	+= $(INC) -pthread -g # -DDEBUG 
 
 LDFLAGS	+= -pthread
 

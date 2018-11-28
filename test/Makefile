@@ -8,8 +8,6 @@ HOST_PORT=12345
 
 
 all:	$(CAMERA_DATA) gettimeofday
-
-exec:
 	chmod +x run_tests
 	chmod +x prep_data
 
