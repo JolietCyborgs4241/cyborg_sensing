@@ -281,7 +281,11 @@ pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
     gettimeofday(&tvNow, (struct timezone *)NULL);     // time now
 #ifdef  DEBUG
     if (DebugLevel == DEBUG_DETAIL) {
+#ifdef	__APPLE__
+        fprintf(DebugFP, "%s(0x%lx, %d): time is now %ld.%d\n",
+#else
         fprintf(DebugFP, "%s(0x%lx, %d): time is now %ld.%ld\n",
+#endif
                 __func__, (long)hdrPtr, ttl, tvNow.tv_sec, tvNow.tv_usec);
     }
 #endif  // DEBUG
@@ -320,7 +324,7 @@ pruneByHdr(CAMERA_LIST_HDR *hdrPtr, int ttl)
             camPtr = camPtr->next;
         }
 
-        if (camPtr = hdrPtr->recs[i]) {
+        if ((camPtr = hdrPtr->recs[i])) {
             // they were all aged out, right from the first one so the list
             // shoud now be completely empty - clear the point in the header
             hdrPtr->recs[i] = (CAMERA_RECORD *)NULL;
@@ -367,6 +371,8 @@ camRecDeleteById(char *id)
     LOCK_CAMLIST;
 
     UNLOCK_CAMLIST;
+
+    return 0;
 }
 
 
@@ -609,7 +615,11 @@ dumpCamRecord(CAMERA_RECORD *ptr)
 {
     fprintf(DebugFP, "CAMERA_RECORD @ (0x%lx):\n", (long)ptr);
 
+#ifdef	__APPLE__
+    fprintf(DebugFP, "\tTime:\t%ld.%08d\n\tCamera:\t%c\n\tx, y:\t%d, %d\n\tw, h:\t%d, %d\n\tNext:\t(0x%lx)\n",
+#else	// everything else
     fprintf(DebugFP, "\tTime:\t%ld.%08ld\n\tCamera:\t%c\n\tx, y:\t%d, %d\n\tw, h:\t%d, %d\n\tNext:\t(0x%lx)\n",
+#endif
             ptr->time.tv_sec, ptr->time.tv_usec, ptr->camera,
             ptr->x, ptr->y, ptr->w, ptr->h,
             (long)ptr->next);

@@ -81,7 +81,11 @@ pruneThread(void *ttl)
         gettimeofday(&tv, (struct timezone *)NULL);
 
         if (DebugLevel == DEBUG_DETAIL) {
+#ifdef	__APPLE__
+            fprintf(DebugFP, "%s(%d): awake at %ld.%d\n",
+#else
             fprintf(DebugFP, "%s(%d): awake at %ld.%ld\n",
+#endif
                     __func__, *(int *)ttl, tv.tv_sec, tv.tv_usec);
         }
 #endif  // DEBUG
