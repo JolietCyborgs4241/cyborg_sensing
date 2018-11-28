@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <getopt.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -16,6 +15,7 @@
 #include "cv_net.h"
 #include "cv_cam.h"
 #include "cv_lists.h"
+#include "cv_threads.h"
 #include "cv_externs.h"
 
 
@@ -38,25 +38,17 @@ main(int argc, char **argv)
 
 	init(argc, argv);
 
+    startPruneThread(Ttl);      // get rid of records older than TTL
+
 	while (1) {
 
 		process(HostInfo.sock);
-
-        int         ret;
-        CAM_RECORD  results[2];
-
-        ret = camRecGetAvg("thing", results);
-
-        fprintf(DebugFP, "%d = camRecGetAvg(\"thing\", array) results)\n", ret);
-
-        dumpCamRecord(&results[0]);
-        dumpCamRecord(&results[1]);
 	}
 
 }
 
 
-
+int MsgNum = 0;
 
 void
 process(int sock)
@@ -68,20 +60,26 @@ process(int sock)
     if ((readRet = recvfrom(sock, buffer, MAX_CAMERA_READ, 0, (struct sockaddr *)NULL, 0)) > 0) {
 
         if (readRet < MIN_CAM_REC_SIZE) {
-            fprintf(stderr, "%s: warning: undersize record recevied (%d bytes)\n", MyName, readRet);
+            if(DebugLevel == DEBUG_DETAIL) {
+                fprintf(stderr, "%s: warning: undersize record recevied (%d bytes)\n",
+                        MyName, readRet);
+            }
             return;
         }
 
         buffer[readRet] = '\0';
 
         if (DebugLevel == DEBUG_DETAIL) {
-            fprintf(DebugFP, "Message:\t\"%s\"\n", buffer);
+            fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
+                    MsgNum,  buffer, strlen(buffer));
         }
     }
 
+    MsgNum++;
+
     // validate and set camera
     // should be "[RL] N2 " at head
-    if (*buffer == CAMERA_LEFT || *buffer == CAMERA_RIGHT) {
+    if (*buffer == CAMERA_LEFT_ID || *buffer == CAMERA_RIGHT_ID) {
         camera = *buffer;
     } else {
         fprintf(stderr, "%s: error: unknown camera '%c'\n", MyName, *buffer);

@@ -6,79 +6,82 @@
 #define _CV_LIST_H_ 1
 
 
-typedef struct  {
+typedef struct camRecord {
+    /// arrival of camera message (actually inserion time in list)
+    struct timeval       time;
+    /// source camera identifier (right or left)
+    char                camera;
+    /// x coordinate of object
+    int                 x;
+    /// y coordinate of object
+    int                 y;
+    /// width of bounding box
+    int                 w;
+    /// height of bounding box
+    int                 h;
+    /// pointer to next camera record
+    struct camRecord    *next;
+} CAMERA_RECORD;
+
+
+typedef struct camListHdr {
     /// Identifier of the object being reported
-    char    *id;        // name of the object being reported
+    char                *id;
     /// \brief pointer to individual camera records about this object
     ///
-    /// object records from both R / L cameras are on this same list
-    void    *recs;      // list of records for this id
+    /// object records from R / L cameras are on separate lists
+    CAMERA_RECORD       *recs[NUM_OF_CAMERAS];
     /// pointer to next object header
-    void    *next;      // next header record
-} CAM_LIST_HDR;
+    struct camListHdr   *next;
+} CAMERA_LIST_HDR;
 
 
 /// Get cam list record for a specific object id
-CAM_LIST_HDR    *camListGetHdr(char *);
-
-/// dump an individual CAM_LIST_HDR
-void dumpCamListHdr(CAM_LIST_HDR *);
+CAMERA_LIST_HDR    *camListGetHdrById(char *);
 
 
 
 
-
-typedef struct {
-    /// arrival of camera message (actually inserion time in list)
-    time_t      secs;                   // arrival time
-    suseconds_t usecs;
-    /// camera identifier (right or left)
-    char        camera;                 // source camera
-    /// x coordinate of object
-    int         x;
-    /// y coordinate of object
-    int         y;
-    /// width of bounding box
-    int         w;
-    /// height of bounding box
-    int         h;
-    /// pointer to next camera record
-    void        *next;                  // next camera record
-} CAM_RECORD;
 
 
 /// ID, camera, x, y, w, h - add a new object (if needed) and camera record (always; newest at front of list)
 int  camRecAdd(char *, char, int, int, int, int);
 
 /// ID, TTL - delete old records for only a specific object id (all cameras)
-int  camRecPruneById(char *, int);
+void  camRecPruneById(char *, int);
 
 /// TTL - prune all camera records older than TTL (regardless of camera or object id)
-int  camRecPrune(int);
+void  camRecPruneAll(int);
 
 /// ID - delete all records for an id (all cameras)
 int  camRecDeleteById(char *);
 
 /// get latest record for an id (both cameras)
 ///
-/// pointer to a 2-element CAM_RECORD array
+/// pointer to a 2-element CAMERA_RECORD array
 ///
-/// CAM_RECORD array is zeroed
-int camRecGetLatest(char *, CAM_RECORD *);
+/// CAMERA_RECORD array is zeroed
+int camRecGetLatest(char *, CAMERA_RECORD *);
 
 /// get average x, y, w, h, values for a specific (both cameras)
-int camRecGetAvg(char *, CAM_RECORD *);
+int camRecGetAvg(char *, CAMERA_RECORD *);
 
-/// zero-out a CAM_RECORD object
-void zeroCamRecord(CAM_RECORD *);
+/// zero-out a CAMERA_RECORD object
+void zeroCamRecord(CAMERA_RECORD *);
 
 /// walks and dumps entire object and camera lists
 void dumpLists();
 
-/// dump an individual CAM_RECORD
-void dumpCamRecord(CAM_RECORD *);
+/// dump an individual CAMERA_RECORD
+void dumpCamRecord(CAMERA_RECORD *);
 
-/// zero an individual CAM_RECORD
-void zeroCamRecord(CAM_RECORD *);
+/// zero an individual CAMERA_RECORD
+void zeroCamRecord(CAMERA_RECORD *);
+
+
+
+#define LOCK_MAX_ATTEMPTS   20
+
+#define LOCK_USLEEP_TIME    100
 
 #endif  /* cv_list.h */
