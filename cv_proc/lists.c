@@ -655,7 +655,7 @@ zeroCamRecord(CAMERA_RECORD *ptr)
 static int
 getLock(pthread_mutex_t *lock)
 {
-    int i;
+    int i, retVal;
 
 #ifdef  DEBUG
     if (DebugLevel == DEBUG_DETAIL) {
@@ -664,7 +664,7 @@ getLock(pthread_mutex_t *lock)
 #endif  // DEBUG
 
     for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
-        if (pthread_mutex_lock(lock) == 0) {    // locked
+        if ((retVal = pthread_mutex_lock(lock)) == 0) {    // locked
 #ifdef  DEBUG
             if (DebugLevel == DEBUG_DETAIL) {
                 fprintf(DebugFP, "%s(0x%lx): took %d attempts to get lock\n",
@@ -673,6 +673,15 @@ getLock(pthread_mutex_t *lock)
 #endif  // DEBUG
             return 0;
         }
+#ifdef  DEBUG	// BE CAREFUL!  DEBUG adds 'else' to 'if' above!!
+          else {
+              if (DebugLevel == DEBUG_DETAIL) {
+                  fprintf(DebugFP, "%s(0x%lx): pthread_mutex_lock() returned %d (%s)\n", __func__,
+                         (long)lock, retVal, (retVal != 0) ? strerror(errno) : "Success");
+              }
+        }
+#endif  // DEBUG
+
         
         usleep ((useconds_t) LOCK_USLEEP_TIME);
     }
@@ -695,11 +704,21 @@ getLock(pthread_mutex_t *lock)
 static int
 releaseLock(pthread_mutex_t *lock)
 {
+	int retVal;
 #ifdef  DEBUG
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(0x%lx): entered\n", __func__, (long)lock);
     }
 #endif  // DEBUG
 
-    return pthread_mutex_unlock(lock);
+    retVal =  pthread_mutex_unlock(lock);
+
+#ifdef  DEBUG
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
+               (long)lock, retVal, (retVal != 0) ? strerror(errno) : "Success");
+    }
+#endif  // DEBUG
+
+    return retVal;
 }
