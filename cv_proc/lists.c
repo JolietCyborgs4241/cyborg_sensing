@@ -52,6 +52,7 @@ static void             pruneByHdr(CAMERA_LIST_HDR *, int),
 
 
 
+
 /// \brief  return the camList hdr
 ///
 /// internal support routine
@@ -644,6 +645,22 @@ zeroCamRecord(CAMERA_RECORD *ptr)
 
 
 
+
+
+/// \brief initialize the mutex for the coordinated CamList access
+//
+void
+initMutex()
+{
+    int retVal;
+
+    retVal = pthread_mutex_init(&camListLock, (pthread_mutexattr_t *) NULL);
+}
+
+
+
+
+
 /// \brief try to get the specified lock
 ///
 /// try to get the lock
@@ -675,9 +692,14 @@ getLock(pthread_mutex_t *lock)
         }
 #ifdef  DEBUG	// BE CAREFUL!  DEBUG adds 'else' to 'if' above!!
           else {
+
+              char    *errorString;
+
+              errorString = strerror(errno);
+
               if (DebugLevel == DEBUG_DETAIL) {
                   fprintf(DebugFP, "%s(0x%lx): pthread_mutex_lock() returned %d (%s)\n", __func__,
-                         (long)lock, retVal, (retVal != 0) ? strerror(errno) : "Success");
+                         (long)lock, retVal, (retVal != 0) ? errorString : "Success");
               }
         }
 #endif  // DEBUG
@@ -704,8 +726,11 @@ getLock(pthread_mutex_t *lock)
 static int
 releaseLock(pthread_mutex_t *lock)
 {
-	int retVal;
+	int     retVal;
+
 #ifdef  DEBUG
+	char    *errorString;
+
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(0x%lx): entered\n", __func__, (long)lock);
     }
@@ -714,9 +739,11 @@ releaseLock(pthread_mutex_t *lock)
     retVal =  pthread_mutex_unlock(lock);
 
 #ifdef  DEBUG
+    errorString =strerror(errno);
+
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
-               (long)lock, retVal, (retVal != 0) ? strerror(errno) : "Success");
+               (long)lock, retVal, (retVal != 0) ? errorString : "Success");
     }
 #endif  // DEBUG
 

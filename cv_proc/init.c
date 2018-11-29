@@ -119,6 +119,8 @@ init(int argc, char **argv)
         }
     }
 
+    initMutex();
+
     openIncomingPort(&HostInfo);
 
     if (DebugLevel) {   // any debug level
