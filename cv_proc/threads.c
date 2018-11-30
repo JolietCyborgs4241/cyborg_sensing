@@ -150,7 +150,7 @@ processCamData(int sock)
 
         if (readRet < MIN_CAM_REC_SIZE) {
             if(DebugLevel == DEBUG_DETAIL) {
-                fprintf(stderr, "%s: warning: undersize record received (%d bytes)\n",
+                fprintf(DebugFP, "%s: warning: undersize record received (%d bytes)\n",
                         MyName, readRet);
             }
             return;
@@ -171,17 +171,17 @@ processCamData(int sock)
     if (*buffer == CAMERA_LEFT_ID || *buffer == CAMERA_RIGHT_ID) {
         camera = *buffer;
     } else {
-        fprintf(stderr, "%s: error: unknown camera '%c'\n", MyName, *buffer);
+        fprintf(DebugFP, "%s: error: unknown camera '%c'\n", MyName, *buffer);
         return;
     }
 
     if (*(buffer+1) != ' ') {
-        fprintf(stderr, "%s: error: non-space 2nd char '%c'\n", MyName, *(buffer + 1));
+        fprintf(DebugFP, "%s: error: non-space 2nd char '%c'\n", MyName, *(buffer + 1));
         return;
     }
 
     if(*(buffer+2) != 'N' && *(buffer+3) != '2' && *(buffer+4) != ' ') {
-        fprintf(stderr, "%s: error: invalid record type \'%c%c\'\n",
+        fprintf(DebugFP, "%s: error: invalid record type \'%c%c\'\n",
                 MyName, *(buffer+2), *(buffer+3));
         return;
     }
@@ -197,5 +197,8 @@ processCamData(int sock)
         return;
     }
 
+    if (DebugLevel == DEBUG_INFO) {
+        fprintf(DebugFP, "%s(%d): recvd and adding msg #%d\n", __func__, sock, MsgNum);
+    }
     camRecAdd(id, camera, x, y, w, h);
 }
