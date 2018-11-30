@@ -50,7 +50,6 @@ Here links to some information sources that can help explain pointers:
 * [Introduction to pointers in Ci (seems to be a popular title for this topic)](https://www.go4expert.com/articles/introduction-pointers-c-t27959/)
 * [Introduction to pointers in C/C++ (video)](https://www.youtube.com/watch?v=h-HBipu_1P0)
 
-
 ### Linked Lists
 
 Linked Lists are a key basic data structure.  Pointers are the easiest (not the only but by far the easiest) way to implement linked lists.  Linked lists provide a flexible mean to connect data records in a way where they can be added, deleted, or reordered without moving large amounts of data by simply changing a few pointers.
@@ -60,7 +59,6 @@ Here are a few resources to get you up to speed on linked lists:
 * [C Linked List](https://www.zentut.com/c-tutorial/c-linked-list/)
 * [Introduction to Linked Lists in C/C++](https://www.codeproject.com/articles/641175/%2fArticles%2f641175%2fAn-Introduction-to-Linked-Lists-in-C-Cplusplus)
 * [Linked List Introduction](https://www.geeksforgeeks.org/linked-list-set-1-introduction/)
-
 
 ### #define
 
@@ -72,7 +70,7 @@ Here are a few resources to get you up to speed on linked lists:
 
 
 ## Conclusion
-There is a lot going on in this code.  Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date.  Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so.
+There is a lot going on in this design and cooresponding code.  Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date.  Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so.
 
 
 - Chris Herzog
