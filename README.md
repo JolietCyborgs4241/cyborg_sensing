@@ -5,7 +5,7 @@ Architecture is a server (cv_cam) for each camera that watches the serial camera
 to the processor (cv_proc).  Each cv_cam modules passes robot object and visual field location information to cv_proc.
 
 The processor maintains lists per camera, per identified object with timestamps and coordinate-based values for each record.
-A time-based sequence of camera records is maintained for each obect the cameras report.  A separate thread prunes the lists
+A time-based sequence of camera records is maintained for each object the cameras report.  A separate thread prunes the lists
 based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from
 each camera as well as an averaged set of values based on the TTL.
 
@@ -13,7 +13,7 @@ Another thread processes the records per identified object (on request) and crea
 distances to the identified object./  This thread will communicate with the cv_robo module.
 
 A third component (cv_robo) will communicate with cv_proc and work with the robot code to steer, drive, and otherwise
-operate the robot based on visual cues.  Cv_robo will act just liike a human-operated joystick and move the robot and
+operate the robot based on visual cues.  Cv_robo will act just like a human-operated joystick and move the robot and
 actuate the appropriate functions based on visual cues (just like a human operator would).  The actual robot driving logic
 lives here.
 
@@ -61,6 +61,43 @@ As a point of information, the term "preprocessor" refers to the compiler pass t
 
 ### Structures and Typedefs
 
+Structures are a key way in C and C++ to group related variables together.  The combine multiple variables into a data entity that can be stored, passed around in the code, and manipulated in a way that maintains the relationships between the variables there in.
+
+For example, a structure in the vision code could look like this:
+
+struct iSeeYou {
+    char thingISee[100];   /  name of the thing I see
+    int  x;                // x coordinate in the camera's view
+    int  y;                // y coordinate in the camera's view
+}
+
+This creates a new data type which can be referenced just like a more basic data type - for example, we could declare an array those structures like this:
+
+struct iSeeYou thingsSeen[20];
+
+There is a specific syntax to deal with these items - below is an example where we set the X coordinate of the 5th item to 12345:
+
+thingsSeen[4].x = 12345;	// remember, arrays start at 0!
+
+Typedefs are a lot like structure definitions but they allow us to actually define a new data type - let's use the above example and create a new data type STUFF_SEEN:
+
+typedef struct {
+    char thingISee[100];   /  name of the thing I see
+    int  x;                // x coordinate in the camera's view
+    int  y;                // y coordinate in the camera's view
+} STUFF_SEEN;
+
+This looks a lot like the original structure but we can use it much easier in the code - for example, here's a declaration of a variable of this new type:
+
+STUFF_SEEN	hey;
+
+More details at:
+
+* [Structures in C](https://www.geeksforgeeks.org/structures-c/)
+* [Struct (C programming Language)](https://en.wikipedia.org/wiki/Struct_(C_programming_language)))
+* [C - Structures](https://www.tutorialspoint.com/cprogramming/c_structures.htm)
+
+
 ### Pointers
 
 Pointers are a way to efficiently access memory locations corresponding to variables and structures when using C.  Pointers allow efficient access by "pointing" to code to locations of variables and structures rather than passing entire structures around.  The use of pointers also supports more sophisticated and flexible data structures such as linked lists which in some usages are much more flexible and powerful than arrays (as one example).  Understanding the use of pointers and the processing associated with pointer arithmetic is a requirement for almost any non-trivial C programming effort.
@@ -85,6 +122,29 @@ Here are a few resources to get you up to speed on linked lists:
 
 ### System and Library Calls
 
+These are the basic calls to get the operating system to do something for us - open a file, get us some more memory, kill something that's running, etc.  System calls are the most basic functionality the operating system (Linux, Windows, etc). can provide - you get the most control but at times they can be harder to use.  There are environments that have a very minimal (or maybe even no operating system) like an Arduino, a set of pretty basic routines (like the RoboRio) or a full tilt, crankin' it out operating system like Linux (a Raspberry Pi is a good example of that).
+
+Library calls will look very similar and often times cause the operating system to do something as well.  Things that fall into that category are routines like stdio (C) or iostream (C++); these sorts of routines provide an easier to use or more flexible and hide some of the system call complexity (stdio and iostream are perfect examples of that).  They'll also provide functionality that many programs want to use like string manipulation that while they aren't things the operating system cares about ("I'm an 'OPERATING SYSTEM' friend - I don't do string comparison!").
+
+There are a lot of function calls that fall into these areas - 100's at least (at one point I knew pretty much all of them but a lot of water has flowed under the bridge and a lot of routines have been added so that's probably not the case anymore).  So how do you get started?  I'd start by looking at the code and using one of the good "manpage" sites online ("manpage" is short for manual page so you won't sound like you're not hip to the groove that's being laid down).
+
+A good site for Linux manpages is [Man7.org](http://man7.org/linux/man-pages/dir_all_alphabetic.html).
+
+Manpages will have standard set of sections that will you understand what's happening - for system and library calls, you'll typically see:
+
+* Name
+* Synopsis (function name, parameters, and return types - if you know what you are doing, a lot of times this is all you need to jar your memory)
+* Description (the will provide more information on what it does and what the parameters or options are if it's not totally obvious)
+* Return Value (what you get back if it works as well as if it doesn't work)
+* See Also (cross references to other related functions - the page to "open" something probably has a link to the functions to "close" it or otherwise manipulate it so if you just remember one name, you can get connected to the other complimentary functions just about every time)
+
+You'll notice there are numbers involved (we never said there would be no math!); these numbers mean things.  The numbers 2 and 3 are probably the most interesting to software developers as those identify system calls and library functions respectively - these are functions your program can actually call.  Things with number 1 are commands - things you'd type at the Linux command prompt to do something other than calling a function in your program.
+
+Here are a few examples:
+
+* [string(3)](http://man7.org/linux/man-pages/man3/string.3.html) - various C string functions (there are quite a few)
+* [cp(1)](http://man7.org/linux/man-pages/man1/cp.1.html) - command to copy files and directories; lots of options in the "Description" section
+
 ### Memory Management
 
 ### Sockets and Networking
@@ -92,6 +152,11 @@ Here are a few resources to get you up to speed on linked lists:
 ### Multi-threaded Programming
 
 ### Locks and Mutexes
+
+First off, you need to know how to pronounce "mutex" (syllable break between the "u" and the "t") - check out how "Julia" pronounces it at [Definitions.net](https://www.definitions.net/pronounce/mutex) - listen *ONLY* to Julia, everyone else is pronouncing it, well, *WRONG* (OK, "Oliver" and "Emily" are pretty solid too but skip the US English dudes for sure as they clearly are not programmers).
+
+Mu-tex - OK, now we can move on.
+
 
 
 ## Conclusion
