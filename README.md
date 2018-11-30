@@ -1,7 +1,6 @@
-# cyborg_vision
 # Vision-related code for FRC #4241 vision efforts
 
-# Overview
+## Overview
 Architecture is a server (cv_cam) for each camera that watches the serial camera output and sends it via a UDP packet
 to the processor (cv_proc).  Each cv_cam modules passes robot object and visual field location informatation to cv_proc.
 
@@ -22,24 +21,24 @@ The overall system is designed to operate around a pair of JeVois smart cameras 
 configure the camers and the serial output providing object-based information.  Overall, the system is farily indepenent
 of the visual processing strategy used.
 
-# Architecture
+## Architecture
 
 
-# Connectivity
+## Connectivity
 
 
-# Key programming concepts to know to understand the code
+## Key programming concepts to know to understand the code
 
 For maximum portabilty and control, the bulk of the software is written in C.  There are several concepts that are important to know in order to understand and
 modify the code.
 
 These include:
 
-## System and Library Calls
+### System and Library Calls
 
-## Memory Management
+### Memory Management
 
-## Pointers
+### Pointers
 
 Pointers are a way to efficiently access memory locations corresponding to variables and structures when using C.  Pointers allow efficient access by "pointing" to code to locations of variables and structures rather than passing entire structures around.  The use of pointers also supports more sophisticated and flexible data structures such as linked lists which in some usages are much more flexible and powerful than arrays (as one example).  Understanding the use of pointers and the processing associated with pointer arithmetic is a requirement for almost any non-trivial C programming effort.
 
@@ -52,19 +51,20 @@ Here links to some information sources that can help explain pointers:
 * [Introduction to pointers in C/C++ (video)](https://www.youtube.com/watch?v=h-HBipu_1P0)
 
 
-## Linked Lists
+### Linked Lists
 
 Linked Lists are a key basic data structure.  Pointers are the easiest (not the only but by far the easiest) way to implement linked lists.
 
-## #define
+### #define
 
-## Sockets and Networking
+### Sockets and Networking
 
-## Multi-threaded Programming
+### Multi-threaded Programming
 
-## Locks and Mutexes
+### Locks and Mutexes
 
 
+## Conclusion
 There is a lot going on in this code.  Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date.  Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so.
 
 
