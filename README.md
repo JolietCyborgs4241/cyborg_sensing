@@ -146,11 +146,11 @@ A good site for Linux manpages is [Man7.org](http://man7.org/linux/man-pages/dir
 
 Manpages will have standard set of sections that will you understand what's happening - for system and library calls, you'll typically see:
 
-* Name
-* Synopsis (function name, parameters, and return types - if you know what you are doing, a lot of times this is all you need to jar your memory)
-* Description (the will provide more information on what it does and what the parameters or options are if it's not totally obvious)
-* Return Value (what you get back if it works as well as if it doesn't work)
-* See Also (cross references to other related functions - the page to "open" something probably has a link to the functions to "close" it or otherwise manipulate it so if you just remember one name, you can get connected to the other complimentary functions just about every time)
+* **Name**
+* **Synopsis** (function name, parameters, and return types - if you know what you are doing, a lot of times this is all you need to jar your memory)
+* **Description** (the will provide more information on what it does and what the parameters or options are if it's not totally obvious)
+* **Return Value** (what you get back if it works as well as if it doesn't work)
+* **See Also** (cross references to other related functions - the page to "open" something probably has a link to the functions to "close" it or otherwise manipulate it so if you just remember one name, you can get connected to the other complimentary functions just about every time)
 
 You'll notice there are numbers involved (we never said there would be no math!); these numbers mean things.  The numbers 2 and 3 are probably the most interesting to software developers as those identify system calls and library functions respectively - these are functions your program can actually call.  Things with number 1 are commands - things you'd type at the Linux command prompt to do something other than calling a function in your program.
 
