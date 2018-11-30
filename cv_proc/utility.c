@@ -13,7 +13,7 @@
 
 /// \brief  cyborg vision malloc front end
 ///
-/// exits with an error to stderr if malloc() fails
+/// exits with an error to DebugFP if malloc() fails
 void *
 cvAlloc(size_t bytes)
 
