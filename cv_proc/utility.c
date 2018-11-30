@@ -21,7 +21,7 @@ cvAlloc(size_t bytes)
     void *ptr;
 
     if ( ! (ptr = malloc(bytes)) ) {
-        fprintf(stderr, "%s: alloc error (%d bytes)\n", MyName, (int)bytes);
+        fprintf(DebugFP, "%s: alloc error (%d bytes)\n", MyName, (int)bytes);
         exit(1);
     }
 
