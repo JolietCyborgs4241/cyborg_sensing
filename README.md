@@ -59,7 +59,7 @@ In addition, you'll also see them used as a macro for some code that you don't w
 Some links:
 
 * [C/C++ Preprocessors](https://www.geeksforgeeks.org/cc-preprocessors/)
-* [#define Directive (C/C++)](#define Directive (C/C++))
+* [#define Directive (C/C++)](https://docs.microsoft.com/en-us/previous-versions/teas0593(v=vs.140))
 
 As a point of information, the term "preprocessor" refers to the compiler pass that first handles all of the #defines and other #something directives before the code is compiled.  Historically this was done by a separate program called the, wait for it, the "preprocessor" though this behavior is built-into many modern compilers (but usually there is an option to see the "pre-processed" code where you can see the code with all of the preprocessor changes which is very handy for debugging more complicated macro definitions.
 
