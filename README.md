@@ -53,7 +53,14 @@ Here links to some information sources that can help explain pointers:
 
 ### Linked Lists
 
-Linked Lists are a key basic data structure.  Pointers are the easiest (not the only but by far the easiest) way to implement linked lists.
+Linked Lists are a key basic data structure.  Pointers are the easiest (not the only but by far the easiest) way to implement linked lists.  Linked lists provide a flexible mean to connect data records in a way where they can be added, deleted, or reordered without moving large amounts of data by simply changing a few pointers.
+
+Here are a few resources to get you up to speed on linked lists:
+
+* [C Linked List](https://www.zentut.com/c-tutorial/c-linked-list/)
+* [Introduction to Linked Lists in C/C++](https://www.codeproject.com/articles/641175/%2fArticles%2f641175%2fAn-Introduction-to-Linked-Lists-in-C-Cplusplus)
+* [Linked List Introduction](https://www.geeksforgeeks.org/linked-list-set-1-introduction/)
+
 
 ### #define
 
