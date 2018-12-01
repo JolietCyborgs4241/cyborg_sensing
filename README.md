@@ -1,25 +1,15 @@
 # Vision-related code for FRC #4241 vision efforts
 
 ## Overview
-Architecture is a server (cv_cam) for each camera that watches the serial camera output and sends it via a UDP packet
-to the processor (cv_proc).  Each cv_cam modules passes robot object and visual field location information to cv_proc.
+Architecture is a server (cv_cam) for each camera that watches the serial camera output and sends it via a UDP packet to the processor (cv_proc).  Each cv_cam modules passes robot object and visual field location information to cv_proc.
 
-The processor maintains lists per camera, per identified object with timestamps and coordinate-based values for each record.
-A time-based sequence of camera records is maintained for each object the cameras report.  A separate thread prunes the lists
-based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from
-each camera as well as an averaged set of values based on the TTL.
+The processor maintains lists per camera, per identified object with timestamps and coordinate-based values for each record.  A time-based sequence of camera records is maintained for each object the cameras report.  A separate thread prunes the lists based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from each camera as well as an averaged set of values based on the TTL.
 
-Another thread processes the records per identified object (on request) and creates direction commands and calculates
-distances to the identified object./  This thread will communicate with the cv_robo module.
+Another thread processes the records per identified object (on request) and creates direction commands and calculates distances to the identified object./  This thread will communicate with the cv_robo module.
 
-A third component (cv_robo) will communicate with cv_proc and work with the robot code to steer, drive, and otherwise
-operate the robot based on visual cues.  Cv_robo will act just like a human-operated joystick and move the robot and
-actuate the appropriate functions based on visual cues (just like a human operator would).  The actual robot driving logic
-lives here.
+A third component (cv_robo) will communicate with cv_proc and work with the robot code to steer, drive, and otherwise operate the robot based on visual cues.  Cv_robo will act just like a human-operated joystick and move the robot and actuate the appropriate functions based on visual cues (just like a human operator would).  The actual robot driving logic lives here.
 
-The overall system is designed to operate around a pair of JeVois smart cameras using both the CLI API to control and
-configure the cameras and the serial output providing object-based information.  Overall, the system is fairly independent
-of the visual processing strategy used.
+The overall system is designed to operate around a pair of JeVois smart cameras using both the CLI API to control and configure the cameras and the serial output providing object-based information.  Overall, the system is fairly independent of the visual processing strategy used.
 
 ## Architecture
 
@@ -29,8 +19,7 @@ of the visual processing strategy used.
 
 ## Key programming concepts to know to understand the code
 
-For maximum portability and control, the bulk of the software is written in C.  There are several concepts that are important to know in order to understand and
-modify the code.
+For maximum portability and control, the bulk of the software is written in C.  There are several concepts that are important to know in order to understand and modify the code.
 
 These include:
 
@@ -161,9 +150,34 @@ Here are a few examples:
 
 ### Memory Management
 
+Many programming languages relieve the programmer from having to manage memory - that is the need to get memory to put new data and objects into and the need to dispose of it when it's no longer needed (not disposing of unneeded memory is generally considered a bug; at best your application will just keep growing but at worst, you'll overwrite or discard the pointer needed to free memory and create what is considered a "memory leak" - these are not considered a feature).  The languages that do this automatically are typically referred to as supporting *automatic garbage collection*; Java is one of those, C isn't.
+
+In C, you allocate memory using the [malloc](https://linux.die.net/man/3/malloc)() function to get more memory (think of it as shorthand for **m**emory **alloc**ation).  This function will make a certain amount of memory available to the program for use.  This memory can be used to store anything, any type of data, for as long as you need to store or (or at least until your program exits at which point any memory used by it it released so it's not lost *forever* ;).  Malloc() returns a pointer if successful; otherwise it returns 0 (or a NULL pointer in the parlance of C).  This is something your program wants to check for just to make sure something awful hasn't happened.  The vision processing system has it's malloc() call in utility.c and is wrapped by a function called cvAlloc().  If a memory allocation ever fails, it's likely that the situation not just for your program, but potentially for the whole system is, well, grim.  There isn't a lot you would typically do except for exit if that happens (if you really know what you're doing and think you're program can continue, you might want to include logic to try and continue but keep in mind that some other code might want to allocate memory including some library calls which might be much less tolerate of a malloc() failure).
+
+Complimentary function to malloc is [free](https://linux.die.net/man/3/malloc)() which takes a pointer returned by malloc() and takes that memory "back" for re-use by the program potentially as the return from a future malloc() call.
+
+*Important note*:  Malloc() returns a pointer - when you all free(), you want to pass that *exact* pointer value back.
+
+Behind the scenes, there is a memory management routine running that allocates memory for your program in bigger chunks.  This is typically referred to as the *heap*.  The malloc() routine keeps a list of memory addresses it handed out and how big of an area that pointer was associated with.  If you look at the documentation for the calls to malloc(), you'll see it's pretty much an all or nothing interface as you either get a pointer back meaning you got what you asked for or you get back nothing.  Likewise, when you call free() with a pointer value you got from a malloc() call, you're also not passing the size of the amount of memory you're freeing, just a pointer to it.  The free routines looks into a list of pointers that were already handed out, which include how much memory that pointer was pointing to, and marks it internally as being available.  If you pass a different value, you really gum up the works.  In the pro world, we refer to that as *heap corruption* and done enough times (or honestly just once), it messes up the lists this library call uses to track, manage, and return memory to the point where it could lose track of some memory (creating a dreaded *leak*) or even worse, it could give out some memory *twice* causing some very, very, very hard to find find data corruption bugs (imagine you had two variables, **x** and **y** and somehow they ended up overlapping the memory used to store what you thought were two very simple, completely distinct variables and when you updated one, you subtly altered the value of the other in a program section far, far away.  That will be *very* tough to find.
+
+So the pro tip of the day:  make sure you give back what you got, and only what you got, and only once (because free()ing something more than once will also lead to *heap corruption).
+
+Some resources for learning more about C memory management:
+
+* [C - Memory Management](https://www.tutorialspoint.com/cprogramming/c_memory_management.htm)
+* [ Memory Management in C Programming](https://www.tutorialcup.com/cprogramming/memory-management.htm)
+* [ C Memory Management](https://stackoverflow.com/questions/24891/c-memory-management)
+
+
+This might all seem like a giant pain but it really isn't; you actually learn to better appreciate how memory is actually managed and used so even in environments with garbage collection, you'll create less garbage (the big downside of automatic garbage collection is that when the environment needs to do it, you're program essentially freezes - not good for situation where you are controlling something in real time; like say, a robot.  Stop processing events on or around your robot at seemingly random times for random amounts of time?  Hello Mr. Wall or have a nice broken part because you sent a command to move something and weren't able to read the limit switch to stop from breaking something on your robot.  Not good.
+
 ### Sockets and Networking
 
 ### Multi-threaded Programming
+
+### Recursion
+
+* [C - Recursion]9https://www.tutorialspoint.com/cprogramming/c_recursion.htm)
 
 ### Locks and Mutexes
 
