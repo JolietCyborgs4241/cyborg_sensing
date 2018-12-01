@@ -13,9 +13,85 @@ The overall system is designed to operate around a pair of JeVois smart cameras 
 
 ## Architecture
 
+Below is a diagram showing the relationship and connectivity of major parts of the vision-procesing system.
 
-## Connectivity
+<INSERT DIAGRAM>
 
+### Components
+
+#### Sensor Servers
+
+##### Camera Servers
+
+##### Other Sensor Servers
+
+#### Central Processor
+
+#### Robot Driver
+
+The Robot Driver (cv_robo) essentially emulates the actions of a human robot operator.  It queries the cv_proc module for appropriate sensor status to get information useful to detecting potential targets, aligning the robot to interact with them, and establish its orientation with the surrounding field of play.
+
+This will probably be the most complex part of the vision-processing system as it is responsible for mapping this information into the actions a human operator would use to move and actuate the robot.  The programming team will need to work closely with the drive team in order to understand how to effectively move, steer, and otherwise operate the robot.
+
+The interface to the RoboRIO will be through a serial port.  There will need to be some new code resident on the RoboRIO to interpret commands coming from the cv_robo module and interpret them just like human-generated joystick commands for operating the robot.  There are a few key aspects to consider here:
+
+* The command handling module will need to be modified to accept direct commands from the cv_robo module as well as the current joystick interface
+
+* The RoboRIO will need to know when autonomous mode is active or not at any given time
+
+  * Autonomous Start:  Indicate to the cv_robo module that it should start controlling the robot.
+
+    * Until this time, the vision-processing system can be running and actively scanning the robot's surroundings
+
+    * Any potential or incorrect targets detected before the start of autonomous mode can either be explicitly purged from the vision-procssing system once the "Start of Autonomous Mode" signal is given to the cv_robo modules
+
+    * Any potential or incorrect targets detected before the start of autonomous modeAutonomous Active:  Accept command from cv_robo only at this time and ignore other command inputs
+
+  * Autonomous Inactive:  Accept only human-genersted inputs and ignore any comands from the cv_robo module
+  
+    * Whether or not the cv_robo module nees to be told that autonomous mode is no longer actice is something that can be decided later
+    
+    * It seems there would be no negative side effects if the vision-processing system continues to operate during the competition and logs objects it sees as well as other sensor inputs as these might be useful for later analysis
+
+### Hardware platform and Environment
+
+### Other ideas and considerations
+
+#### Logging and Tracing
+
+It will be important for each component in the vision-processing system to record information so that post-testing or post-competition, we can analyze how well it worked and potentially improve it for future runs.
+
+This information could include:
+
+* Configuration settings for each component
+
+* Messages sent and received from other components of the vision-processing system
+
+* Key logic decisions impacting the decisions and operations while in autonomous mode
+
+All of this information would need to be timestamped so it can be later coorelated and analyzed to get a complete picture of the operaton of the vision-processing system.  Syncronization of timestamps between differnt components should not be a problem since all of the vision-procssing system will be runnign on a single hardware platform supplying the exact same timebase to all components.
+
+The logging and tracing information should be stored as text rather than binary to allow a programmer to quickly be able to scan through and understand the output without much additional processing.  This doesn't mean that we might not want to create other tools to help us coorelate or otherwise visualize the vision-processing logs to better understand how it is operating.
+
+#### Visual Tracing
+
+In addition to logging vision-processing statuses, events, and activity in the log files, it might be useful to include a set of visible indicators on the robot in order to give resl-time information about what the vision-processing system is doing at that moment in time.  The Raspberry PI B+ platform provides 20+ GPIO pins (**G**eneral **P**urpose **I**nput/**O**utput) which could be used to drive a series of LEDs on the robot indicating information about what is happening.
+
+Each major component could be associated with an appropriate set of LEDs that could indicate appropriate status information such as:
+
+* That module has started and is operating
+
+* 
+
+* 
+
+* 
+
+*
+
+#### Physical Recording
+
+During testing and competition activities, it would be very useful to record the robot from several different locations to capture how it physically controls the robot.  If possible, this should be done in a manner that captures the robot in slow motion for more detailed analysis of the phyical movements of the robot as well as capturing any Visual Tracing indications.
 
 ## Key programming concepts to know to understand the code
 
