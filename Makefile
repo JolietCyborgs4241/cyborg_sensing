@@ -2,4 +2,5 @@
 
 all:
 	cd cv_proc ; make
+	cd doc ; make
 	cd test ; make
