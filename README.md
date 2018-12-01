@@ -13,7 +13,7 @@ The overall system is designed to operate around a pair of JeVois smart cameras 
 
 ## Architecture
 
-Below is a diagram showing the relationship and connectivity of major parts of the vision-procesing system.
+Below is a diagram showing the relationship and connectivity of major parts of the vision-processing system.
 
 <INSERT DIAGRAM>
 
@@ -43,13 +43,13 @@ The interface to the RoboRIO will be through a serial port.  There will need to 
 
     * Until this time, the vision-processing system can be running and actively scanning the robot's surroundings
 
-    * Any potential or incorrect targets detected before the start of autonomous mode can either be explicitly purged from the vision-procssing system once the "Start of Autonomous Mode" signal is given to the cv_robo modules
+    * Any potential or incorrect targets detected before the start of autonomous mode can either be explicitly purged from the vision-processing system once the "Start of Autonomous Mode" signal is given to the cv_robo modules
 
     * Any potential or incorrect targets detected before the start of autonomous modeAutonomous Active:  Accept command from cv_robo only at this time and ignore other command inputs
 
-  * Autonomous Inactive:  Accept only human-genersted inputs and ignore any comands from the cv_robo module
+  * Autonomous Inactive:  Accept only human-generated inputs and ignore any commands from the cv_robo module
   
-    * Whether or not the cv_robo module nees to be told that autonomous mode is no longer actice is something that can be decided later
+    * Whether or not the cv_robo module needs to be told that autonomous mode is no longer active is something that can be decided later
     
     * It seems there would be no negative side effects if the vision-processing system continues to operate during the competition and logs objects it sees as well as other sensor inputs as these might be useful for later analysis
 
@@ -69,9 +69,9 @@ This information could include:
 
 * Key logic decisions impacting the decisions and operations while in autonomous mode
 
-All of this information would need to be timestamped so it can be later coorelated and analyzed to get a complete picture of the operaton of the vision-processing system.  Syncronization of timestamps between differnt components should not be a problem since all of the vision-procssing system will be runnign on a single hardware platform supplying the exact same timebase to all components.
+All of this information would need to be timestamped so it can be later correlated and analyzed to get a complete picture of the operation of the vision-processing system.  Syncronization of timestamps between different components should not be a problem since all of the vision-processing system will be running on a single hardware platform supplying the exact same timebase to all components.
 
-The logging and tracing information should be stored as text rather than binary to allow a programmer to quickly be able to scan through and understand the output without much additional processing.  This doesn't mean that we might not want to create other tools to help us coorelate or otherwise visualize the vision-processing logs to better understand how it is operating.
+The logging and tracing information should be stored as text rather than binary to allow a programmer to quickly be able to scan through and understand the output without much additional processing.  This doesn't mean that we might not want to create other tools to help us correlate or otherwise visualize the vision-processing logs to better understand how it is operating.
 
 #### Visual Tracing
 
@@ -91,7 +91,7 @@ Each major component could be associated with an appropriate set of LEDs that co
 
 #### Physical Recording
 
-During testing and competition activities, it would be very useful to record the robot from several different locations to capture how it physically controls the robot.  If possible, this should be done in a manner that captures the robot in slow motion for more detailed analysis of the phyical movements of the robot as well as capturing any Visual Tracing indications.
+During testing and competition activities, it would be very useful to record the robot from several different locations to capture how it physically controls the robot.  If possible, this should be done in a manner that captures the robot in slow motion for more detailed analysis of the physical movements of the robot as well as capturing any Visual Tracing indications.
 
 ## Key programming concepts to know to understand the code
 
