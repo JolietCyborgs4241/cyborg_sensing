@@ -177,7 +177,7 @@ This might all seem like a giant pain but it really isn't; you actually learn to
 
 ### Recursion
 
-* [C - Recursion](https://www.tutorialspoint.com/cprogramming/c_recursion.htm)
+* [C - Recursion]9https://www.tutorialspoint.com/cprogramming/c_recursion.htm)
 
 ### Locks and Mutexes
 
@@ -191,5 +191,5 @@ Mu-tex - OK, now we can move on.
 There is a lot going on in this design and corresponding code.  Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date.  Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so.
 
 
-Chris Herzog
+- Chris Herzog
 
