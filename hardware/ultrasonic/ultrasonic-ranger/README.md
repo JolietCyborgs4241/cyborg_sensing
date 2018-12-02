@@ -37,7 +37,8 @@ There are several files in this directory:
        * All from just by looking at the blinking LED (we'll want to make sure we can see the LED when the sensor is installed and running)
   1. After all of the above, the sensor sleeps for a pre-determined amount of time and repeats the main loop() processing
 ### Output
-1. For now, the sensor will output a string giving the detected distance to whatever it is getting the primary echo from
-  * "Distance:  # (cm)"
-1. In the future it will output something which identifies the sensor type and specific sensor identifier - something like:
-  * "U 2 45" (interpreted as ultrasonic sensor type, #2, detecting a target at 45cm)
+For now, the sensor will output a string giving the detected distance to whatever it is getting the primary echo from
+* "Distance:  # (cm)"
+
+In the future it will output something which identifies the sensor type and specific sensor identifier - something like:
+* "U 2 45" (interpreted as ultrasonic sensor type, #2, detecting a target at 45cm)
