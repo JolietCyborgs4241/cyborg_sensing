@@ -64,13 +64,81 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h2>Overview</h2>
-<p>Architecture is a server (cv_cam) for each camera that watches the serial camera output and sends it via a UDP packet to the processor (cv_proc). Each cv_cam modules passes robot object and visual field location information to cv_proc.</p>
-<p>The processor maintains lists per camera, per identified object with timestamps and coordinate-based values for each record. A time-based sequence of camera records is maintained for each object the cameras report. A separate thread prunes the lists based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from each camera as well as an averaged set of values based on the TTL.</p>
-<p>Another thread processes the records per identified object (on request) and creates direction commands and calculates distances to the identified object./ This thread will communicate with the cv_robo module.</p>
-<p>A third component (cv_robo) will communicate with cv_proc and work with the robot code to steer, drive, and otherwise operate the robot based on visual cues. Cv_robo will act just like a human-operated joystick and move the robot and actuate the appropriate functions based on visual cues (just like a human operator would). The actual robot driving logic lives here.</p>
-<p>The overall system is designed to operate around a pair of JeVois smart cameras using both the CLI API to control and configure the cameras and the serial output providing object-based information. Overall, the system is fairly independent of the visual processing strategy used.</p>
+<p>Architecture is a set of servers collecting information (such as cv_cam for each camera that watches the serial camera output) and sending the sensor data via a UDP packet to the centralized database (cv_db). In the case of a camera, each cv_cam modules passes robot object and visual field location information to cv_db as well as some identifying information tying this visual information to a specific camera. Similar processing happens for other sensors (like ultrasonic rangers for example).</p>
+<p>The database maintains lists per sensor with some extra structure for cameras (such as names of identified object with visual coordinate-based values for each record) Each record is timestamped to sub-millisecond precision so we know precisely when it arrived and was stored. In the case of cameras, this creates a time-based sequence of camera records maintained for each object the cameras report; other sensors are logged in the same way. A separate thread prunes the lists based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from each camera (and potentially other sensors) as well as an averaged set of values based on the TTL.</p>
+<p>Another thread responds to querys about the data base to provide up-to-date information about the spatial environment around the robot. Queries could include:</p>
+<ul>
+<li>Does any camera see the "ball" object?</li>
+<li><p class="startli">How far away from an obstacle is the front sensor of the robot?</p>
+<p class="startli">This thread will typically communicate with the cv_robo module.</p>
+</li>
+</ul>
+<p>A third component (cv_robo) will communicate with cv_db and work with the robot code to steer, drive, and otherwise operate the robot based on visual cues. Cv_robo will act just like a human-operated joystick and move the robot and actuate the appropriate functions based on visual cues (just like a human operator would). The actual robot driving logic lives here.</p>
+<p>The overall system is designed to operate around at least a pair of JeVois smart cameras using both the CLI API to control and configure the cameras and the serial output providing object-based information. Overall, the system is fairly independent of the visual processing strategy used so we can delay choosing a visual processing algorithm until we understand the challenge and can even it change it while wr're working on the roboto or even between events or runs if we are feeling especially bold and confident). There may be other sensors use to augment the robot's perception of its environment and its orientation to the field of play and the contents thereof.</p>
 <h2>Architecture</h2>
-<h2>Connectivity</h2>
+<p>Below is a diagram showing the relationship and connectivity of major parts of the vision-processing system. Keep in mind that this can grow to be more than just vision; the goal is autonomous operation of the robot and while it's believed that vision is going to play a key role in this, it's also very likely that the robot is going to end up growing some sort of "sensor package" to help it get the job done.</p>
+<div class="image">
+<img src="https://github.com/cgzog/cyborg_vision/blob/master/cv_arch_diagram.png" alt="Cyborg-vision Architectural Diagram" title="Cyborg-vision Architectural Diagram"/>
+</div>
+<h3>Components</h3>
+<h4>Device Servers</h4>
+<p>These are small, special purpose processes that in general watch a sensor, get it's current readings (either on a regular interval or whenever the sensor sends it out depending on the behavior of the sensor).</p>
+<p>They take these values, add some identification information, and send it to the CV Database for logging.</p>
+<h5>Camera Servers</h5>
+<h5>Other Sensor Servers</h5>
+<p>The design does not preclude having more sensor servers which can monitor individual or sets of sensors and pass that information to cv_db. This could include different sensor types such as ultrasonic, light or others sensor types.</p>
+<p>Each sensor type can have its value stored in same time-tracked manner as the cameras making the most recent values available to the Robot Driver module for consideration in cotrolling the robot. The format of the data from each sensor type can be defined at the time that sensor is incorporated taking into account the type and richness of the information available from that sensor type. Each data record will need to include the appropriate sensor identification information so that each specific sensor instance can be mapped into the physical space surrounding the robot.</p>
+<h4>Database</h4>
+<p>The Cyborg-Vision Database (cv_db) gets readings from various sensor servers and saves their values. In addition to saving the values, it also regularly "prunes" the database to remove older values (typically referred to as a TTL, or **T**ime-**t**o-**L**ive). Whenever it finds values older than the TTL limit, it removes these from the database. Think of it terms of keeping only the most recent sensor history; who cares what a camera saw 30 seconds ago? The robot has probably moved, turned, or something else has changed; we mostly want to know what's happening right now (or at least within only the last few seconds).</p>
+<p>Processes that want to find out about the conditions around the robot (whether visual, ranging, etc.) can query cv_db and get the status of a specific sensor, a set of sensors, or potentially even an average sensor reading across the values available.</p>
+<h4>Robot Driver</h4>
+<p>The Robot Driver (cv_robo) essentially emulates the actions of a human robot operator. It queries the cv_proc module for appropriate sensor status to get information useful to detecting potential targets, aligning the robot to interact with them, and establish its orientation with the surrounding field of play.</p>
+<p>This will probably be the most complex part of the vision-processing system as it is responsible for mapping this information into the actions a human operator would use to move and actuate the robot. The programming team will need to work closely with the drive team in order to understand how to effectively move, steer, and otherwise operate the robot.</p>
+<p>The interface to the RoboRIO will be through a serial port. There will need to be some new code resident on the RoboRIO to interpret commands coming from the cv_robo module and interpret them just like human-generated joystick commands for operating the robot. There are a few key aspects to consider here:</p>
+<ul>
+<li>The command handling module will need to be modified to accept direct commands from the cv_robo module as well as the current joystick interface</li>
+<li>The RoboRIO will need to know when autonomous mode is active or not at any given time<ul>
+<li>Autonomous Start: Indicate to the cv_robo module that it should start controlling the robot.<ul>
+<li>Until this time, the vision-processing system can be running and actively scanning the robot's surroundings</li>
+<li>Any potential or incorrect targets detected before the start of autonomous mode can either be explicitly purged from the vision-processing system once the "Start of Autonomous Mode" signal is given to the cv_robo modules</li>
+<li>Any potential or incorrect targets detected before the start of autonomous modeAutonomous Active: Accept command from cv_robo only at this time and ignore other command inputs</li>
+</ul>
+</li>
+<li>Autonomous Inactive: Accept only human-generated inputs and ignore any commands from the cv_robo module<ul>
+<li>Whether or not the cv_robo module needs to be told that autonomous mode is no longer active is something that can be decided later</li>
+<li>It seems there would be no negative side effects if the vision-processing system continues to operate during the competition and logs objects it sees as well as other sensor inputs as these might be useful for later analysis</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4>Visual Status Display</h4>
+<p>This module, cv_status, drives a series of human-visible LEDs on the robot that display the status of different components of the visual-processing system. The Raspberry Pi used to run the various components of the visual-processing system has a series of output pins that we can use to drive visual indicators.</p>
+<p>This can provide visual feedback to an observer as to the status and operation of the visual-processing system. All of the different components can send messages to cv_status to control their respective indicators.</p>
+<h3>Hardware platform and Environment</h3>
+<h3>Other ideas and considerations</h3>
+<h4>Logging and Tracing</h4>
+<p>It will be important for each component in the vision-processing system to record information so that post-testing or post-competition, we can analyze how well it worked and potentially improve it for future runs.</p>
+<p>This information could include:</p>
+<ul>
+<li>Configuration settings for each component</li>
+<li>Messages sent and received from other components of the vision-processing system</li>
+<li>Key logic decisions impacting the decisions and operations while in autonomous mode</li>
+</ul>
+<p>All of this information would need to be timestamped so it can be later correlated and analyzed to get a complete picture of the operation of the vision-processing system. Syncronization of timestamps between different components should not be a problem since all of the vision-processing system will be running on a single hardware platform supplying the exact same timebase to all components.</p>
+<p>The logging and tracing information should be stored as text rather than binary to allow a programmer to quickly be able to scan through and understand the output without much additional processing. This doesn't mean that we might not want to create other tools to help us correlate or otherwise visualize the vision-processing logs to better understand how it is operating.</p>
+<h4>Visual Tracing</h4>
+<p>In addition to logging vision-processing statuses, events, and activity in the log files, it might be useful to include a set of visible indicators on the robot in order to give real-time information about what the vision-processing system is doing at that moment in time. The Raspberry PI B+ platform provides 20+ GPIO pins (**G**eneral **P**urpose **I**nput/**O**utput) which could be used to drive a series of LEDs on the robot indicating information about what is happening.</p>
+<p>Each major component could be associated with an appropriate set of LEDs that could indicate appropriate status information such as:</p>
+<ul>
+<li>That module has started and is operating</li>
+<li></li>
+<li></li>
+<li></li>
+<li><h4>Physical Recording</h4>
+</li>
+</ul>
+<p>During testing and competition activities, it would be very useful to record the robot from several different locations to capture how it physically controls the robot. If possible, this should be done in a manner that captures the robot in slow motion for more detailed analysis of the physical movements of the robot as well as capturing any Visual Tracing indications.</p>
 <h2>Key programming concepts to know to understand the code</h2>
 <p>For maximum portability and control, the bulk of the software is written in C. There are several concepts that are important to know in order to understand and modify the code.</p>
 <p>These include:</p>
@@ -153,16 +221,13 @@ $(function() {
 <h3>Multi-threaded Programming</h3>
 <h3>Recursion</h3>
 <ul>
-<li>[C - Recursion]9https://www.tutorialspoint.com/cprogramming/c_recursion.htm)</li>
+<li><a href="https://www.tutorialspoint.com/cprogramming/c_recursion.htm">C - Recursion</a></li>
 </ul>
 <h3>Locks and Mutexes</h3>
 <p>First off, you need to know how to pronounce "mutex" (syllable break between the "u" and the "t") - check out how "Julia" pronounces it at <a href="https://www.definitions.net/pronounce/mutex">Definitions.net</a> - listen <em>ONLY</em> to Julia, everyone else is pronouncing it, well, <em>WRONG</em> (OK, "Oliver" and "Emily" are pretty solid too but skip the US English dudes for sure as they clearly are not programmers).</p>
 <p>Mu-tex - OK, now we can move on.</p>
 <h2>Conclusion</h2>
-<p>There is a lot going on in this design and corresponding code. Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date. Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so.</p>
-<ul>
-<li>Chris Herzog </li>
-</ul>
+<p>There is a lot going on in this design and corresponding code. Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date. Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
