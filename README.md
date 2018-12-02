@@ -19,11 +19,15 @@ Below is a diagram showing the relationship and connectivity of major parts of t
 
 ### Components
 
-#### Sensor Servers
+#### Device Servers
 
 ##### Camera Servers
 
 ##### Other Sensor Servers
+
+The design does not preclude having more sensor servers which can monitor individual or sets of sensors and pass that information to cv_proc.  This could include different sensor types such as ultrasonic, light or others sensor types.
+
+Each sensor type can have its value stored in same time-tracked manner as the cameras maing the most recent values available to the Robot Driver module for consideration in cotrolling the robot.  The format of the data from each sensor type can be defined at the time that sensor is incorporated taking into account the type and richnes of the information available from that sensor type.  Each data record will need to include the appropriate sensir identification information so that each specific sensor instance can be mapped into the physical space surrounding the robot.
 
 #### Central Processor
 
@@ -53,6 +57,12 @@ The interface to the RoboRIO will be through a serial port.  There will need to 
     
     * It seems there would be no negative side effects if the vision-processing system continues to operate during the competition and logs objects it sees as well as other sensor inputs as these might be useful for later analysis
 
+#### Visual Status Display
+
+This module, cv_status, drives a series of human-visible LEDs on the robot that display the status of different components of the visual-processing system.  The Raspberry Pi used to run the various components of the visual-processing system has a series of output pins that we can use to drive visual indicators.
+
+This can provide visual feedback to an observer as to the status and operation of the visual-processing system.  All of the different components can send messages to cv_status to control their respective indicators.
+
 ### Hardware platform and Environment
 
 ### Other ideas and considerations
@@ -75,7 +85,7 @@ The logging and tracing information should be stored as text rather than binary 
 
 #### Visual Tracing
 
-In addition to logging vision-processing statuses, events, and activity in the log files, it might be useful to include a set of visible indicators on the robot in order to give resl-time information about what the vision-processing system is doing at that moment in time.  The Raspberry PI B+ platform provides 20+ GPIO pins (**G**eneral **P**urpose **I**nput/**O**utput) which could be used to drive a series of LEDs on the robot indicating information about what is happening.
+In addition to logging vision-processing statuses, events, and activity in the log files, it might be useful to include a set of visible indicators on the robot in order to give real-time information about what the vision-processing system is doing at that moment in time.  The Raspberry PI B+ platform provides 20+ GPIO pins (**G**eneral **P**urpose **I**nput/**O**utput) which could be used to drive a series of LEDs on the robot indicating information about what is happening.
 
 Each major component could be associated with an appropriate set of LEDs that could indicate appropriate status information such as:
 
