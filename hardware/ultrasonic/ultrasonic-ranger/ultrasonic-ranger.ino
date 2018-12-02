@@ -1,10 +1,12 @@
-    /*
-    * Ultrasonic Sensor HC-SR04 and Arduino Tutorial
-    *
-    * by Dejan Nedelkovski,
-    * www.HowToMechatronics.com
-    *
-    */
+/*
+ * Derived and extended from:
+ *
+ * Ultrasonic Sensor HC-SR04 and Arduino Tutorial
+ *
+ * by Dejan Nedelkovski,
+ * www.HowToMechatronics.com
+ *
+ */
     
 #define TRIG_PIN          10
 #define ECHO_PIN          11
