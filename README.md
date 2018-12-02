@@ -1,19 +1,25 @@
 # Vision-related code for FRC #4241 vision efforts
 
 ## Overview
-Architecture is a server (cv_cam) for each camera that watches the serial camera output and sends it via a UDP packet to the processor (cv_proc).  Each cv_cam modules passes robot object and visual field location information to cv_proc.
+Architecture is a set of servers collecting information (such as cv_cam for each camera that watches the serial camera output) and sending the sensor data via a UDP packet to the centralized database (cv_db).  In the case of a camera, each cv_cam modules passes robot object and visual field location information to cv_db as well as some identifying information tying this visual information to a specific camera.  Similar processing happens for other sensors (like ultrasonic rangers for example).
 
-The processor maintains lists per camera, per identified object with timestamps and coordinate-based values for each record.  A time-based sequence of camera records is maintained for each object the cameras report.  A separate thread prunes the lists based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from each camera as well as an averaged set of values based on the TTL.
+The database maintains lists per sensor with some extra structure for cameras (such as names of identified object with visual coordinate-based values for each record)  Each record is timestamped to sub-millisecond precision so we know precisely when it arrived and was stored.  In the case of cameras, this creates a time-based sequence of camera records maintained for each object the cameras report; other sensors are logged in the same way.  A separate thread prunes the lists based on an overall Time-To-Live (TTL) value to remove old records but still allow access to the latest information from each camera (and potentially other sensors) as well as an averaged set of values based on the TTL.
 
-Another thread processes the records per identified object (on request) and creates direction commands and calculates distances to the identified object./  This thread will communicate with the cv_robo module.
+Another thread responds to querys about the data base to provide up-to-date information about the spatial environment around the robot.  Queries could include:
 
-A third component (cv_robo) will communicate with cv_proc and work with the robot code to steer, drive, and otherwise operate the robot based on visual cues.  Cv_robo will act just like a human-operated joystick and move the robot and actuate the appropriate functions based on visual cues (just like a human operator would).  The actual robot driving logic lives here.
+* Does any camera see the "ball" object?
 
-The overall system is designed to operate around a pair of JeVois smart cameras using both the CLI API to control and configure the cameras and the serial output providing object-based information.  Overall, the system is fairly independent of the visual processing strategy used.
+* How far away from an obstacle is the front sensor of the robot?
+
+ This thread will typically communicate with the cv_robo module.
+
+A third component (cv_robo) will communicate with cv_db and work with the robot code to steer, drive, and otherwise operate the robot based on visual cues.  Cv_robo will act just like a human-operated joystick and move the robot and actuate the appropriate functions based on visual cues (just like a human operator would).  The actual robot driving logic lives here.
+
+The overall system is designed to operate around at least a pair of JeVois smart cameras using both the CLI API to control and configure the cameras and the serial output providing object-based information.  Overall, the system is fairly independent of the visual processing strategy used so we can delay choosing a visual processing algorithm until we understand the challenge and can even it change it while wr're working on the roboto or even between events or runs if we are feeling especially bold and confident).  There may be other sensors use to augment the robot's perception of its environment and its orientation to the field of play and the contents thereof.   
 
 ## Architecture
 
-Below is a diagram showing the relationship and connectivity of major parts of the vision-processing system.
+Below is a diagram showing the relationship and connectivity of major parts of the vision-processing system.  Keep in mind that this can grow to be more than just vision; the goal is autonomous operation of the robot and while it's believed that vision is going to play a key role in this, it's also very likely that the robot is going to end up growing some sort of "sensor package" to help it get the job done.
  
  ![Cyborg-vision Architectural Diagram](https://github.com/cgzog/cyborg_vision/blob/master/cv_arch_diagram.png "Cyborg-vision Architectural Diagram")
 
@@ -21,15 +27,23 @@ Below is a diagram showing the relationship and connectivity of major parts of t
 
 #### Device Servers
 
+These are small, special purpose processes that in general watch a sensor, get it's current readings (either on a regular interval or whenever the sensor sends it out depending on the behavior of the sensor).
+
+They take these values, add some identification information, and send it to the CV Database for logging.
+
 ##### Camera Servers
 
 ##### Other Sensor Servers
 
-The design does not preclude having more sensor servers which can monitor individual or sets of sensors and pass that information to cv_proc.  This could include different sensor types such as ultrasonic, light or others sensor types.
+The design does not preclude having more sensor servers which can monitor individual or sets of sensors and pass that information to cv_db.  This could include different sensor types such as ultrasonic, light or others sensor types.
 
-Each sensor type can have its value stored in same time-tracked manner as the cameras maing the most recent values available to the Robot Driver module for consideration in cotrolling the robot.  The format of the data from each sensor type can be defined at the time that sensor is incorporated taking into account the type and richnes of the information available from that sensor type.  Each data record will need to include the appropriate sensir identification information so that each specific sensor instance can be mapped into the physical space surrounding the robot.
+Each sensor type can have its value stored in same time-tracked manner as the cameras making the most recent values available to the Robot Driver module for consideration in cotrolling the robot.  The format of the data from each sensor type can be defined at the time that sensor is incorporated taking into account the type and richness of the information available from that sensor type.  Each data record will need to include the appropriate sensor identification information so that each specific sensor instance can be mapped into the physical space surrounding the robot.
 
-#### Central Processor
+#### Database
+
+The Cyborg-Vision Database (cv_db) gets readings from various sensor servers and saves their values.  In addition to saving the values, it also regularly "prunes" the database to remove older values (typically referred to as a TTL, or **T**ime-**t**o-**L**ive).  Whenever it finds values older than the TTL limit, it removes these from the database.  Think of it terms of keeping only the most recent sensor history; who cares what a camera saw 30 seconds ago?  The robot has probably moved, turned, or something else has changed; we mostly want to know what's happening right now (or at least within only the last few seconds).
+
+Processes that want to find out about the conditions around the robot (whether visual, ranging, etc.) can query cv_db and get the status of a specific sensor, a set of sensors, or potentially even an average sensor reading across the values available.
 
 #### Robot Driver
 
