@@ -1,6 +1,6 @@
-#Cyborg-Autonomous Ultrasonic Sensor
+# Cyborg-Autonomous Ultrasonic Sensor
 
-##Files
+## Files
 There are several files in this directory:
 
 * Sensor Schematic
@@ -18,12 +18,12 @@ There are several files in this directory:
 * PDF exports of both of the above
 * Ardiuno project file (.ino)
 
-##Code Overview
-###Initialization
+## Code Overview
+### Initialization
 1. Setup the input and output pins to drive the UHC-SR04 Ultrasonic
 1. Clear the flag used to toggle the LED connected to pin 13 (this is a standard Arduino connection on almost all boards to an on-board LED)
 1. Set the output speed of the serial power to 115200 baud
-###Main Loop
+### Main Loop
 1. Send a short pulse to the ultrasonic module
 1. Wait for the response and use the length of the pulse back from the ultrasonic module to do the math to calculate (see the comments in the code)
 1. We also blink an on-board LED as a heartbeat
@@ -36,7 +36,7 @@ There are several files in this directory:
        * The module is running and making measurements
        * All from just by looking at the blinking LED (we'll want to make sure we can see the LED when the sensor is installed and running)
   1. After all of the above, the sensor sleeps for a pre-determined amount of time and repeats the main loop() processing
-###Output
+### Output
 1. For now, the sensor will output a string giving the detected distance to whatever it is getting the primary echo from
   * "Distance:  # (cm)"
 1. In the future it will output something which identifies the sensor type and specific sensor identifier - something like:
