@@ -14,8 +14,8 @@ The overall system is designed to operate around a pair of JeVois smart cameras 
 ## Architecture
 
 Below is a diagram showing the relationship and connectivity of major parts of the vision-processing system.
-
-<INSERT DIAGRAM>
+ 
+ ![Cyborg-vision Architectural Diagram](https://github.com/cgzog/cyborg_vision/blob/master/cv_arch_diagram.png "Cyborg-vision Architectural Diagram")
 
 ### Components
 
