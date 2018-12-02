@@ -12,7 +12,7 @@
 #define ECHO_PIN          11
 #define ACTIVE_PIN        13
 
-#define INTER_READ_PAUSE  500     // 1/2 second
+#define INTER_READ_PAUSE  250     // 1/4 second
 
 
 long duration;
