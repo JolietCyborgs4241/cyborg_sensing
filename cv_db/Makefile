@@ -1,4 +1,4 @@
-#	vision processing makefile
+#	autonomous database Makefile
 
 
 CV_INC_DIR	= ../include
@@ -7,11 +7,11 @@ CFLAGS	+= $(INC) -pthread -g #-DDEBUG
 
 LDFLAGS	+= -pthread
 
-SRCS	= cv_proc.c init.c globals.c lists.c utility.c threads.c
+SRCS	= cv_db.c init.c globals.c lists.c utility.c threads.c
 
 OBJS	= ${SRCS:.c=.o}
 
-TARGETS	= cv_proc
+TARGETS	= cv_db
 
 
 
@@ -19,9 +19,9 @@ all:	$(TARGETS)
 
 
 
-cv_proc:	$(OBJS)
+cv_db:	$(OBJS)
 
-cv_proc.o:	cv_proc.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
+cv_db.o:	cv_db.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
 
 init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 			$(CV_INC_DIR)/cv_externs.h

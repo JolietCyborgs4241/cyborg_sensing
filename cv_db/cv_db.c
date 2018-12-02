@@ -1,6 +1,6 @@
-//	cv_proc.c
+//	cv_db.c
 //
-//	main driver for vision communications
+//	database for autonomous mode operations communications
 
 #include <stdlib.h>
 #include <unistd.h>
