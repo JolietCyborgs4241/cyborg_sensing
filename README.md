@@ -39,9 +39,21 @@ The design does not preclude having more sensor servers which can monitor indivi
 
 Each sensor type can have its value stored in same time-tracked manner as the cameras making the most recent values available to the Robot Driver module for consideration in cotrolling the robot.  The format of the data from each sensor type can be defined at the time that sensor is incorporated taking into account the type and richness of the information available from that sensor type.  Each data record will need to include the appropriate sensor identification information so that each specific sensor instance can be mapped into the physical space surrounding the robot.
 
+The diagram includes a 9-way combination sensor including:
+
+* 3-axis accelerometer
+
+* 3-axis magnetometer
+
+* 3 axis rotation
+
+This information will be logged in the same manner as any other sensor with the hope of being able to recover actual robot movments and forces post-practive and post-competition.
+
+It may also send measurement to cv_db to make them available to the robot controlling logic.
+
 #### Database
 
-The Cyborg-Vision Database (cv_db) gets readings from various sensor servers and saves their values.  In addition to saving the values, it also regularly "prunes" the database to remove older values (typically referred to as a TTL, or **T**ime-**t**o-**L**ive).  Whenever it finds values older than the TTL limit, it removes these from the database.  Think of it terms of keeping only the most recent sensor history; who cares what a camera saw 30 seconds ago?  The robot has probably moved, turned, or something else has changed; we mostly want to know what's happening right now (or at least within only the last few seconds).
+The Cyborg-Vision Database (cv_db) gets readings from various sensor servers and saves their values.  In addition to saving the values, it also regularly "prunes" the database to remove older values (typically referred to as a TTL, or **T**ime-**t**o-**L**ive).  Whenever it finds values older than the TTL limit, it removes these from the database.  Think of it terms of keeping only the most recent sensor history; who cares what a camera saw 30 seconds ago?  The robot has probably moved, turned, or something else has changed; we mostly want to know what's happening right now (or at least within only the last few seconds).  This database is essentially an enhanced "Last Value" cache ("Last Few Values" essentially) and will be retained fully in memory (so it will be lost when the robot powers down).  It will however log all incoming data messages and queries for later reference.
 
 Processes that want to find out about the conditions around the robot (whether visual, ranging, etc.) can query cv_db and get the status of a specific sensor, a set of sensors, or potentially even an average sensor reading across the values available.
 
@@ -97,6 +109,14 @@ All of this information would need to be timestamped so it can be later correlat
 
 The logging and tracing information should be stored as text rather than binary to allow a programmer to quickly be able to scan through and understand the output without much additional processing.  This doesn't mean that we might not want to create other tools to help us correlate or otherwise visualize the vision-processing logs to better understand how it is operating.
 
+There are a few key considerations to make this work well:
+
+* We need make sure that the log survives the robot powering off at the end of the competition (unless we can maintain power to the hardware supporting the log-supporting device from before the practice or competiion starts until we access the log)
+
+* If we will lose power, we need to ensure that the log records are not damaged by the log-supporting device losing power.  We can take some steps to try and minimize the chances of this and try to make things record log information as synchronously as we can.
+
+We need to extend this to the Robo Rio-based control code as well.  If possible, we should timestamp and log each command input from the human operators for later review and use as test data for a further robot testing and debugging.
+
 #### Visual Tracing
 
 In addition to logging vision-processing statuses, events, and activity in the log files, it might be useful to include a set of visible indicators on the robot in order to give real-time information about what the vision-processing system is doing at that moment in time.  The Raspberry PI B+ platform provides 20+ GPIO pins (**G**eneral **P**urpose **I**nput/**O**utput) which could be used to drive a series of LEDs on the robot indicating information about what is happening.
@@ -105,17 +125,31 @@ Each major component could be associated with an appropriate set of LEDs that co
 
 * That module has started and is operating
 
-* 
+* Specific processing indications like certain read, write, or computational events
 
-* 
-
-* 
-
-*
+* Heartbeats indicating some component is still running.
 
 #### Physical Recording
 
 During testing and competition activities, it would be very useful to record the robot from several different locations to capture how it physically controls the robot.  If possible, this should be done in a manner that captures the robot in slow motion for more detailed analysis of the physical movements of the robot as well as capturing any Visual Tracing indications.
+
+#### Post-practice and post-competition procedures
+
+We should include as part of the post practice or competition checklist the task of downloading, saving, and uploading the logs.  This will make sure that we have them available and saved and also allow a remote team member to review and work with the on-site team members to potentially help understand a problem or other anomoly.
+
+This probably should be one of the very first things we do even before fixing a broken or damaged robot; it will only take a few moments (we'll need to work out our procedures to they'll be fast, safe for the logged data, and well documented).
+
+The example is a Formula One racing team; data is one of the most valuable to things to get from the car each time it goes out and gets taken care of before anyone even starts wrenching on it.
+
+#### General Autonomous Hardware Philosophy
+
+There will be a lot of moving parts here - software and hardware.  To give us the ability to have reasonable spares on hand and the ability to put those spares into play quickly and reliably, we need to take a little care as to how the system gets configured and connected.  Ideally we will want a system implementation that will allow us to setup and validate major devices back at the shop and be able to replace a failing component with no or minimal (and super clear and super documented) configuration.
+
+If it takes a bunch of software programming or at worst, actual changes to the code for something, in order to get it configured, the likelyhood of an error or mistake under pressure goes *way* up.  Once we validate something, we need to be able to bag it and stash it as a spare without messing around with it any more than we absolutely have to.
+
+That said, we'll want to make sure that we bring the right equipment to be able to maintain and work on the autonomous components if needed during a competition.  In those sorts of high-pressure situations, we will need to have well documented and practiced procedures to make sure we stay in control, don't make things worse through not knowing what code something is running or what it's configuration should be, don't lose changes or improvements, and similar considerations.
+
+**At the end of the day, it's not just what you do but how you do it so that you can do it again - reliably and repeatably!**
 
 ## Key programming concepts to know to understand the code
 
