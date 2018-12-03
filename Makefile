@@ -1,12 +1,10 @@
-#	top level Makefile for cyborg_vision
+#	top level Makefile for cyborg_autonomous
 
 all:
-	cd cv_db ; make all
-	cd doc ; make all
-	cd test ; make all
+	cd software ; make all
 
 clean:
-	cd cv_db ; make clean
-	cd doc ; make clean
-	cd test ; make clean
+	cd software ; make clean
 
+cleandoc:
+	cd software ; make cleandoc

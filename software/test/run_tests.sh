@@ -33,8 +33,8 @@ do
     echo -n "${MSGS[$i]}" > /dev/udp/$HOST/$PORT
     echo "  sent."
 
-    # do a random delay from 0 to .249 seconds
-    DELAY=`printf %03d $((RANDOM % 250))`
+    # do a random delay from 0 to .099 seconds
+    DELAY=`printf %03d $((RANDOM % 100))`
     echo "Delaying for 0.${DELAY}s ..."
     sleep "0.${DELAY}"
 done

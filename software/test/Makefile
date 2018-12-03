@@ -27,4 +27,4 @@ test:	all
 	./run_tests $(HOST_IP) $(HOST_PORT)
 
 clean:
-	-rm gettimeofday $(CAMERA_DATA) $(SCRIPTS)
+	-rm -f gettimeofday $(CAMERA_DATA) $(SCRIPTS)
