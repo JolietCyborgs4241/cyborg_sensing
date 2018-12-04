@@ -1,14 +1,14 @@
 #   Makefle for test data and tools
 
-DATA_FILES = ball.data square.data stuff.data thing.data
-SCRIPTS = prep_data run_tests
-CAMERA_DATA = camera_records.out
+DATA_FILES_SRC = cam_ball.data cam_square.data cam_stuff.data cam_thing.data
+SCRIPTS        = prep_data run_tests
+SENSOR_DATA    = sensor_data.out
 
 HOST_IP=127.0.0.1
 HOST_PORT=12345
 
 
-all:	$(SCRIPTS) $(CAMERA_DATA) gettimeofday
+all:	$(SCRIPTS) $(SENSOR_DATA) gettimeofday
 
 prep_data:	prep_data.sh
 	cp prep_data.sh  prep_data
@@ -18,7 +18,7 @@ run_tests:	run_tests.sh
 	cp run_tests.sh run_tests
 	chmod +x run_tests
 
-$(CAMERA_DATA): $(DATA_FILES)
+$(SENSOR_DATA): $(DATA_FILES)
 	./prep_data
 
 gettimeofday:   gettimeofday.c
@@ -27,4 +27,4 @@ test:	all
 	./run_tests $(HOST_IP) $(HOST_PORT)
 
 clean:
-	-rm -f gettimeofday $(CAMERA_DATA) $(SCRIPTS)
+	-rm -f gettimeofday $(SENSOR_DATA) $(SCRIPTS)

@@ -11,13 +11,13 @@ PORT=$2
 INTERVAL=0
 DELAY=0
 
-CAMERA_DATA=camera_records.out
+SENSOR_DATA=sensor_records.out
 
 OLD_IFS=${IFS}
 IFS=$'\n'
 
 MSGS=(
-`cat ${CAMERA_DATA}`
+`cat ${SENSOR_DATA}`
 )
 
 IFS=${OLD_IFS}

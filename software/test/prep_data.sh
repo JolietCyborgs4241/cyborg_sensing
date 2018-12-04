@@ -4,9 +4,9 @@
 #   all of the test data records together into a single file
 #
 
-TEMP_FILE=camera_records.tmp
-TEMP_FILE_2=camera_records.tmp2
-OUTPUT_FILE=camera_records.out
+TEMP_FILE=sensor_records.tmp
+TEMP_FILE_2=sensor_records.tmp2
+OUTPUT_FILE=sensor_records.out
 RANDOM_RANGE=1000
 
 if [ -s ${OUTPUT_FILE} ]
