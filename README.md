@@ -83,6 +83,12 @@ The interface to the RoboRIO will be through a serial port.  There will need to 
     
     * It seems there would be no negative side effects if the vision-processing system continues to operate during the competition and logs objects it sees as well as other sensor inputs as these might be useful for later analysis
 
+    * One big advantage for keeping the autonomous system active is the ability to provide what could be considered "augmented control" - the ability to have some smaller sets of operations happen autonomously even during human-controlled operation.  As an example, there could be an operational mode where the robot advances on a target object or location until it is some sensed distance away from it, and then automatically perform some operation (like drop or pick up something).  The advantage for a capability like this is it could make some potential operations more reliable by eliminating the need to specific robot positioning or interactions by having the robot itself handle the final, close-in details of some interaction.  Another example could be align the robot with a target, get a distance measurement, and then adjust it's operation with minima human operation (shooting a ball towards a target is an example of this; the robot can be coarsely aligned by the human operation who can initiate a series of operations where the robot does a more fine grained alignment and adjusts the power of it's action in order to accomodate the distance to the target.
+
+##### Robot Driver Fallback Approach
+
+If we can't get the logic to control the robot the level we like in the Robot Driver module, we can fallbck to making the sensor data available directly to the Robo Rio.  In this case, the autonomous system is reduced to a sensor database that provides sets of sensor data to the main robot controller.
+
 #### Visual Status Display
 
 This module, cv_status, drives a series of human-visible LEDs on the robot that display the status of different components of the visual-processing system.  This will provide a way for the components in the autonomous system to report various status and states via RGB LEDs driven by the cv_status server (and supporting hardware driver) providing immediate visual feedback on the operation of the autonomous system.
