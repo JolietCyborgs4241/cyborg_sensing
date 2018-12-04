@@ -9,6 +9,9 @@
 
 
 /// camera sensor
+///
+/// C id thing x y w h
+///
 #define	SENSOR_CAM          'C'
 
 /// range sensor
@@ -17,15 +20,26 @@
 ///
 /// range is reported in cm normalized from the output edge of the robot
 ///
-#define SENSOR_RANGE        'U'
+/// R id d
+///
+#define SENSOR_RANGE        'R'
 
 /// g-force sensor (3-D)
+///
+/// G id x y z
+///
 #define SENSOR_G            'G'
 
 /// roll rate sensor (3-D)
-#define SENSOR_ROLL         'R'
+///
+/// O id x y z
+///
+#define SENSOR_ROLL         'O'
 
 /// magnetometer (3-D)
+///
+/// M id x y z
+//
 #define SENSOR_MAG          'M'
 
 #endif  /* sensors.h */
