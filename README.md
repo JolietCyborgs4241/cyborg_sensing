@@ -85,7 +85,7 @@ The interface to the RoboRIO will be through a serial port.  There will need to 
 
 #### Visual Status Display
 
-This module, cv_status, drives a series of human-visible LEDs on the robot that display the status of different components of the visual-processing system.  The Raspberry Pi used to run the various components of the visual-processing system has a series of output pins that we can use to drive visual indicators.
+This module, cv_status, drives a series of human-visible LEDs on the robot that display the status of different components of the visual-processing system.  This will provide a way for the components in the autonomous system to report various status and states via RGB LEDs driven by the cv_status server (and supporting hardware driver) providing immediate visual feedback on the operation of the autonomous system.
 
 This can provide visual feedback to an observer as to the status and operation of the visual-processing system.  All of the different components can send messages to cv_status to control their respective indicators.
 
