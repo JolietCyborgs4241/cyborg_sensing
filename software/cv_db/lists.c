@@ -51,6 +51,8 @@ static void             pruneByHdr(CAMERA_LIST_HDR *, int),
                         freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
 
 
+static SENSOR_LIST_HDR  *SensorLists = (SENSOR_LIST_HDR *)NULL;
+
 
 
 /// \brief  return the camList hdr
