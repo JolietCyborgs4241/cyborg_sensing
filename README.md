@@ -1,4 +1,4 @@
-# Vision-related code for FRC #4241 vision efforts
+# Autonomous-related code for FRC #4241 autonomous operation efforts
 
 ## Overview
 Architecture is a set of servers collecting information (such as cv_cam for each camera that watches the serial camera output) and sending the sensor data via a UDP packet to the centralized database (cv_db).  In the case of a camera, each cv_cam modules passes robot object and visual field location information to cv_db as well as some identifying information tying this visual information to a specific camera.  Similar processing happens for other sensors (like ultrasonic rangers for example).
