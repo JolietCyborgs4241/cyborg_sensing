@@ -37,7 +37,7 @@ main(int argc, char **argv)
 
 	init(argc, argv);
 
-    startCamDataThread(HostInfo.sock);   // start reading recs from the cams
+    startSensorDataThread(HostInfo.sock);   // start reading recs from the cams
 
     startPruneThread(Ttl);      // get rid of records older than TTL
 

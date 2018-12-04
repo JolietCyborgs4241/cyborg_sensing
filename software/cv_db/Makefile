@@ -3,11 +3,11 @@
 
 CV_INC_DIR	= ../include
 INC		= -I$(CV_INC_DIR)
-CFLAGS	+= $(INC) -pthread -g #-DDEBUG 
+CFLAGS	+= $(INC) -pthread -g $(DEBUG)
 
 LDFLAGS	+= -pthread
 
-SRCS	= cv_db.c init.c globals.c lists.c utility.c threads.c
+SRCS	= cv_db.c init.c globals.c lists.c utility.c threads.c sensors.c
 
 OBJS	= ${SRCS:.c=.o}
 
@@ -36,7 +36,10 @@ lists.o:	lists.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 utility.o:	utility.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
 
 threads.o:	threads.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h \
-			$(CV_INC_DIR)/cv_threads.h
+			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/cv_threads.h
+
+sensors.o:	sensors.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h \
+			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/cv_threads.h
 
 
 

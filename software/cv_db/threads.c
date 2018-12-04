@@ -8,12 +8,14 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
+#include <errno.h>
 
 #include "cv.h"
 #include "cv_net.h"
 #include "cv_cam.h"
 #include "cv_lists.h"
 #include "cv_externs.h"
+#include "sensors.h"
 
 
 //  three threads:
@@ -29,13 +31,12 @@
 static void *pruneThread(void *);
 pthread_t   tidPrune;
 
-static void *recvCamDataThread(void *);
+static void *recvSensorDataThread(void *);
 pthread_t   tidRecieve;
 
-static void
-processCamData(int);
+static void processSensorData(int sock);
 
-
+void processCamData(char *);   // in sensors.c
 
 
 
@@ -99,7 +100,7 @@ pruneThread(void *ttl)
 
 
 void
-startCamDataThread(int sock)
+startSensorDataThread(int sock)
 {
     pthread_attr_t  attr;
     static int      sockStatic;
@@ -113,10 +114,10 @@ startCamDataThread(int sock)
     pthread_attr_init(&attr);
 fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, *((int *)&sock));
 
-    pthread_create(&tidPrune, &attr, recvCamDataThread, &sockStatic);
+    pthread_create(&tidPrune, &attr, recvSensorDataThread, &sockStatic);
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): recvCamDataThread thread started.\n", __func__, sock);
+        fprintf(DebugFP, "%s(%d): recvSensorDataThread thread started.\n", __func__, sock);
     }
 }
 
@@ -124,14 +125,14 @@ fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, 
 
 
 static void *
-recvCamDataThread(void *sock)
+recvSensorDataThread(void *sock)
 {
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(%d): Starting...\n", __func__, *(int *)sock);
     }
 
     while (1) {
-        processCamData(*(int *)sock);      // each call processes one record
+        processSensorData(*(int *)sock);      // each call processes one record
     }
 
 }
@@ -140,21 +141,12 @@ recvCamDataThread(void *sock)
 int MsgNum = 0;
 
 static void
-processCamData(int sock)
-
+processSensorData(int sock)
 {
-	char    buffer[MAX_CAMERA_READ], id[MAX_CAMERA_READ], camera;
-	int     readRet, scanRet, x, y, w, h;
+        char    buffer[MAX_SENSOR_READ];
+        int     readRet;
 
-    if ((readRet = recvfrom(sock, buffer, MAX_CAMERA_READ, 0, (struct sockaddr *)NULL, 0)) > 0) {
-
-        if (readRet < MIN_CAM_REC_SIZE) {
-            if(DebugLevel == DEBUG_DETAIL) {
-                fprintf(DebugFP, "%s: warning: undersize record received (%d bytes)\n",
-                        MyName, readRet);
-            }
-            return;
-        }
+    if ((readRet = recvfrom(sock, buffer, MAX_SENSOR_READ, 0, (struct sockaddr *)NULL, 0)) > 0) {
 
         buffer[readRet] = '\0';
 
@@ -162,43 +154,32 @@ processCamData(int sock)
             fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
                     MsgNum,  buffer, strlen(buffer));
         }
-    }
 
-    MsgNum++;
+        switch (*buffer) {               // first character identifies sensor type
 
-    // validate and set camera
-    // should be "[RL] N2 " at head
-    if (*buffer == CAMERA_LEFT_ID || *buffer == CAMERA_RIGHT_ID) {
-        camera = *buffer;
-    } else {
-        fprintf(DebugFP, "%s: error: unknown camera '%c'\n", MyName, *buffer);
-        return;
-    }
+        case SENSOR_CAM:
+            processCamData(buffer);
+            break;
 
-    if (*(buffer+1) != ' ') {
-        fprintf(DebugFP, "%s: error: non-space 2nd char '%c'\n", MyName, *(buffer + 1));
-        return;
-    }
+        case SENSOR_RANGE:
+            break;
 
-    if(*(buffer+2) != 'N' && *(buffer+3) != '2' && *(buffer+4) != ' ') {
-        fprintf(DebugFP, "%s: error: invalid record type \'%c%c\'\n",
-                MyName, *(buffer+2), *(buffer+3));
-        return;
-    }
+        case SENSOR_G:
+            break;
 
-    // seems OK start scan after first 2 chars (camera, space, type, space)
-    scanRet = sscanf(buffer+5, "%s %d %d %d %d",
-                     id, &x, &y, &w, &h);
+        case SENSOR_ROLL:
+            break;
 
-    if (scanRet != 5) {         // scanning error
-        if (DebugLevel == DEBUG_DETAIL) {
-            fprintf(DebugFP, "scanf() error: ret %d\n", scanRet);
+        case SENSOR_MAG:
+            break;
+
+        default:
+            fprintf(DebugFP, "%s: %s(): invalid sensor type '%c'\n", MyName, __func__, *buffer);
         }
-        return;
-    }
 
-    if (DebugLevel == DEBUG_INFO) {
-        fprintf(DebugFP, "%s(%d): recvd and adding msg #%d\n", __func__, sock, MsgNum);
+        MsgNum++;
+
+    } else {
+        fprintf(DebugFP, "%s(%d): read error \"%s\"\n", __func__, sock, strerror(errno));
     }
-    camRecAdd(id, camera, x, y, w, h);
 }

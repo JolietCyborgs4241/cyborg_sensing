@@ -8,6 +8,11 @@
 
 
 
+#define	MAX_SENSOR_READ     (2*1024)
+
+
+
+
 /// camera sensor
 ///
 /// C id thing x y w h
