@@ -75,3 +75,41 @@ processCamData(char *buffer)
     }
     camRecAdd(id, camera, x, y, w, h);
 }
+
+
+
+
+
+void
+processRangerData(char *buffer)
+{
+
+
+}
+
+
+
+void
+processGData(char *buffer)
+{
+
+
+}
+
+
+
+void
+processRollData(char *buffer)
+{
+
+
+}
+
+
+
+void
+processMagData(char *buffer)
+{
+
+
+}

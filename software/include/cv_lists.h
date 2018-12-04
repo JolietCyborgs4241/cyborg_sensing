@@ -6,8 +6,12 @@
 #define _CV_LIST_H_ 1
 
 
+// ****************************************************************
+// camera stuff
+//
+
 typedef struct camRecord {
-    /// arrival of camera message (actually inserion time in list)
+    /// arrival of camera message (actually insertion time in list)
     struct timeval       time;
     /// source camera identifier (right or left)
     char                camera;
@@ -23,7 +27,6 @@ typedef struct camRecord {
     struct camRecord    *next;
 } CAMERA_RECORD;
 
-
 typedef struct camListHdr {
     /// Identifier of the object being reported
     char                *id;
@@ -38,10 +41,6 @@ typedef struct camListHdr {
 
 /// Get cam list record for a specific object id
 CAMERA_LIST_HDR    *camListGetHdrById(char *);
-
-
-
-
 
 
 /// ID, camera, x, y, w, h - add a new object (if needed) and camera record (always; newest at front of list)
@@ -78,6 +77,88 @@ void dumpCamRecord(CAMERA_RECORD *);
 /// zero an individual CAMERA_RECORD
 void zeroCamRecord(CAMERA_RECORD *);
 
+
+
+
+// ****************************************************************
+// general sensor stuff
+//
+
+typedef struct sensorRangeRec {
+    /// distance (in cm) for ranging sensor type
+    int                 range;
+} SENSOR_RANGE_RECORD;
+
+typedef struct sensorGRec {
+    /// acceleration X axis
+    int                 x;
+    /// acceleration X axis
+    int                 y;
+    /// acceleration X axis
+    int                 z;
+} SENSOR_G_RECORD;
+
+typedef struct sensorRollRec {
+    /// roll rate X axis
+    int                 x;
+    /// roll rate X axis
+    int                 y;
+    /// roll rate X axis
+    int                 z;
+} SENSOR_ROLL_RECORD;
+
+
+typedef struct sensorMagRec {
+    /// mag inclination X axis
+    int                 x;
+    /// mag inclination X axis
+    int                 y;
+    /// mag inclination X axis
+    int                 z;
+} SENSOR_MAG_RECORD;
+
+
+typedef struct sensorRecord {
+    /// arrival of sensor message (actually insertion time in list)
+    struct timeval      time;
+    /// union of all non-camera sensor records
+    union {
+        SENSOR_RANGE_RECORD    range;
+        SENSOR_G_RECORD        gForce;
+        SENSOR_ROLL_RECORD     roll;
+        SENSOR_MAG_RECORD      mag;
+    } sensorData;
+    /// pointer to next sensor record
+    void                *next;
+} SENSOR_RECORD;
+
+
+typedef struct sensorIdRecord {
+    /// source sensor identifier
+    char                id;
+    /// pointer to actual sensor data records
+    SENSOR_RECORD       *recs;
+    /// pointer to next sensor id record
+    struct sensorIdRecord       *next;
+} SENSOR_ID_RECORD;
+
+
+typedef struct sensorListHdr {
+    /// type of sensor (see sensors.h)
+    char                 sensorType;
+    ///  pointer to individual sensor records about this object
+    SENSOR_ID_RECORD        *recs;
+    /// pointer to next object header
+    struct sensorListHdr *next;
+} SENSOR_LIST_HDR;
+
+
+
+
+
+// ****************************************************************
+// general list stuff
+//
 
 
 #define LOCK_MAX_ATTEMPTS   20

@@ -36,7 +36,11 @@ pthread_t   tidRecieve;
 
 static void processSensorData(int sock);
 
-void processCamData(char *);   // in sensors.c
+void processCamData(char *);      // all in sensors.c
+void processRangerData(char *);
+void processGData(char *);
+void processRollData(char *);
+void processMagData(char *);
 
 
 
@@ -162,15 +166,19 @@ processSensorData(int sock)
             break;
 
         case SENSOR_RANGE:
+            processRangerData(buffer);
             break;
 
         case SENSOR_G:
+            processGData(buffer);
             break;
 
         case SENSOR_ROLL:
+            processRollData(buffer);
             break;
 
         case SENSOR_MAG:
+            processMagData(buffer);
             break;
 
         default:
