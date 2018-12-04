@@ -751,3 +751,28 @@ releaseLock(pthread_mutex_t *lock)
 
     return retVal;
 }
+
+
+
+
+int
+sensorRecAdd(char sensor, char id, int i1, int i2, int i3, int i4);
+
+void
+sensorRecPruneBySensor(char sensor, int ttl);
+
+void
+sensorRecPruneAll(int ttl);
+
+void
+sensorRecDeleteById(char sensor);
+
+int
+sensorRecGetLatest(char sensor, void *retPtr);
+
+int
+sensorRecGetAvg(char sensor, void *retPtr);
+
+void
+zeroSensorRecord(char sensor, void *retPtr);
+

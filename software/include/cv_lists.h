@@ -68,9 +68,6 @@ int camRecGetAvg(char *, CAMERA_RECORD *);
 /// zero-out a CAMERA_RECORD object
 void zeroCamRecord(CAMERA_RECORD *);
 
-/// walks and dumps entire object and camera lists
-void dumpLists();
-
 /// dump an individual CAMERA_RECORD
 void dumpCamRecord(CAMERA_RECORD *);
 
@@ -153,12 +150,56 @@ typedef struct sensorListHdr {
 } SENSOR_LIST_HDR;
 
 
+/// type, ID, i1, i2, i3, i4 - add a new sensor type (if needed)
+/// and sensor record (always; newest at front of list)
+int  sensorRecAdd(char, char, int, int, int, int);
+
+/// ID, TTL - delete old records for only a specific sensor
+/// (all instantiations of that sensor)
+void  sensorRecPruneBySensor(char, int);
+
+/// TTL - prune all sensor records older than TTL
+/// (all instantiations)
+void  sensorRecPruneAll(int);
+
+/// ID - delete all records for a sensor type
+void  sensorRecDeleteById(char);
+
+/// get latest record for a specific sensor in all instantiations
+/// of a specific sensor type
+///
+/// pointer to where an array of sensor records will be returned
+///
+/// count is number of sensor instantiations returned
+int sensorRecGetLatest(char, void *);
+
+/// get average values for a specific sensor in all instantiations
+/// of a specific sensor type
+///
+/// pointer to where an array of sensor records will be returned
+///
+/// count is number of sensor instantiations returned
+/// get average x, y, w, h, values for a specific (both cameras)
+int sensorRecGetAvg(char, void *);
+
+/// zero an individual sensor record
+///
+/// sensor type and pointer to record
+////
+/// zeroes only the fields applicable for that sensor and
+/// sets sensor type
+void zeroSensorRecord(char, void *);
+
+
 
 
 
 // ****************************************************************
 // general list stuff
 //
+
+/// walks and dumps entire object and camera lists
+void dumpLists();
 
 
 #define LOCK_MAX_ATTEMPTS   20
