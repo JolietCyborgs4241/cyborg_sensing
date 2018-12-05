@@ -14,9 +14,9 @@
 #include "cv.h"
 #include "cv_net.h"
 #include "cv_cam.h"
-#include "cv_lists.h"
-#include "cv_threads.h"
-#include "cv_externs.h"
+#include "db/lists.h"
+#include "db/threads.h"
+#include "db/externs.h"
 
 
 

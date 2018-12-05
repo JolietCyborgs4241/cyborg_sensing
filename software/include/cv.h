@@ -26,9 +26,4 @@ void    *cvAlloc(size_t);
 void    cvFree(void *);
 
 
-void	initMutex();
-
-
-
-
 #endif  /* cv.h */

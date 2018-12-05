@@ -9,12 +9,13 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #include "cv.h"
 #include "cv_net.h"
 #include "cv_cam.h"
-#include "cv_externs.h"
-#include "cv_lists.h"
+#include "db/externs.h"
+#include "db/lists.h"
 
 
 

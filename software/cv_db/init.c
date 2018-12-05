@@ -18,7 +18,7 @@
 #include "cv.h"
 #include "cv_net.h"
 #include "cv_cam.h"
-#include "cv_externs.h"
+#include "db/externs.h"
 
 
 
@@ -48,7 +48,7 @@ init(int argc, char **argv)
 
     // clear HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
-    HostInfo.hostPort     = DEF_HOST_PORT;
+    HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
 
     while ((c = getopt(argc, argv, "h:p:D:d:t:")) != -1) {
 

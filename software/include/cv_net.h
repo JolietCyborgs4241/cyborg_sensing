@@ -18,9 +18,16 @@
 
 
 
-#define DEF_HOST_IP_STRING  "127.0.0.1"
-#define DEF_HOST_PORT       12345
+#define DEF_HOST_IP_STRING      "127.0.0.1"
 
+/// default port for posting data to cv_db
+#define DEF_HOST_PORT_DB_POST   12345
+/// default port for querying data from cv_db
+#define DEF_HOST_PORT_DB_QUERY  12346
+/// default port for querying data from cv_db
+#define DEF_HOST_PORT_STATUS    12347
+
+/// used for storing host addressing information
 typedef struct {
     /// host interface to listen for incoming UDP packets from cameras
     char    *hostIPString;
@@ -33,4 +40,4 @@ typedef struct {
 
 
 
-#endif  /* cn_net.h */
+#endif  /* cv_net.h */

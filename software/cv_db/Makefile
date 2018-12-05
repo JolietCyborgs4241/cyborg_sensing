@@ -21,25 +21,28 @@ all:	$(TARGETS)
 
 cv_db:	$(OBJS)
 
-cv_db.o:	cv_db.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
+cv_db.o:	cv_db.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
+			$(CV_INC_DIR)/db/lists.h
 
 init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
-			$(CV_INC_DIR)/cv_externs.h
+			$(CV_INC_DIR)/db/externs.h
 
 globals.o:	globals.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
-			$(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/cv_externs.h
+			$(CV_INC_DIR)/cv_cam.h
 
 lists.o:	lists.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
-			$(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/cv_externs.h \
-			$(CV_INC_DIR)/cv_lists.h
+			$(CV_INC_DIR)/cv_cam.h $(CV_INC_DIR)/db/externs.h \
+			$(CV_INC_DIR)/db/lists.h
 
-utility.o:	utility.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h
+utility.o:	utility.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h
 
-threads.o:	threads.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h \
-			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/cv_threads.h
+threads.o:	threads.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
+			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/db/threads.h \
+			$(CV_INC_DIR)/db/lists.h
 
-sensors.o:	sensors.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_externs.h \
-			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/cv_threads.h
+sensors.o:	sensors.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
+			$(CV_INC_DIR)/sensors.h \
+			$(CV_INC_DIR)/db/lists.h
 
 
 

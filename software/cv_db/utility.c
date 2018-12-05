@@ -8,7 +8,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_externs.h"
+#include "db/externs.h"
 
 
 /// \brief  cyborg vision malloc front end

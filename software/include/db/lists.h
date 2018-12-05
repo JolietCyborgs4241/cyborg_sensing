@@ -1,9 +1,9 @@
-//  cv_list.h
+//  lists.h
 //
 //  structures for storing and manipulating camera data records
 
-#ifndef _CV_LIST_H_
-#define _CV_LIST_H_ 1
+#ifndef _CYBORG_DB_LISTS_H_
+#define _CYBORG_DB_LISTS_H_ 1
 
 
 // ****************************************************************
@@ -206,4 +206,4 @@ void dumpLists();
 
 #define LOCK_USLEEP_TIME    100
 
-#endif  /* cv_list.h */
+#endif  /* lists.h */

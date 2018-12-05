@@ -12,8 +12,8 @@
 #include "cv.h"
 #include "cv_net.h"
 #include "cv_cam.h"
-#include "cv_lists.h"
-#include "cv_externs.h"
+#include "db/lists.h"
+#include "db/externs.h"
 #include "sensors.h"
 
 
@@ -24,7 +24,7 @@
 void
 processCamData(char *buffer)
 {
-    char    id[MAX_CAMERA_READ], camera;
+    char    id[MAX_SENSOR_READ], camera;
     int     scanRet, x, y, w, h;
 
     // validate and set camera
