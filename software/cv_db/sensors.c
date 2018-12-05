@@ -11,7 +11,6 @@
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_cam.h"
 #include "db/lists.h"
 #include "db/externs.h"
 #include "sensors.h"
@@ -83,10 +82,10 @@ processCamData(char *buffer)
 void
 processRangerData(char *buffer)
 {
-    char    ranger;
+    char    id[MAX_SENSOR_READ], *ptr;;
     int     dist;
 
-    if (*buffer != SENSOR_RANGE || *(buffer + 1) != ' ') {
+    if (*buffer != SENSOR_DIST || *(buffer + 1) != ' ') {
         fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
                 MyName, __func__, buffer);
         return;
@@ -94,9 +93,26 @@ processRangerData(char *buffer)
 
     buffer += 2;            // starts with "R " so continue
 
-    ranger = *buffer;       // get id char
+    // copy the id and null terminate it
+    //
+    // make sure we don't fall off the end of 'buffer' or the 'id' buffer and look
+    // for a space to terminate the id sting in the sensor record
+    //
+    // it would be simpler to just point to the id snd add the terminator to the
+    // buffer itself but we don't want to alter the sensor record in this routine
 
-    buffer++;
+    ptr = id;
+    while (*buffer && *buffer != ' ' && (ptr - id <= sizeof(id) -1)) {
+        *ptr++ = *buffer++;
+    }
+
+    if ( ! *buffer) {
+        fprintf(DebugFP, "%s: error: %s() early sensor record termination while processing id\n",
+                __func__, MyName);
+        return;
+    }
+
+    *ptr = '\0';
 
     if (*buffer != ' ') {
         fprintf(DebugFP, "%s: error: non-space after id char '%c'\n", MyName, *buffer);
@@ -116,7 +132,7 @@ processRangerData(char *buffer)
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
-    sensorRecAdd(SENSOR_RANGE, ranger, dist, 0, 0, 0);  // unused params are 0
+    sensorRecAdd(SENSOR_DIST, id, dist, 0, 0, 0);  // unused params are 0
 }
 
 
@@ -125,7 +141,8 @@ processRangerData(char *buffer)
 void
 process9DData(char *buffer)
 {
-    char    id, type;
+    char    id[MAX_SENSOR_READ], *ptr;
+    SENSOR_TYPE   type;
     int     scanRet, x, y, z;
 
     if (((*buffer != SENSOR_G) && (*buffer != SENSOR_ROLL) && (*buffer != SENSOR_MAG))
@@ -135,11 +152,30 @@ process9DData(char *buffer)
         return;
     }
 
+    type = (SENSOR_TYPE)*buffer;
+
     buffer += 2;            // starts with "[GOM] " so continue
 
-    id = *buffer;       // get id char
+    // copy the id and null terminate it
+    //
+    // make sure we don't fall off the end of 'buffer' or the 'id' buffer and look
+    // for a space to terminate the id sting in the sensor record
+    //
+    // it would be simpler to just point to the id snd add the terminator to the
+    // buffer itself but we don't want to alter the sensor record in this routine
 
-    buffer++;
+    ptr = id;
+    while (*buffer && *buffer != ' ' && (ptr - id <= sizeof(id) -1)) {
+        *ptr++ = *buffer++;
+    }
+
+    if ( ! *buffer) {
+        fprintf(DebugFP, "%s: error: %s() early sensor record termination while processing id\n",
+                __func__, MyName);
+        return;
+    }
+
+    *ptr = '\0';
 
     if (*buffer != ' ') {
         fprintf(DebugFP, "%s: error: non-space after id char '%c'\n", MyName, *buffer);

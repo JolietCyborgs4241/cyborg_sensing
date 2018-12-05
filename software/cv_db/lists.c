@@ -13,7 +13,6 @@
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_cam.h"
 #include "db/externs.h"
 #include "db/lists.h"
 
@@ -757,13 +756,13 @@ releaseLock(pthread_mutex_t *lock)
 
 
 int
-sensorRecAdd(char sensor, char id, int i1, int i2, int i3, int i4)
+sensorRecAdd(SENSOR_TYPE sensor, char *id, int i1, int i2, int i3, int i4)
 {
 
 }
 
 void
-sensorRecPruneBySensor(char sensor, int ttl)
+sensorRecPruneBySensorType(SENSOR_TYPE sensor, int ttl)
 {
 
 }
@@ -775,25 +774,25 @@ sensorRecPruneAll(int ttl)
 }
 
 void
-sensorRecDeleteById(char sensor)
+sensorRecDeleteById(SENSOR_TYPE sensor, char *id)
 {
 
 }
 
 int
-sensorRecGetLatest(char sensor, void *retPtr)
+sensorRecGetLatest(SENSOR_TYPE sensor, char *id, void *retPtr)
 {
 
 }
 
 int
-sensorRecGetAvg(char sensor, void *retPtr)
+sensorRecGetAvg(SENSOR_TYPE sensor, char *id, void *retPtr)
 {
 
 }
 
 void
-zeroSensorRecord(char sensor, void *retPtr)
+zeroSensorRecord(SENSOR_TYPE sensor, void *retPtr)
 {
 
 }

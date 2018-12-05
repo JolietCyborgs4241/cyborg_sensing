@@ -1,7 +1,6 @@
 //  lists.h
 //
-//  structures function prototypes for storing and
-//  manipulating sensor data records
+//  structures for storing and manipulating camera data records
 
 #ifndef _CYBORG_DB_LISTS_H_
 #define _CYBORG_DB_LISTS_H_ 1
@@ -9,28 +8,8 @@
 #include "sensors.h"
 
 // ****************************************************************
-// sensor list definition stuff
+// camera stuff
 //
-
-typedef struct sensorIdList {
-    /// sensor type
-    SENSOR_ID         type;
-    /// pointer to next lower level (sensor sub id records)
-    SENSOR_SUBID_LIST   *sensors;
-    /// pointer to next sensor id list record
-    struct sensorIdList  *next;
-} SENSOR_ID_LIST;
-
-typedef struct sensorList {
-    /// sensor type
-    SENSOR_TYPE         type;
-    /// pointer to next lower level (starting with sensor id records)
-    SENSOR_ID_LIST      *sensors;
-    /// pointer to next sensor list record
-    struct sensorList   *next;
-} SENSOR_LIST;
-
-
 
 typedef struct camRecord {
     /// arrival of camera message (actually insertion time in list)

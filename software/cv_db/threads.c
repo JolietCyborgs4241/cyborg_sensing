@@ -12,7 +12,6 @@
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_cam.h"
 #include "db/lists.h"
 #include "db/externs.h"
 #include "sensors.h"
@@ -163,7 +162,7 @@ processSensorData(int sock)
             processCamData(buffer);
             break;
 
-        case SENSOR_RANGE:
+        case SENSOR_DIST:
             processRangerData(buffer);
             break;
 

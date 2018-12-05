@@ -17,7 +17,6 @@
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_cam.h"
 #include "db/externs.h"
 
 
