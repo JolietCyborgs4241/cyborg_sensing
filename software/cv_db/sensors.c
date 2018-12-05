@@ -83,33 +83,83 @@ processCamData(char *buffer)
 void
 processRangerData(char *buffer)
 {
+    char    ranger;
+    int     dist;
 
+    if (*buffer != SENSOR_RANGE || *(buffer + 1) != ' ') {
+        fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
+                MyName, __func__, buffer);
+        return;
+    }
 
+    buffer += 2;            // starts with "R " so continue
+
+    ranger = *buffer;       // get id char
+
+    buffer++;
+
+    if (*buffer != ' ') {
+        fprintf(DebugFP, "%s: error: non-space after id char '%c'\n", MyName, *buffer);
+        return;
+    }
+
+    buffer++;               // now point to the real data value
+
+    dist = atoi(buffer);
+
+    if (dist <= 0) {        // scanning error
+        fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, dist);
+        return;
+    }
+
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
+    }
+
+    sensorRecAdd(SENSOR_RANGE, ranger, dist, 0, 0, 0);  // unused params are 0
 }
 
 
-
+// all the different readings form the 9D sensor (G, roll, mag) look the same
+// so we can process and validate them all together
 void
-processGData(char *buffer)
+process9DData(char *buffer)
 {
+    char    id, type;
+    int     scanRet, x, y, z;
 
+    if (((*buffer != SENSOR_G) && (*buffer != SENSOR_ROLL) && (*buffer != SENSOR_MAG))
+       ||  *(buffer + 1) != ' ') {
+        fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
+                MyName, __func__, buffer);
+        return;
+    }
 
-}
+    buffer += 2;            // starts with "[GOM] " so continue
 
+    id = *buffer;       // get id char
 
+    buffer++;
 
-void
-processRollData(char *buffer)
-{
+    if (*buffer != ' ') {
+        fprintf(DebugFP, "%s: error: non-space after id char '%c'\n", MyName, *buffer);
+        return;
+    }
 
+    buffer++;               // now point to the real data values
 
-}
+    // seems OK start scan
+    scanRet = sscanf(buffer, "%d %d %d",
+                     &x, &y, &z);
 
+    if (scanRet != 3) {         // scanning error
+        fprintf(DebugFP, "%s(): scanf(\"%s\") error: ret %d\n", __func__, buffer, scanRet);
+        return;
+    }
 
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
+    }
 
-void
-processMagData(char *buffer)
-{
-
-
+    sensorRecAdd(type, id, x, y, z, 0);  // unused params are 0
 }
