@@ -57,6 +57,10 @@ The Cyborg-Vision Database (cv_db) gets readings from various sensor servers and
 
 Processes that want to find out about the conditions around the robot (whether visual, ranging, etc.) can query cv_db and get the status of a specific sensor, a set of sensors, or potentially even an average sensor reading across the values available.
 
+Here is a high level diagram showing how the various structures that correspond to the different sensors are stored and how the data is related to it's associated sensor (which generally provides the context for the data in terms of where this data applies in terms of it's relatonship with the robot:
+
+ ![Cyborg-vision Sensor Data Storage Diagram](https://github.com/cgzog/cyborg_vision/blob/master/sensor_db_structure.png "Cyborg-vision Sensor Data Storage Diagram")
+
 #### Robot Driver
 
 The Robot Driver (cv_robo) essentially emulates the actions of a human robot operator.  It queries the cv_proc module for appropriate sensor status to get information useful to detecting potential targets, aligning the robot to interact with them, and establish its orientation with the surrounding field of play.
