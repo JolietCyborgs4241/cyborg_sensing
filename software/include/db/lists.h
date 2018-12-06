@@ -20,20 +20,20 @@ typedef struct sensorCamRec {
 } SENSOR_CAMERA_RECORD;
 
 
-typedef struct sensorGRec {
-    /// acceleration X axis
-    int                 x;
-} SENSOR_DIST_RECORD;
+typedef struct sensorRangeRec {
+    /// range to target (cm)
+    int                 range;
+} SENSOR_RANGE_RECORD;
 
 
-typedef struct sensorGRec {
+typedef struct sensorAccellRec {
     /// acceleration X axis
     int                 x;
     /// acceleration Y axis
     int                 y;
     /// acceleration Z axis
     int                 z;
-} SENSOR_G_RECORD;
+} SENSOR_ACCELL_RECORD;
 
 
 typedef struct sensorRollRec {
@@ -57,38 +57,41 @@ typedef struct sensorMagRec {
 
 
 typedef struct sensorRecord {
+    /// Sensor type (repeated here because it's convenient to have close
+    /// to the union of sensor records
+    SENSOR_TYPE         type;
     /// arrival of sensor message (actually insertion time in list)
     struct timeval      time;
     /// union of all non-camera sensor records
     union {
-        SENSOR_CAM_RECORD      camera;
-        SENSOR_DIST_RECORD     dist;
-        SENSOR_G_RECORD        gForce;
-        SENSOR_ROLL_RECORD     roll;
-        SENSOR_MAG_RECORD      mag;
+        SENSOR_CAMERA_RECORD camera;
+        SENSOR_RANGE_RECORD  range;
+        SENSOR_ACCELL_RECORD accell;
+        SENSOR_ROLL_RECORD   roll;
+        SENSOR_MAG_RECORD    magnetic;
     } sensorData;
     /// pointer to next sensor record
-    struct sensorRecord        *next;
+    struct sensorRecord    *next;
 } SENSOR_RECORD;
 
 
 typedef struct sensorSubIdList {
     /// sensor type
-    SENSOR_SUB_ID       subId;
+    char                   *subId;
     /// pointer to next lower level (sensor data records)
-    SENSOR_DATA_LIST    *data;
+    SENSOR_RECORD          *data;
     /// pointer to next sensor sub id list record
-    struct sensorSubIdList  *next;
+    struct sensorSubIdList *next;
 } SENSOR_SUBID_LIST;
 
 
 typedef struct sensorIdList {
     /// sensor id
-    SENSOR_ID           id;
+    char                    *id;
     /// pointer to next lower level (sensor sub id records)
-    SENSOR_SUBID_LIST   *subIds;
+    SENSOR_SUBID_LIST       *subIds;
     /// pointer to next sensor id list record
-    struct sensorIdList  *next;
+    struct sensorIdList     *next;
 } SENSOR_ID_LIST;
 
 
@@ -106,9 +109,9 @@ typedef struct sensorList {
 
 /// type, ID, subID, i1, i2, i3, i4 - adds a new sensor type (if needed)
 /// and sensor record (always; newest at front of list)
-int  sensorRecAdd(SENSOR_TYPE, char *, SUB_ID_TYPE, int, int, int, int);
+int  sensorRecAdd(SENSOR_TYPE, char *, char *, int, int, int, int);
 
-/// ID, TTL - delete old records for only a specific tytpe of sensor
+/// ID, TTL - delete old records for only a specific type of sensor
 /// (all instantiations of that sensor)
 void  sensorRecPruneBySensorType(SENSOR_TYPE, int);
 
@@ -120,7 +123,7 @@ void  sensorRecPruneAll(int);
 void  sensorRecDeleteById(SENSOR_TYPE, char *);
 
 /// ID, subID - delete all records for a sensor type, ID, and subID
-void  sensorRecDeleteByIdSubId(SENSOR_TYPE, char *, SENSOR_SUBID_TYPE);
+void  sensorRecDeleteByIdSubId(SENSOR_TYPE, char *, char *);
 
 /// get latest record for a specific sensor in all subIds
 /// of a specific sensor type
@@ -138,7 +141,7 @@ int sensorRecGetLatest(SENSOR_TYPE, char *, void *);
 /// (must be freed when no longer needed)
 ///
 /// count is number of sensor instantiations returned
-int sensorRecGetLatestSubId(SENSOR_TYPE, char *, SENSOR_SUBID_TYPE, void *);
+int sensorRecGetLatestSubId(SENSOR_TYPE, char *, char *, void *);
 
 /// get average values for a specific sensor in all instantiations
 /// of a specific sensor type
@@ -158,7 +161,7 @@ int sensorRecGetAvg(SENSOR_TYPE, char *, void *);
 ///
 /// count is number of sensor instantiations returned
 /// get average x, y, w, h, values for a specific (both cameras)
-int sensorRecGetAvgSubId(SENSOR_TYPE, char *, SENSOR_SUBID_TYPE, void *);
+int sensorRecGetAvgSubId(SENSOR_TYPE, char *, char *, void *);
 
 /// zero an individual sensor data record
 ///

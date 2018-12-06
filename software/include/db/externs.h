@@ -22,5 +22,5 @@ extern  int         DebugLevel;
 /// Global FP for Debug output
 extern  FILE        *DebugFP;
 
-void    initMutex();
+void    initMutexes();
 

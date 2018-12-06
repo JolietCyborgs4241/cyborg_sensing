@@ -1,4 +1,4 @@
-//    cv_proc_init.c
+//    cv_db_init.c
 //
 //    vision processor initialization
 
@@ -118,7 +118,7 @@ init(int argc, char **argv)
         }
     }
 
-    initMutex();
+    initMutexes();
 
     openIncomingPort(&HostInfo);
 

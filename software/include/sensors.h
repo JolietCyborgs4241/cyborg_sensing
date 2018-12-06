@@ -18,35 +18,35 @@ typedef char                SENSOR_TYPE;
 ///
 /// C id subid (really the thing the camera sees) x y w h
 ///
-#define	SENSOR_CAM          'C'
+#define	SENSOR_CAMERA       'C'
 
-/// distance sensor
+/// range sensor
 ///
-/// assume all distance sensors return similar records regardless of technology
+/// assume all range sensors return similar records regardless of technology
 ///
-/// distance is reported in cm normalized from the output edge of the robot
+/// range is reported in cm normalized from the output edge of the robot
 ///
-/// D id subid (likely just a fixed dummy value) d
+/// R id subid (likely just a fixed dummy value) d
 ///
-#define SENSOR_DIST         'D'
+#define SENSOR_RANGE        'R'
 
 /// g-force sensor (3-D)
 ///
 /// G id subid (likely just a fixed dummy value) x y z
 ///
-#define SENSOR_G            'G'
+#define SENSOR_ACCELL       'G'
 
 /// roll rate sensor (3-D)
 ///
-/// R id subid (likely just a fixed dummy value) x y z
+/// O id subid (likely just a fixed dummy value) x y z
 ///
-#define SENSOR_ROLL         'R'
+#define SENSOR_ROLL         'O'
 
 /// magnetometer (3-D)
 ///
 /// M id subid (likely just a fixed dummy value) x y z
 //
-#define SENSOR_MAG          'M'
+#define SENSOR_MAGNETIC     'M'
 
 #endif  /* sensors.h */
 

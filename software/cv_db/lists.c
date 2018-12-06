@@ -24,18 +24,18 @@
                         if (DebugLevel == DEBUG_DETAIL) {\
                             fprintf(DebugFP, "Line %d in %s: getLock(0x%lx)\n", \
                                     __LINE__, __func__, (long)&camListLock); \
-                        } getLock(&camListLock)
+                        } getLock(&sensorListLock)
 
 #define UNLOCK_SENSOR_LIST \
                         if (DebugLevel == DEBUG_DETAIL) {\
                             fprintf(DebugFP, "Line %d in %s: releaseLock(0x%lx)\n", \
                                     __LINE__, __func__, (long)&camListLock); \
-                        } releaseLock(&camListLock)
+                        } releaseLock(&sensorListLock)
 
 #else   //  ! DEBUG ----------------------------------------------------------------
 
-#define LOCK_CAMLIST    getLock(&mainListLock)
-#define UNLOCK_CAMLIST  releaseLock(&mainListLock)
+#define LOCK_SENSOR_LIST    getLock(&mainListLock)
+#define UNLOCK_SENSOR_LIST  releaseLock(&mainListLock)
 
 #endif  //  DEBUG -----------------------------------------------------------------^
 
@@ -54,7 +54,6 @@ static SENSOR_LIST      *SensorLists = (SENSOR_LIST *)NULL;
 
 
 static void             pruneByHdr(CAMERA_LIST_HDR *, int),
-                        dumpCamListHdr(CAMERA_LIST_HDR *),
                         freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
 
 
@@ -66,7 +65,7 @@ static void             pruneByHdr(CAMERA_LIST_HDR *, int),
 ///
 /// doesn't lock sensorList - assumes caller has locked it (if needed)
 static SENSOR_LIST *
-sensorListGetHdr()
+sensorListGetHead()
 {
     return(SensorLists);
 }
@@ -86,11 +85,9 @@ sensorListGetPtrBySensor(SENSOR_TYPE sensor)
     SENSOR_LIST   *ptr;
 
     // any sensors at all?
-    if ( ! sensorLists) {
+    if ( ! (ptr = sensorListGetHdr())) {
         return NULL;
     }
-
-    ptr = sensorLists;
 
     // look for the sensor type
     while (ptr) {
@@ -115,15 +112,15 @@ sensorListGetPtrBySensor(SENSOR_TYPE sensor)
 ///
 /// no elements ever get removed from the camList headers
 SENSOR_ID_LIST *
-sensorIdListGetPtrBySensorAndId(SENSOR_TYPE sensor, char *id)
+sensorIdListGetPtrBySensorId(SENSOR_TYPE sensor, char *id)
 {
     SENSOR_LIST *ptr;
 
-    if ((ptr = sensorListGetPtrBySensor(sensor)) == (SENSOR_LIST *)NULL) {
+    if (ptr = sensorListGetPtrBySensor(sensor)) {
         return (SENSOR_ID_LIST *)NULL;
     }
 
-    // look for the sensor type
+    // look for the sensor id
     while (ptr) {
         if (strcmp(id, ptr->id) == 0) {
             return ptr;
@@ -137,10 +134,9 @@ sensorIdListGetPtrBySensorAndId(SENSOR_TYPE sensor, char *id)
 
 
 
-XXXXXXXXXXXXXXXXXXXXXXX
 
-/// \brief  Get pointer to a SENSOR_LIST_HDR for a specific sensor
-///         and id
+/// \brief  Get pointer to a SENSOR_SUBID_LIST for a specific sensor,
+///         id, and subid
 ///
 /// type, id
 ///
@@ -148,18 +144,18 @@ XXXXXXXXXXXXXXXXXXXXXXX
 /// which could be added while we are traversing
 ///
 /// no elements ever get removed from the camList headers
-SENSOR_ID_LIST *
-sensorIdListGetPtrBySensorAndId(SENSOR_TYPE sensor, char *id)
+SENSOR_SUBID_LIST *
+sensorIdListGetPtrBySensorIdSubid(SENSOR_TYPE sensor, char *id, char *subId)
 {
-    SENSOR_LIST *ptr;
+    SENSOR_ID_LIST  *ptr;
 
-    if ((ptr = sensorListGetPtrBySensor(sensor)) == (SENSOR_LIST *)NULL) {
-        return (SENSOR_ID_LIST *)NULL;
+    if (ptr = sensorIdListGetPtrBySensorId(sensor, id)) {
+        return (SENSOR_SUBID_LIST *)NULL;
     }
 
-    // look for the sensor type
+    // look for the sensor subid
     while (ptr) {
-        if (strcmp(id, ptr->id) == 0) {
+        if (strcmp(subId, ptr->subId) == 0) {
             return ptr;
         }
 
@@ -169,26 +165,32 @@ sensorIdListGetPtrBySensorAndId(SENSOR_TYPE sensor, char *id)
     return (SENSOR_ID_LIST *)NULL;
 }
 
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-
-/// \brief  Add a new camera record
+/// \brief  Add a sensor record
 ///
-/// id, camera, x, y, w, h
+/// type, id, subId, #, #, #, #
 ///
 /// locks the camList
 int
-camRecAdd(char *id, char camera, int x, int y, int w, int h)
+sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int x, int y, int w, int h)
 {
-    CAMERA_LIST_HDR    *hdrPtr, *newHdrPtr;
-    CAMERA_RECORD      *newCamPtr;
-    int                idx;
-
+    SENSOR_SUBID_LIST   *subIdPtr;
+    SENSOR_ID_LIST      *idPtr;
+    SENSOR_LIST         *sensorPtr;
+    
     if (DebugLevel == DEBUG_INFO) {
-        fprintf(DebugFP, "camRecAdd(\"%s\", \'%c\', %d, %d, %d, %d)\n",
-                id, camera, x, y, w, h);
+        fprintf(DebugFP, "%s: %s(%d, \"%s\", \"%s\", %d, %d, %d, %d)\n",
+                MyName, __func__, (int)sensor, id, subId, x, y, w, h);
     }
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
+
+    // can we just add a record - everything else in place?
+ 
+CAN WE CHECK AND ADD IN REVERSE????
+
+    START SEEING FROM THE LOWEST LEVEL IF SOMETHING EXISTS AND ADD TO WHAT WE DO FIND?
 
     // first record for any ids?
     if ( ! camLists) {
@@ -246,7 +248,7 @@ camRecAdd(char *id, char camera, int x, int y, int w, int h)
         hdrPtr->recs[idx] = newCamPtr;
     }
 
-    UNLOCK_CAMLIST;
+    UNLOCK_SENSOR_LIST;
 
     return 1;
 }
@@ -270,10 +272,10 @@ camRecPruneById(char *id, int ttl)
         return;         // no pruning if TTL is 0
     }
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
 
     if ((hdrPtr = sensorListGetHdrById(id)) == 0) {
-        UNLOCK_CAMLIST;
+        UNLOCK_SENSOR_LIST;
         return;         // specified object not found
     }
 
@@ -281,14 +283,14 @@ camRecPruneById(char *id, int ttl)
         if (strcmp(id, hdrPtr->id) == 0) {  // found it
             pruneByHdr(hdrPtr, ttl);
 
-            UNLOCK_CAMLIST;
+            UNLOCK_SENSOR_LIST;
             return;
         }
 
         hdrPtr = hdrPtr->next;
     }
 
-    UNLOCK_CAMLIST;
+    UNLOCK_SENSOR_LIST;
 }
 
 
@@ -310,17 +312,17 @@ camRecPruneAll(int ttl)
         return;         // no pruning if TTL is 0
     }
 #ifdef  DEBUG
-    // This locks the list so it must precede the LOCK_CAMLIST below
+    // This locks the list so it must precede the LOCK_SENSOR_LIST below
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(%d): prior to prune\n", __func__, ttl);
         dumpLists();
     }
 #endif  // DEBUG
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
 
     if ((hdrPtr = sensorListGetHdr()) == (CAMERA_LIST_HDR *)NULL) {
-        UNLOCK_CAMLIST;
+        UNLOCK_SENSOR_LIST;
         return;               // the whole list is empty
     }
 
@@ -332,7 +334,7 @@ camRecPruneAll(int ttl)
         hdrPtr = hdrPtr->next;
     }
 
-    UNLOCK_CAMLIST;
+    UNLOCK_SENSOR_LIST;
 }
 
 
@@ -438,9 +440,9 @@ int
 camRecDeleteById(char *id)
 {
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
 
-    UNLOCK_CAMLIST;
+    UNLOCK_SENSOR_LIST;
 
     return 0;
 }
@@ -481,7 +483,7 @@ camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
         return -1;       // no records of any kind
     }
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
 
     hdrPtr     = sensorListGetHdrById(id);
 
@@ -506,7 +508,7 @@ camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
         }
     }
 
-    UNLOCK_CAMLIST;
+    UNLOCK_SENSOR_LIST;
     return count;
 }    
 
@@ -550,12 +552,12 @@ camRecGetAvg(char *id, CAMERA_RECORD *rlCamArray)
         return -1;       // no records of any kind
     }
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
 
     hdrPtr = sensorListGetHdrById(id);
 
     if ( ! hdrPtr) {
-        UNLOCK_CAMLIST;
+        UNLOCK_SENSOR_LIST;
         return -1;      // that id not found
     }
 
@@ -600,130 +602,317 @@ camRecGetAvg(char *id, CAMERA_RECORD *rlCamArray)
     }
 
     if (counts[CAMERA_LEFT_IDX] && counts[CAMERA_RIGHT_IDX]) {
-        UNLOCK_CAMLIST;
+        UNLOCK_SENSOR_LIST;
         return 2;
     }
 
     if (counts[CAMERA_LEFT_IDX] || counts[CAMERA_RIGHT_IDX]) {
-        UNLOCK_CAMLIST;
+        UNLOCK_SENSOR_LIST;
         return 1;
     } else {
-        UNLOCK_CAMLIST;
+        UNLOCK_SENSOR_LIST;
         return 0;
     }
 }    
 
 
+static void
+dumpSensorList(SENSOR_LIST *ptr)
+{
+    fprintf(DebugFP, "SENSOR_LIST(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\tType:\t\"%c\"\n", ptr->type);
+    fprintf(DebugFP, "\tSensors:\t0x%lx\n", (long)ptr->sensors);
+    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+}
 
 
+static void
+dumpSensorIdList(SENSOR_ID_LIST *ptr)
+{
+    fprintf(DebugFP, "SENSOR_ID_LIST(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\tID:\t\"%s\"\n", ptr->id);
+    fprintf(DebugFP, "\tSubIDs:\t0x%lx\n", (long)ptr->subIds);
+    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+}
+
+
+static void
+dumpSensorSubIdList(SENSOR_SUBID_LIST *ptr)
+{
+    fprintf(DebugFP, "SENSOR_SUBID_LIST(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\tSubID:\t\"%s\"\n", ptr->subId);
+    fprintf(DebugFP, "\tData:\t0x%lx\n", (long)ptr->data);
+    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+}
+
+
+static void
+dumpSensorRecord(SENSOR_RECORD *ptr)
+{
+    fprintf(DebugFP, "SENSOR_RECORD(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\ttime:\t%ld.%08ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\tType:\t%d ", ptr->type);
+
+    switch (ptr->type) {
+
+        case SENSOR_CAMERA:
+           fprintf(DebugFP, "(Camera)\n");
+           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.camera.x);
+           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.camera.x);
+           fprintf(DebugFP, "\t\tW:\t%d\n", ptr->sensorData.camera.w);
+           fprintf(DebugFP, "\t\tH:\t%d\n", ptr->sensorData.camera.h);
+           break;
+
+        case SENSOR_RANGE:
+           fprintf(DebugFP, "(Range)\n");
+           fprintf(DebugFP, "\t\tRange:\t%d\n", ptr->sensorData.range.range);
+           break;
+
+        case SENSOR_ACCELL:
+           fprintf(DebugFP, "(Acceleration)\n");
+           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.accell.x);
+           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.accell.y);
+           fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.accell.z);
+           break;
+
+        case SENSOR_ROLL:
+           fprintf(DebugFP, "(Roll)\n");
+           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.roll.x);
+           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.roll.y);
+           fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.roll.z);
+           break;
+
+        case SENSOR_MAGNETIC:
+           fprintf(DebugFP, "(Magnetic)\n");
+           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.magnetic.x);
+           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.magnetic.y);
+           fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.magnetic.z);
+           break;
+    }
+
+    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+}
+
+
+void
+walkSensorRecords(SENSOR_RECORD *ptr)
+{
+    while (ptr) {
+        dumpSensorRecord(ptr);
+        
+        ptr = ptr->next;
+    }
+}
+
+
+
+void
+walkSensorSubIdList(SENSOR_SUBID_LIST *ptr)
+{
+    while (ptr) {
+        dumpSensorSubIdList(ptr);
+        
+        walkSensorRecords(ptr->data);
+
+        ptr = ptr->next;
+    }
+}
+
+
+
+void
+walkSensorIdList(SENSOR_ID_LIST *ptr)
+{
+    while (ptr) {
+        dumpSensorIdList(ptr);
+        
+        walkSensorSubIdList(ptr->subIds);
+
+        ptr = ptr->next;
+    }
+}
+
+
+void
+walkSensorList(SENSOR_LIST *ptr)
+{
+    while (ptr) {
+        dumpSensorList(ptr);
+        
+        walkSensorIdList(ptr->sensors);
+
+        ptr = ptr->next;
+    }
+}
 
 
 void
 dumpLists()
 {
-    CAMERA_LIST_HDR *camListHdr = camLists;
-    int             i;
+    SENSOR_LIST         *sensorListPtr;
 
-    fprintf(DebugFP, "dumpLists():\nv----------------------v\n");
+    fprintf(DebugFP, "dumpLists():\nVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV\n");
 
-    LOCK_CAMLIST;
+    LOCK_SENSOR_LIST;
 
-    if (! camLists ) {
-        fprintf(DebugFP, "\tNO CAMERA RECORDS\n");
-        fprintf(DebugFP, "^------------^\n");
-        UNLOCK_CAMLIST;
+    if ( ! (sensorListPtr = sensorListGetHead())) {
+        fprintf(DebugFP, "\nNO RECORDS\n\n");
         return;
+    } else {
+        walkSensorList(sensorListPtr);
     }
 
-    while (camListHdr) {
-        if (DebugLevel == DEBUG_DETAIL) {
-            dumpCamListHdr(camListHdr);
-        }
+    UNLOCK_SENSOR_LIST;
 
-        for (i = 0 ; i < NUM_OF_CAMERAS ; i++) {
-
-            CAMERA_RECORD  *camRecs = camListHdr->recs[i];
-
-            while (camRecs) {
-                if (DebugLevel == DEBUG_DETAIL) {
-                    dumpCamRecord(camRecs);
-                }
-
-                camRecs = camRecs->next;
-            }
-        }
-        camListHdr = camListHdr->next;
-    }
-
-    UNLOCK_CAMLIST;
-
-    fprintf(DebugFP, "^----------------------^\n");
+    fprintf(DebugFP, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
 }
 
 
 
-
-/// \brief dump an individual CAMERA_LIST_HDR object to the debug output
-///
-static void
-dumpCamListHdr(CAMERA_LIST_HDR *ptr)
-{
-    fprintf(DebugFP, "CAMERA_LIST_HDR @ (0x%lx):\n", (long)ptr);
-
-    fprintf(DebugFP, "\tID:\t\"%s\"\n\tRecs:\t(0x%lx [LEFT]) (0x%lx [RIGHT])\n\tNext:\t(0x%lx)\n",
-            ptr->id,
-            (long)ptr->recs[CAMERA_LEFT_IDX], (long)ptr->recs[CAMERA_RIGHT_IDX],
-            (long)ptr->next);
-}
-
-
-
-/// \brief dump an individual CAMERA_RECORD object to the debug output
-///
-void
-dumpCamRecord(CAMERA_RECORD *ptr)
-{
-    fprintf(DebugFP, "CAMERA_RECORD @ (0x%lx):\n", (long)ptr);
-
-#ifdef	__APPLE__
-    fprintf(DebugFP, "\tTime:\t%ld.%08d\n\tCamera:\t%c\n\tx, y:\t%d, %d\n\tw, h:\t%d, %d\n\tNext:\t(0x%lx)\n",
-#else	// everything else
-    fprintf(DebugFP, "\tTime:\t%ld.%08ld\n\tCamera:\t%c\n\tx, y:\t%d, %d\n\tw, h:\t%d, %d\n\tNext:\t(0x%lx)\n",
-#endif
-            ptr->time.tv_sec, ptr->time.tv_usec, ptr->camera,
-            ptr->x, ptr->y, ptr->w, ptr->h,
-            (long)ptr->next);
-}
-
-
-
-
-/// \brief zero all fields in an individual CAMERA_RECORD object to the debug output
+/// \brief zero all fields in an individual SENSOR_LIST record
 ///
 /// general utility function - useful for testing as well
 void
-zeroCamRecord(CAMERA_RECORD *ptr)
+zeroSensorListRecord(SENSOR_LIST *ptr)
 {
-    ptr->time.tv_sec = ptr->time.tv_usec = 0;
-    ptr->camera = ' ';
-    ptr->x = ptr->y = ptr->w = ptr->h = 0;
-    ptr->next = (CAMERA_RECORD *)NULL;
+    ptr->type    = 0;
+    ptr->sensors = NULL;
+    ptr->next     = NULL;
 }
 
 
 
+/// \brief zero all fields in an individual SENSOR_ID_LIST record
+///
+/// general utility function - useful for testing as well
+void
+zeroSensorIdListRecord(SENSOR_ID_LIST *ptr)
+{
+    ptr->id     = NULL;
+    ptr->subIds = NULL;
+    ptr->next    = NULL;
+}
 
 
 
+/// \brief zero all fields in an individual SENSOR_SUBID_LIST record
+///
+/// general utility function - useful for testing as well
+void
+zeroSensorSubIdListRecord(SENSOR_SUBID_LIST *ptr)
+{
+    ptr->subId = NULL;
+    ptr->data  = NULL;
+    ptr->next   = NULL;
+}
 
-/// \brief initialize the mutex for the coordinated CamList access
+
+
+/// \brief zero all fields in an individual SENSOR_RECORD record
+///
+/// does not zero any of the sensor-specific fields
+///
+/// general utility function - useful for testing as well
+void
+zeroSensorRecord(SENSOR_RECORD *ptr)
+{
+    ptr->time.tv_sec  = 0;
+    ptr->time.tv_usec = 0;
+    ptr->next          = NULL;
+}
+
+
+
+/// alloc and zero a SENSOR_LIST record
+///
+/// if a memory allocation error happens, program will exit
+SENSOR_LIST *
+allocSensorListRecord()
+{
+    SENSOR_LIST *ptr;
+
+    ptr = cvAlloc(sizeof(SENSOR_LIST));
+
+    zeroSensorListRecord(ptr);
+
+    return ptr;
+}
+
+
+
+/// alloc and zero a SENSOR_ID_LIST record
+///
+/// we do set the id since we have to allocate memory for it
+///
+/// if a memory allocation error happens, program will exit
+SENSOR_ID_LIST *
+allocSensorIdListRecord(char *id)
+{
+    SENSOR_ID_LIST *ptr;
+
+    ptr = cvAlloc(sizeof(SENSOR_ID_LIST));
+
+    zeroSensorIdListRecord(ptr);
+
+    ptr->id = cvAlloc(strlen(id) + 1);
+    strcpy(ptr->id, id);
+
+    return ptr;
+}
+
+
+
+/// alloc and zero a SENSOR_SUBID_LIST record
+///
+/// we do set the subId since we have to allocate memory for it
+///
+/// if a memory allocation error happens, program will exit
+SENSOR_SUBID_LIST *
+allocSensorSubIdListRecord(char *subId)
+{
+    SENSOR_SUBID_LIST *ptr;
+
+    ptr = cvAlloc(sizeof(SENSOR_SUBID_LIST));
+
+    zeroSensorSubIdListRecord(ptr);
+
+    ptr->subId = cvAlloc(strlen(subId) + 1);
+    strcpy(ptr->subId, subId);
+
+    return ptr;
+}
+
+
+
+/// alloc and zero a SENSOR_ID_LIST record
+///
+/// if a memory allocation error happens, program will exit
+SENSOR_RECORD *
+allocSensorRecord()
+{
+    SENSOR_RECORD *ptr;
+
+    ptr = cvAlloc(sizeof(SENSOR_RECORD));
+
+    zeroSensorRecord(ptr);
+
+    return ptr;
+}
+
+
+NEED FREE ROUTINES!!!!!
+
+INCLUDING STUFF ALLOCATED FOR RECORDS (LIKE IDS, ETC).
+
+
+/// \brief initialize the mutex for the coordinated sensor list access
 //
 void
-initMutex()
+initMutexes()
 {
     int retVal;
 
-    retVal = pthread_mutex_init(&camListLock, (pthread_mutexattr_t *) NULL);
+    retVal = pthread_mutex_init(&mainListLock, (pthread_mutexattr_t *) NULL);
 }
 
 
@@ -742,12 +931,6 @@ static int
 getLock(pthread_mutex_t *lock)
 {
     int i, retVal;
-
-#ifdef  DEBUG
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(0x%lx): entered\n", __func__, (long)lock);
-    }
-#endif  // DEBUG
 
     for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
         if ((retVal = pthread_mutex_lock(lock)) == 0) {    // locked
@@ -797,20 +980,12 @@ releaseLock(pthread_mutex_t *lock)
 {
 	int     retVal;
 
-#ifdef  DEBUG
-	char    *errorString;
-
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(0x%lx): entered\n", __func__, (long)lock);
-    }
-#endif  // DEBUG
-
     retVal =  pthread_mutex_unlock(lock);
 
 #ifdef  DEBUG
-    errorString =strerror(errno);
+    errorString = strerror(errno);
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_DETAIL && retVal) {
         fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
                (long)lock, retVal, (retVal != 0) ? errorString : "Success");
     }
@@ -818,49 +993,3 @@ releaseLock(pthread_mutex_t *lock)
 
     return retVal;
 }
-
-
-
-
-int
-sensorRecAdd(SENSOR_TYPE sensor, char *id, int i1, int i2, int i3, int i4)
-{
-
-}
-
-void
-sensorRecPruneBySensorType(SENSOR_TYPE sensor, int ttl)
-{
-
-}
-
-void
-sensorRecPruneAll(int ttl)
-{
-
-}
-
-void
-sensorRecDeleteById(SENSOR_TYPE sensor, char *id)
-{
-
-}
-
-int
-sensorRecGetLatest(SENSOR_TYPE sensor, char *id, void *retPtr)
-{
-
-}
-
-int
-sensorRecGetAvg(SENSOR_TYPE sensor, char *id, void *retPtr)
-{
-
-}
-
-void
-zeroSensorRecord(SENSOR_TYPE sensor, void *retPtr)
-{
-
-}
-
