@@ -2,7 +2,9 @@
 
 ## Introduction
 
-One of the key aspects to creating a solution is to come up with a strategy to manage, coorelate, and analyze information from a number of different sources to give the robot a sense of situational awareness potentially including:
+One of the key aspects to creating a solution for autonomous control (or for any sort of complex system really) is to develop a strategy to manage, coorelate, and analyze information from a number of different sources.
+
+The goal here is to give the robot a sense of situational awareness potentially including:
 
 * Location
 
@@ -10,9 +12,23 @@ One of the key aspects to creating a solution is to come up with a strategy to m
 
 * Orientation to other objects and general playfield
 
-One of the first challenges is the collection and management of this informaton which may be coming from a significant number of individual sensors and other data sources.  Maintaining the timeliness of this information is key - much of the robots actions will be driven by very near term observations of it's surroundings, likely limited to a few seconds of history (at most, some even less).  To this end, the core of the autonmous system is the database of sensed information amd providing a set of ways to analyze, normalize (if needed), and make this iraw or otherwise conditioned information available to the robot control logic (which could reside on or off the RoboRio).
+With this information, the robot has the potential to be able to perform non-trivial high-level tasks without human intervention.  This is a continous process often refered to as an "**OODA loop*:
 
-This a longer term and more comprehensive approach - it might yield payoffs in the short term (I feel we can use the information even for a simple obot control scenario) but it also provides an architecture for longer term and more sophisticated awareness and subsequent control.
+* **O** - Observe (what is around the robot?)
+
+* **O** - Orient (how is the robot oriented in regards to its observed surroundings?)
+
+* **D** - Decide (what should the robot do?  As in *now*; turn, move, lift, drop, shoot, etc.?  This probably is and should be part of a bigger goal.)
+
+* **A** - Act (how should the robot instantiate its decision?)
+
+* Repeat...
+
+Each of these is a discrete step in the autononmous process and is repeated over and over with updated inputs and goals as appropriate.   This is not an easy to reach goal.
+
+One of the first challenges is the collection and management of this informaton which may be coming from a significant number of individual sensors and other data sources.  Maintaining the timeliness of this information is key - much of the robots actions will be driven by very near term observations of its surroundings, likely limited to a few seconds of history (at most, maybe even less).  To this end, the core of the autonomous system is the database of sensed information and providing a set of ways to analyze, normalize (if needed), and make this raw or conditioned information available to the robot control logic (which could reside on or off the RoboRio).
+
+This a longer term and more comprehensive approach - it might yield payoffs in the short term (I feel we can use the information even for a simple robot control scenario) but it also provides an architecture for a longer term and more sophisticated method of awareness and subsequent control.
 
 The architecture is designed around a series of functional blocks which should give the ability to modify, replace, and re-work substantial components with minimal impacts on other parts of the system.  Each component can be thought of as having a specific responsibility with connections to and from other components over which data and commands move between functional blocks.  Looking at the system in that way can make it easier to understand the overall approach without having to dig into the details of implementation of any individual component.
 
