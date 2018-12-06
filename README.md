@@ -1,5 +1,23 @@
 # Autonomous-related code for FRC #4241 autonomous operation efforts
 
+## Introduction
+
+One of the key aspects to creating a solution is to come up with a strategy to manage, coorelate, and analyze information from a number of different sources to give the robot a sense of situational awareness potentially including:
+
+* Location
+
+* Distances from other objects
+
+* Orientation to other objects and general playfield
+
+One of the first challenges is the collection and management of this informaton which may be coming from a significant number of individual sensors and other data sources.  Maintaining the timeliness of this information is key - much of the robots actions will be driven by very near term observations of it's surroundings, likely limited to a few seconds of history (at most, some even less).  To this end, the core of the autonmous system is the database of sensed information amd providing a set of ways to analyze, normalize (if needed), and make this iraw or otherwise conditioned information available to the robot control logic (which could reside on or off the RoboRio).
+
+This a longer term and more comprehensive approach - it might yield payoffs in the short term (I feel we can use the information even for a simple obot control scenario) but it also provides an architecture for longer term and more sophisticated awareness and subsequent control.
+
+The architecture is designed around a series of functional blocks which should give the ability to modify, replace, and re-work substantial components with minimal impacts on other parts of the system.  Each component can be thought of as having a specific responsibility with connections to and from other components over which data and commands move between functional blocks.  Looking at the system in that way can make it easier to understand the overall approach without having to dig into the details of implementation of any individual component.
+
+**Note:**  This is an evolving document and is trying to be maintained as the thinking about this approach is evolving as well.  You might see repetition or even contradictions; excuse the first but please point out the second.
+
 ## Overview
 Architecture is a set of servers collecting information (such as cv_cam for each camera that watches the serial camera output) and sending the sensor data via a UDP packet to the centralized database (cv_db).  In the case of a camera, each cv_cam modules passes robot object and visual field location information to cv_db as well as some identifying information tying this visual information to a specific camera.  Similar processing happens for other sensors (like ultrasonic rangers for example).
 
