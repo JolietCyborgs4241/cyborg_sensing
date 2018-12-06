@@ -18,156 +18,89 @@
 
 
 
-#ifdef  DEBUG // show function and line in debug output --------------------------V
+#ifdef  DEBUG           // show function and line in debug output
 
-#define LOCK_SENSOR_LIST   \
-                        if (DebugLevel == DEBUG_DETAIL) {\
+#define LOCK_CAMLIST    if (DebugLevel == DEBUG_DETAIL) {\
                             fprintf(DebugFP, "Line %d in %s: getLock(0x%lx)\n", \
                                     __LINE__, __func__, (long)&camListLock); \
                         } getLock(&camListLock)
-
-#define UNLOCK_SENSOR_LIST \
-                        if (DebugLevel == DEBUG_DETAIL) {\
+#define UNLOCK_CAMLIST  if (DebugLevel == DEBUG_DETAIL) {\
                             fprintf(DebugFP, "Line %d in %s: releaseLock(0x%lx)\n", \
                                     __LINE__, __func__, (long)&camListLock); \
                         } releaseLock(&camListLock)
 
-#else   //  ! DEBUG ----------------------------------------------------------------
+#else   //  ! DEBUG
 
-#define LOCK_CAMLIST    getLock(&mainListLock)
-#define UNLOCK_CAMLIST  releaseLock(&mainListLock)
+#define LOCK_CAMLIST    getLock(&camListLock)
+#define UNLOCK_CAMLIST  releaseLock(&camListLock)
 
-#endif  //  DEBUG -----------------------------------------------------------------^
-
+#endif  //  DEBUG
 
 
 static int              getLock(pthread_mutex_t *),
                         releaseLock(pthread_mutex_t *);
 
-static pthread_mutex_t  mainListLock;
+static pthread_mutex_t  camListLock;
 
+static CAMERA_LIST_HDR  *camLists = (CAMERA_LIST_HDR *)NULL;
 
-
-static SENSOR_LIST      *sensorListGetHead();
-
-static SENSOR_LIST      *SensorLists = (SENSOR_LIST *)NULL;
-
+static CAMERA_LIST_HDR  *camListGetHdr();
 
 static void             pruneByHdr(CAMERA_LIST_HDR *, int),
                         dumpCamListHdr(CAMERA_LIST_HDR *),
                         freeCamRecsFromEnd(CAMERA_RECORD *); // RECURSIVE!!
 
 
+static SENSOR_LIST_HDR  *SensorLists = (SENSOR_LIST_HDR *)NULL;
 
 
-/// \brief  return the sensorList hdr
+
+/// \brief  return the camList hdr
 ///
 /// internal support routine
 ///
-/// doesn't lock sensorList - assumes caller has locked it (if needed)
-static SENSOR_LIST *
-sensorListGetHdr()
+/// doesn't lock camList - assumes caller has locked it (if needed)
+static CAMERA_LIST_HDR *
+camListGetHdr()
 {
-    return(SensorLists);
+    return(camLists);
 }
 
 
-/// \brief  Get pointer to a SENSOR_LIST for a specific sensor type
+
+
+/// \brief  Get a CAMERA_LIST_HDR for a specific object id
 ///
-/// type
+/// id
 ///
-/// doesn't lock the sensorlist - at worst it will miss the first entry
+/// doesn't lock the camlist - at worst it will miss the first entry
 /// which could be added while we are traversing
 ///
 /// no elements ever get removed from the camList headers
-SENSOR_LIST *
-sensorListGetPtrBySensor(SENSOR_TYPE sensor)
+CAMERA_LIST_HDR *
+camListGetHdrById(char *id)
 {
-    SENSOR_LIST   *ptr;
+    CAMERA_LIST_HDR    *hdrPtr;
 
-    // any sensors at all?
-    if ( ! sensorLists) {
+    // any ids at all?
+    if ( ! camLists) {
         return NULL;
     }
 
-    ptr = sensorLists;
+    hdrPtr = camLists;
 
-    // look for the sensor type
-    while (ptr) {
-        if (ptr->type == sensor) {
-            return ptr;
+    while (hdrPtr) {
+        if (strcmp(id, hdrPtr->id) == 0) {
+            break;
         }
 
-        ptr = ptr->next;
+        hdrPtr = hdrPtr->next;
     }
 
-    return (SENSOR_LIST *)NULL;
+    return hdrPtr;
 }
 
 
-/// \brief  Get pointer to a SENSOR_ID_LIST for a specific sensor
-///         and id
-///
-/// type, id
-///
-/// doesn't lock the camlist - at worst it will miss the first entry
-/// which could be added while we are traversing
-///
-/// no elements ever get removed from the camList headers
-SENSOR_ID_LIST *
-sensorIdListGetPtrBySensorAndId(SENSOR_TYPE sensor, char *id)
-{
-    SENSOR_LIST *ptr;
-
-    if ((ptr = sensorListGetPtrBySensor(sensor)) == (SENSOR_LIST *)NULL) {
-        return (SENSOR_ID_LIST *)NULL;
-    }
-
-    // look for the sensor type
-    while (ptr) {
-        if (strcmp(id, ptr->id) == 0) {
-            return ptr;
-        }
-
-        ptr = ptr->next;
-    }
-
-    return (SENSOR_ID_LIST *)NULL;
-}
-
-
-
-XXXXXXXXXXXXXXXXXXXXXXX
-
-/// \brief  Get pointer to a SENSOR_LIST_HDR for a specific sensor
-///         and id
-///
-/// type, id
-///
-/// doesn't lock the camlist - at worst it will miss the first entry
-/// which could be added while we are traversing
-///
-/// no elements ever get removed from the camList headers
-SENSOR_ID_LIST *
-sensorIdListGetPtrBySensorAndId(SENSOR_TYPE sensor, char *id)
-{
-    SENSOR_LIST *ptr;
-
-    if ((ptr = sensorListGetPtrBySensor(sensor)) == (SENSOR_LIST *)NULL) {
-        return (SENSOR_ID_LIST *)NULL;
-    }
-
-    // look for the sensor type
-    while (ptr) {
-        if (strcmp(id, ptr->id) == 0) {
-            return ptr;
-        }
-
-        ptr = ptr->next;
-    }
-
-    return (SENSOR_ID_LIST *)NULL;
-}
 
 
 
@@ -205,7 +138,7 @@ camRecAdd(char *id, char camera, int x, int y, int w, int h)
     }
 
     // search for the id (even if we just added it)
-    hdrPtr = sensorListGetHdrById(id);
+    hdrPtr = camListGetHdrById(id);
 
     if ( ! hdrPtr) {        // went to the end so add a new header for this id
         newHdrPtr       = (CAMERA_LIST_HDR *)cvAlloc(sizeof(CAMERA_LIST_HDR));
@@ -272,7 +205,7 @@ camRecPruneById(char *id, int ttl)
 
     LOCK_CAMLIST;
 
-    if ((hdrPtr = sensorListGetHdrById(id)) == 0) {
+    if ((hdrPtr = camListGetHdrById(id)) == 0) {
         UNLOCK_CAMLIST;
         return;         // specified object not found
     }
@@ -319,7 +252,7 @@ camRecPruneAll(int ttl)
 
     LOCK_CAMLIST;
 
-    if ((hdrPtr = sensorListGetHdr()) == (CAMERA_LIST_HDR *)NULL) {
+    if ((hdrPtr = camListGetHdr()) == (CAMERA_LIST_HDR *)NULL) {
         UNLOCK_CAMLIST;
         return;               // the whole list is empty
     }
@@ -483,7 +416,7 @@ camRecGetLatest(char *id, CAMERA_RECORD *rlCamArray)
 
     LOCK_CAMLIST;
 
-    hdrPtr     = sensorListGetHdrById(id);
+    hdrPtr     = camListGetHdrById(id);
 
     if ( ! hdrPtr) {
         return -1;      // that id not found
@@ -552,7 +485,7 @@ camRecGetAvg(char *id, CAMERA_RECORD *rlCamArray)
 
     LOCK_CAMLIST;
 
-    hdrPtr = sensorListGetHdrById(id);
+    hdrPtr = camListGetHdrById(id);
 
     if ( ! hdrPtr) {
         UNLOCK_CAMLIST;
