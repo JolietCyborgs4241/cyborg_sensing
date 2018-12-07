@@ -125,6 +125,14 @@ void  sensorRecDeleteById(SENSOR_TYPE, char *);
 /// ID, subID - delete all records for a sensor type, ID, and subID
 void  sensorRecDeleteByIdSubId(SENSOR_TYPE, char *, char *);
 
+/// ID - get all the subsIds for a specific sensor type
+///
+/// returns a pointer to a list of strings
+/// (must all be freed when no longer needed)
+char *
+sensorGetSubIds(SENSOR_TYPE);
+#warning sensorGetSubIds return
+
 /// get latest record for a specific sensor in all subIds
 /// of a specific sensor type
 ///

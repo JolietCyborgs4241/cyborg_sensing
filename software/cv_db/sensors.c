@@ -28,17 +28,17 @@ processCamData(char *buffer)
 
     // validate and set camera
     // should be "[RL] N2 " at head
-    if (*buffer != SENSOR_CAM || *(buffer + 1) != ' ') {
+    if (*buffer != SENSOR_CAMERA || *(buffer + 1) != ' ') {
         fprintf(DebugFP, "%s: error: %s() sensor header error\n", MyName, __func__);
         return;
     }
 
     buffer += 2;           // Starts with "C " so continue
 
-    if (*buffer == CAMERA_LEFT_ID || *buffer == CAMERA_RIGHT_ID) {
+    if (*buffer != ' ') {
         camera = *buffer;
     } else {
-        fprintf(DebugFP, "%s: error: unknown camera '%c'\n", MyName, *buffer);
+        fprintf(DebugFP, "%s: error: blank camera field\n", MyName);
         return;
     }
 
@@ -72,7 +72,7 @@ processCamData(char *buffer)
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
-    camRecAdd(id, camera, x, y, w, h);
+    sensorRecAdd(SENSOR_CAMERA, id, camera, x, y, w, h);
 }
 
 
@@ -83,9 +83,9 @@ void
 processRangerData(char *buffer)
 {
     char    id[MAX_SENSOR_READ], *ptr;;
-    int     dist;
+    int     range;
 
-    if (*buffer != SENSOR_DIST || *(buffer + 1) != ' ') {
+    if (*buffer != SENSOR_RANGE || *(buffer + 1) != ' ') {
         fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
                 MyName, __func__, buffer);
         return;
@@ -121,10 +121,10 @@ processRangerData(char *buffer)
 
     buffer++;               // now point to the real data value
 
-    dist = atoi(buffer);
+    range = atoi(buffer);
 
-    if (dist <= 0) {        // scanning error
-        fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, dist);
+    if (range <= 0) {        // scanning error
+        fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, range);
         return;
     }
 
@@ -132,7 +132,7 @@ processRangerData(char *buffer)
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
-    sensorRecAdd(SENSOR_DIST, id, dist, 0, 0, 0);  // unused params are 0
+    sensorRecAdd(SENSOR_RANGE, id, "", range, 0, 0, 0);  // unused params are 0
 }
 
 
@@ -145,8 +145,9 @@ process9DData(char *buffer)
     SENSOR_TYPE   type;
     int     scanRet, x, y, z;
 
-    if (((*buffer != SENSOR_G) && (*buffer != SENSOR_ROLL) && (*buffer != SENSOR_MAG))
-       ||  *(buffer + 1) != ' ') {
+    if (((*buffer != SENSOR_ACCELL) && (*buffer != SENSOR_ROLL)
+         && (*buffer != SENSOR_MAGNETIC)) ||  *(buffer + 1) != ' ') {
+
         fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
                 MyName, __func__, buffer);
         return;
@@ -197,5 +198,5 @@ process9DData(char *buffer)
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
-    sensorRecAdd(type, id, x, y, z, 0);  // unused params are 0
+    sensorRecAdd(type, id, "", x, y, z, 0);  // unused params are 0
 }

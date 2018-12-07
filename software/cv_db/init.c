@@ -120,6 +120,8 @@ init(int argc, char **argv)
 
     initMutexes();
 
+    initDb();
+
     openIncomingPort(&HostInfo);
 
     if (DebugLevel) {   // any debug level

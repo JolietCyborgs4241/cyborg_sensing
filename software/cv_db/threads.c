@@ -92,7 +92,7 @@ pruneThread(void *ttl)
         }
 #endif  // DEBUG
         
-        camRecPruneAll(*(int *)ttl);
+        sensorRecPruneAll(*(int *)ttl);
     }
 }
 
@@ -158,17 +158,17 @@ processSensorData(int sock)
 
         switch (*buffer) {               // first character identifies sensor type
 
-        case SENSOR_CAM:
+        case SENSOR_CAMERA:
             processCamData(buffer);
             break;
 
-        case SENSOR_DIST:
+        case SENSOR_RANGE:
             processRangerData(buffer);
             break;
 
-        case SENSOR_G:
+        case SENSOR_ACCELL:
         case SENSOR_ROLL:
-        case SENSOR_MAG:
+        case SENSOR_MAGNETIC:
             process9DData(buffer);
             break;
 

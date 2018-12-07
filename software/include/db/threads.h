@@ -1,9 +1,9 @@
-//  cv_threads.h
+//  db/threads.h
 //
-//  thread-related stuff
+//  database thread-related stuff
 
-#ifndef _CV_THREADS_H_
-#define _CV_THREADS_H_ 1
+#ifndef _CV_DB_THREADS_H_
+#define _CV_DB_THREADS_H_ 1
 
 
 /// Start the purging thread
@@ -17,4 +17,4 @@ void    startPruneThread(int);
 void    startSensorDataThread(int);
 
 
-#endif  /* cv_threads.h */
+#endif  /* db/threads.h */

@@ -1,8 +1,10 @@
-//  cv_externs.h
+//  db/externs.h
 //
-//  global variable external definitions for cyborg_vision
+//  global variable external definitions for cyborg_vision database
 //
 
+#ifndef _DB_EXTERNS_H_
+#define _DB_EXTERNS_H_  1
 
 /// program name (set directly from argv[0])
 extern  char        *MyName;
@@ -23,4 +25,6 @@ extern  int         DebugLevel;
 extern  FILE        *DebugFP;
 
 void    initMutexes();
+void    initDb();
 
+#endif  /* db/externs.h */
