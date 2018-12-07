@@ -8,11 +8,19 @@
 
 
 
-#define	DEBUG_OFF       0
-#define	DEBUG_INFO      1
-#define	DEBUG_DETAIL    2
+#define	DEBUG_OFF           0
+#define	DEBUG_INFO          1
+#define	DEBUG_DETAIL        2
 
-#define TTL_DEFAULT     3   // secs
+#define DEBUG_OUT(X, ...)   fprintf(DebugFP X__VA_OPT__(,) __VA_ARGS__)
+//#define G(X, ...) f(0, X __VA_OPT__(,) __VA_ARGS__)
+//G(a, b, c) // replaced by f(0, a, b, c)
+//G(a, )     // replaced by f(0, a)
+//G(a)       // replaced by f(0, a)
+
+
+
+#define TTL_DEFAULT         3   // secs
 
 
 

@@ -130,7 +130,7 @@ initDb()
 ///
 /// no elements ever get removed from the camList headers
 SENSOR_LIST *
-sensorListGetPtrBySensor(SENSOR_TYPE sensor)
+sensorGetListBySensor(SENSOR_TYPE sensor)
 {
     SENSOR_LIST   *ptr;
 
@@ -162,7 +162,7 @@ sensorListGetPtrBySensor(SENSOR_TYPE sensor)
 ///
 /// no elements ever get removed from the camList headers
 SENSOR_ID_LIST *
-sensorIdListGetPtrBySensorId(SENSOR_TYPE sensor, char *id)
+sensorGetIdListById(SENSOR_TYPE sensor, char *id)
 {
     SENSOR_LIST     *ptr;
     SENSOR_ID_LIST  *idPtr;
@@ -195,7 +195,7 @@ sensorIdListGetPtrBySensorId(SENSOR_TYPE sensor, char *id)
 ///
 /// doesn't lock the camlist
 SENSOR_SUBID_LIST *
-sensorIdListGetPtrBySensorIdSubid(SENSOR_TYPE sensor, char *id, char *subId)
+sensorSubIdListBySubid(SENSOR_TYPE sensor, char *id, char *subId)
 {
     SENSOR_ID_LIST      *ptr;
     SENSOR_SUBID_LIST   *subIdPtr;
@@ -216,6 +216,83 @@ sensorIdListGetPtrBySensorIdSubid(SENSOR_TYPE sensor, char *id, char *subId)
     }
 
     return (SENSOR_SUBID_LIST *)NULL;
+}
+
+
+
+/// \brief  Alloc, fill, and add a sensor record to a subId record
+static void
+newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
+                int i1, int i2, int i3, int i4)
+{
+    SENSOR_RECORD   *sensorPtr;
+
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s((0x%lx), \"%s\", %d, %d, %d, %d, %d\n", __func__, 
+                (long)subPtr, type, i1, i2, i3, i4);
+    }
+
+    sensorPtr = allocSensorRecord();
+
+    sensorPtr->type = sensor;           // save sensor type again
+    sensorPtr->next = subIdPtr->data;   // hook to the front
+    subIdPtr->data  = sensorPtr;        // update subId record
+    gettimeofday(&(sensorPtr->time));
+
+    switch (sensor) {
+
+    case SENSOR_CAMERA:
+        sensorPtr->sensorData.camera.x = i1;
+        sensorPtr->sensorData.camera.y = i2;
+        sensorPtr->sensorData.camera.w = i3;
+        sensorPtr->sensorData.camera.h = i4;
+        break;
+
+    case SENSOR_RANGE:
+        sensorPtr->sensorData.range.range = i1;
+        break;
+
+    case SENSOR_ACCELL:
+        sensorPtr->sensorData.accell.x = i1;
+        sensorPtr->sensorData.accell.y = i2;
+        sensorPtr->sensorData.accell.z = i3;
+        break;
+
+    case SENSOR_ROLL:
+        sensorPtr->sensorData.roll.x = i1;
+        sensorPtr->sensorData.roll.y = i2;
+        sensorPtr->sensorData.roll.z = i3;
+        break;
+
+    case SENSOR_MAGNETIC:
+        sensorPtr->sensorData.magnetic.x = i1;
+        sensorPtr->sensorData.magnetic.y = i2;
+        sensorPtr->sensorData.magnetic.z = i3;
+        break;
+
+    }
+}
+
+
+/// \brief  Alloc, fill, and add a sensor record to a id record
+/// adding the subId record as well
+static void
+newSensorSubId(SENSOR_ID_LIST *idPtr, char *subId, SENSOR_TYPE type,
+                int i1, int i2, int i3, int i4)
+{
+    SENSOR_SUBID_LIST   *subIdPtr;;
+
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s((0x%lx), \"%s\", %d, %d, %d, %d, %d\n", __func__, 
+                (long)idPtr, type, i1, i2, i3, i4);
+    }
+
+    subIdPtr = allocSensorSubIdListRecord(char *subId);
+
+    subIdPtr->next = idPtr->subIds;   // hook to the front
+    idPtr->subIds  = subIdPtr;        // update id record
+
+    newSensorRecord(subIdPtr, type, i1, i2, i3, i4);    // add the new sensor record
 }
 
 
@@ -259,46 +336,6 @@ THEY CAN USE EACH OTHER TO ADD LOWER LEVELS
                         if ((subIdLen == 0 && strlen(subIdPtr) == 0) ||
                             (strcmp(subId, subIdPtr->subId) == 0)) {    // found subId
 
-                            sensorPtr = allocSensorRecord();
-
-                            sensorPtr->type = sensor;           // save sensor type again
-                            sensorPtr->next = subIdPtr->data;   // hook to the front
-                            subIdPtr->data  = sensorPtr;        // update subId record
-                            gettimeofday(&(sensorPtr->time));
-
-                            switch (sensor) {
-
-                            case SENSOR_CAMERA:
-                                sensorPtr->sensorData.camera.x = i1;
-                                sensorPtr->sensorData.camera.y = i2;
-                                sensorPtr->sensorData.camera.w = i3;
-                                sensorPtr->sensorData.camera.h = i4;
-                                break;
-
-                            case SENSOR_RANGE:
-                                sensorPtr->sensorData.range.range = i1;
-                                break;
-
-                            case SENSOR_ACCELL:
-                                sensorPtr->sensorData.accell.x = i1;
-                                sensorPtr->sensorData.accell.y = i2;
-                                sensorPtr->sensorData.accell.z = i3;
-                                break;
-
-                            case SENSOR_ROLL:
-                                sensorPtr->sensorData.roll.x = i1;
-                                sensorPtr->sensorData.roll.y = i2;
-                                sensorPtr->sensorData.roll.z = i3;
-                                break;
-
-                            case SENSOR_MAGNETIC:
-                                sensorPtr->sensorData.magnetic.x = i1;
-                                sensorPtr->sensorData.magnetic.y = i2;
-                                sensorPtr->sensorData.magnetic.z = i3;
-                                break;
-
-                            }
-                        }
 
                         subIdPtr = subIdPtr->next;
                 }
