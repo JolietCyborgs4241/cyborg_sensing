@@ -61,9 +61,28 @@ static void                 freeSensorRecsFromEnd(SENSOR_RECORD *); // RECURSIVE
 
 
 
+/// \brief  return the sensorList hdr
+///
+/// internal support routine
+///
+/// doesn't lock sensorList - assumes caller has locked it (if needed)
+static SENSOR_LIST *
+sensorListGetHead()
+{
+    return(SensorLists);
+}
+
+
+
+// *****************************************************************
+//
+// Initilize DB - create one top level record per sensor
+//
+// *****************************************************************
+
 /// \brief  initialize the database
 ///
-/// one record for each sensor type
+/// one record for each sensor type at the top level
 void
 initDb()
 {
@@ -99,17 +118,6 @@ initDb()
     SensorLists = firstPtr;
 
     dumpLists();
-}
-
-/// \brief  return the sensorList hdr
-///
-/// internal support routine
-///
-/// doesn't lock sensorList - assumes caller has locked it (if needed)
-static SENSOR_LIST *
-sensorListGetHead()
-{
-    return(SensorLists);
 }
 
 
@@ -185,10 +193,7 @@ sensorIdListGetPtrBySensorId(SENSOR_TYPE sensor, char *id)
 ///
 /// type, id
 ///
-/// doesn't lock the camlist - at worst it will miss the first entry
-/// which could be added while we are traversing
-///
-/// no elements ever get removed from the camList headers
+/// doesn't lock the camlist
 SENSOR_SUBID_LIST *
 sensorIdListGetPtrBySensorIdSubid(SENSOR_TYPE sensor, char *id, char *subId)
 {
@@ -220,30 +225,96 @@ sensorIdListGetPtrBySensorIdSubid(SENSOR_TYPE sensor, char *id, char *subId)
 /// type, id, subId, #, #, #, #
 ///
 /// locks the camList
-int
-sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int x, int y, int w, int h)
+void
+sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, int i4)
 {
-#ifdef NEVER
     SENSOR_LIST         *listPtr;
     SENSOR_SUBID_LIST   *subIdPtr;
     SENSOR_ID_LIST      *idPtr;
     SENSOR_LIST         *sensorPtr;
+    int                 subIdLen;
     
     if (DebugLevel == DEBUG_INFO) {
         fprintf(DebugFP, "%s: %s(%d, \"%s\", \"%s\", %d, %d, %d, %d)\n",
                 MyName, __func__, (int)sensor, id, subId, x, y, w, h);
     }
 
+HAVE ROUTINES TO ADD A SENSOR RECORD STARTING AT SOME LEVEL?
+THEY CAN USE EACH OTHER TO ADD LOWER LEVELS
+
     LOCK_SENSOR_LIST;
 
     listPtr = sensorListGetHead();
 
     while (listPtr) {
+        if (listPtr->type == sensor) {  // found correct sensor
+            idPtr = listPtr->sensors;   // down to the id level
 
+            while (idPtr) {
+                if (strcmp(idPtr->id, id) == 0) {   // found correct ID
+                    subIdPtr = idPtr->subIds        // down to the subId level
+
+                    while (subIdPtr) {
+                        subIdLen = strlen(subId);   // could be an empty string
+                        if ((subIdLen == 0 && strlen(subIdPtr) == 0) ||
+                            (strcmp(subId, subIdPtr->subId) == 0)) {    // found subId
+
+                            sensorPtr = allocSensorRecord();
+
+                            sensorPtr->type = sensor;           // save sensor type again
+                            sensorPtr->next = subIdPtr->data;   // hook to the front
+                            subIdPtr->data  = sensorPtr;        // update subId record
+                            gettimeofday(&(sensorPtr->time));
+
+                            switch (sensor) {
+
+                            case SENSOR_CAMERA:
+                                sensorPtr->sensorData.camera.x = i1;
+                                sensorPtr->sensorData.camera.y = i2;
+                                sensorPtr->sensorData.camera.w = i3;
+                                sensorPtr->sensorData.camera.h = i4;
+                                break;
+
+                            case SENSOR_RANGE:
+                                sensorPtr->sensorData.range.range = i1;
+                                break;
+
+                            case SENSOR_ACCELL:
+                                sensorPtr->sensorData.accell.x = i1;
+                                sensorPtr->sensorData.accell.y = i2;
+                                sensorPtr->sensorData.accell.z = i3;
+                                break;
+
+                            case SENSOR_ROLL:
+                                sensorPtr->sensorData.roll.x = i1;
+                                sensorPtr->sensorData.roll.y = i2;
+                                sensorPtr->sensorData.roll.z = i3;
+                                break;
+
+                            case SENSOR_MAGNETIC:
+                                sensorPtr->sensorData.magnetic.x = i1;
+                                sensorPtr->sensorData.magnetic.y = i2;
+                                sensorPtr->sensorData.magnetic.z = i3;
+                                break;
+
+                            }
+                        }
+
+                        subIdPtr = subIdPtr->next;
+                }
+
+                idPtr = idPtr->next;
+            }
+
+            if (idPtr == (SENSOR_ID_LIST *)NULL) {  // didn't find it in this sensor list
+        }
+
+        listPtr = listPtr->next;
     }
 
-    if ( !
-#endif
+    // there should never be a case where we have a sensor type that's not already listed
+    fprintf(DebugFP, "%s: warning: %s(%c, \"%s\", \"%s\", %d, %d, %d, %d, %d\n",
+            MyName, __func__, sensor, id, subId, i1, i2, i3, i4);
 }
 
 
