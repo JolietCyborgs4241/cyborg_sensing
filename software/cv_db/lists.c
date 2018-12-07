@@ -167,7 +167,7 @@ sensorGetIdListById(SENSOR_TYPE sensor, char *id)
     SENSOR_LIST     *ptr;
     SENSOR_ID_LIST  *idPtr;
 
-    if (ptr = sensorListGetPtrBySensor(sensor)) {
+    if ((ptr = sensorGetListBySensor(sensor))) {
         return (SENSOR_ID_LIST *)NULL;
     }
 
@@ -200,7 +200,7 @@ sensorSubIdListBySubid(SENSOR_TYPE sensor, char *id, char *subId)
     SENSOR_ID_LIST      *ptr;
     SENSOR_SUBID_LIST   *subIdPtr;
 
-    if (ptr = sensorIdListGetPtrBySensorId(sensor, id)) {
+    if ((ptr = sensorGetIdListById(sensor, id))) {
         return (SENSOR_SUBID_LIST *)NULL;
     }
 
@@ -220,6 +220,13 @@ sensorSubIdListBySubid(SENSOR_TYPE sensor, char *id, char *subId)
 
 
 
+
+// *****************************************************************
+//
+// add routines
+//
+// *****************************************************************
+
 /// \brief  Alloc, fill, and add a sensor record to a subId record
 static void
 newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
@@ -228,18 +235,18 @@ newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
     SENSOR_RECORD   *sensorPtr;
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s((0x%lx), \"%s\", %d, %d, %d, %d, %d\n", __func__, 
-                (long)subPtr, type, i1, i2, i3, i4);
+        fprintf(DebugFP, "%s((0x%lx), \'%c\', %d, %d, %d, %d\n",
+                __func__, (long)subPtr, type, i1, i2, i3, i4);
     }
 
     sensorPtr = allocSensorRecord();
 
-    sensorPtr->type = sensor;           // save sensor type again
-    sensorPtr->next = subIdPtr->data;   // hook to the front
-    subIdPtr->data  = sensorPtr;        // update subId record
-    gettimeofday(&(sensorPtr->time));
+    sensorPtr->type = type;             // save sensor type again
+    sensorPtr->next = subPtr->data;     // hook to the front
+    subPtr->data    = sensorPtr;        // update subId record
+    gettimeofday(&(sensorPtr->time), NULL);
 
-    switch (sensor) {
+    switch (type) {
 
     case SENSOR_CAMERA:
         sensorPtr->sensorData.camera.x = i1;
@@ -274,25 +281,48 @@ newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
 }
 
 
-/// \brief  Alloc, fill, and add a sensor record to a id record
-/// adding the subId record as well
+/// \brief  Alloc, fill, and add a subid record to a id record
+/// adding the sensor record as well
 static void
-newSensorSubId(SENSOR_ID_LIST *idPtr, char *subId, SENSOR_TYPE type,
-                int i1, int i2, int i3, int i4)
+newSensorSubId(SENSOR_ID_LIST *idPtr, SENSOR_TYPE type, char *subId,
+               int i1, int i2, int i3, int i4)
 {
     SENSOR_SUBID_LIST   *subIdPtr;;
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s((0x%lx), \"%s\", %d, %d, %d, %d, %d\n", __func__, 
-                (long)idPtr, type, i1, i2, i3, i4);
+        fprintf(DebugFP, "%s((0x%lx), \'%c\', \"%s\", %d, %d, %d, %d\n",
+		__func__, (long)idPtr, type, subId, i1, i2, i3, i4);
     }
 
-    subIdPtr = allocSensorSubIdListRecord(char *subId);
+    subIdPtr = allocSensorSubIdListRecord(subId);
 
     subIdPtr->next = idPtr->subIds;   // hook to the front
     idPtr->subIds  = subIdPtr;        // update id record
 
     newSensorRecord(subIdPtr, type, i1, i2, i3, i4);    // add the new sensor record
+}
+
+
+
+/// \brief  Alloc, fill, and add a id record to a top level sensor record
+/// adding the id, subId, and sensor record as well
+static void
+newSensorId(SENSOR_LIST *listPtr, char *id, char *subId, SENSOR_TYPE type,
+                int i1, int i2, int i3, int i4)
+{
+    SENSOR_ID_LIST   *idPtr;;
+
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s((0x%lx), \"%s\", \"%s\", %d, %d, %d, %d, %d\n",
+		__func__, (long)listPtr, id, subId, type, i1, i2, i3, i4);
+    }
+
+    idPtr = allocSensorIdListRecord(id);
+
+    idPtr->next       = listPtr->sensors;   // hook to the front
+    listPtr->sensors  = idPtr;              // update id record
+
+    newSensorSubId(idPtr, type, subId, i1, i2, i3, i4);    // add the new subId record
 }
 
 
@@ -313,11 +343,11 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
     
     if (DebugLevel == DEBUG_INFO) {
         fprintf(DebugFP, "%s: %s(%d, \"%s\", \"%s\", %d, %d, %d, %d)\n",
-                MyName, __func__, (int)sensor, id, subId, x, y, w, h);
+                MyName, __func__, (int)sensor, id, subId, i1, i2, i3, i3);
     }
 
-HAVE ROUTINES TO ADD A SENSOR RECORD STARTING AT SOME LEVEL?
-THEY CAN USE EACH OTHER TO ADD LOWER LEVELS
+    // we'll go as far down the list as we can until we don't find something
+    // and then add it
 
     LOCK_SENSOR_LIST;
 
@@ -329,28 +359,38 @@ THEY CAN USE EACH OTHER TO ADD LOWER LEVELS
 
             while (idPtr) {
                 if (strcmp(idPtr->id, id) == 0) {   // found correct ID
-                    subIdPtr = idPtr->subIds        // down to the subId level
+                    subIdPtr = idPtr->subIds;       // down to the subId level
 
                     while (subIdPtr) {
                         subIdLen = strlen(subId);   // could be an empty string
                         if ((subIdLen == 0 && strlen(subIdPtr) == 0) ||
                             (strcmp(subId, subIdPtr->subId) == 0)) {    // found subId
 
-
+				// looks like all we need to do is add the sensor data record
+				newSensorRecord(subIdPtr, sensor, i1, i2, i3, i4);
+                                return;
+                        }
                         subIdPtr = subIdPtr->next;
+                     }
+
+                     // looks like we need to add the subId record as well
+                     newSensorSubId(idPtr, sensor, subId, i1, i2, i3, i4);
+                     return;
                 }
 
                 idPtr = idPtr->next;
             }
 
-            if (idPtr == (SENSOR_ID_LIST *)NULL) {  // didn't find it in this sensor list
+            // looks like we need to add the id record as well
+            newSensorId(idPtr, id, subId, sensor, i1, i2, i3, i4);
+            return;
         }
 
         listPtr = listPtr->next;
     }
 
     // there should never be a case where we have a sensor type that's not already listed
-    fprintf(DebugFP, "%s: warning: %s(%c, \"%s\", \"%s\", %d, %d, %d, %d, %d\n",
+    fprintf(DebugFP, "%s: warning: %s(%c, \"%s\", \"%s\", %d, %d, %d, %d\n",
             MyName, __func__, sensor, id, subId, i1, i2, i3, i4);
 }
 
@@ -429,7 +469,11 @@ static void
 dumpSensorRecord(SENSOR_RECORD *ptr)
 {
     fprintf(DebugFP, "SENSOR_RECORD(@0x%lx):\n", (long)ptr);
+#ifdef	__APPLE__
+    fprintf(DebugFP, "\ttime:\t%ld.%08d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+#else
     fprintf(DebugFP, "\ttime:\t%ld.%08ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+#endif
     fprintf(DebugFP, "\tType:\t%d ", ptr->type);
 
     switch (ptr->type) {

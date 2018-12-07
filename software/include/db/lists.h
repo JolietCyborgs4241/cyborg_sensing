@@ -109,7 +109,7 @@ typedef struct sensorList {
 
 /// type, ID, subID, i1, i2, i3, i4 - adds a new sensor type (if needed)
 /// and sensor record (always; newest at front of list)
-int  sensorRecAdd(SENSOR_TYPE, char *, char *, int, int, int, int);
+void  sensorRecAdd(SENSOR_TYPE, char *, char *, int, int, int, int);
 
 /// ID, TTL - delete old records for only a specific type of sensor
 /// (all instantiations of that sensor)
