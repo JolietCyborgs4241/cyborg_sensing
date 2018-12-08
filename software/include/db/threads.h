@@ -9,7 +9,7 @@
 /// Start the purging thread
 ///
 /// ttl
-void    startPruneThread(int);
+void    startPruneThread();
 
 /// start the receiving thread
 ///

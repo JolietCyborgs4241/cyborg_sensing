@@ -8,6 +8,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
+#include "sensors.h"
 #include "db/externs.h"
 
 

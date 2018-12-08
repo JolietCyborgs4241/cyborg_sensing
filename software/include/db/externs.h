@@ -12,7 +12,6 @@ extern  char        *MyName;
 /// network connection for incoming camera messages
 extern  HOST_INFO   HostInfo;
 
-/// time-to-live for camera messages
 extern  int         Ttl;
 
 /// \brief Global debug level
@@ -26,5 +25,10 @@ extern  FILE        *DebugFP;
 
 void    initMutexes();
 void    initDb();
+
+/// time-to-live for sensor data
+///
+/// could potentially be distinct for each sensor type
+TTLS    SensorTtls[];
 
 #endif  /* db/externs.h */

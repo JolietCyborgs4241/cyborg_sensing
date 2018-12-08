@@ -13,6 +13,12 @@
 
 typedef char                SENSOR_TYPE;
 
+typedef struct ttl_info {
+    SENSOR_TYPE sensor;
+    int         ttlSecs;
+    int         ttlUsecs;
+} TTLS;
+
 
 /// camera sensor
 ///

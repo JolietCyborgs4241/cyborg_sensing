@@ -32,18 +32,18 @@ main(int argc, char **argv)
 {
 	MyName = argv[0];
 
-    DebugFP = stderr;           // unless overridden on the command line
+    DebugFP = stderr;                       // unless overridden on the command line
 
 	init(argc, argv);
 
     startSensorDataThread(HostInfo.sock);   // start reading recs from the cams
 
-    startPruneThread(Ttl);      // get rid of records older than TTL
+    startPruneThread();                     // get rid of records older than TTL
 
 	while (1) {
 
-		sleep(1000);            // eventually the processing from the RoboRio
-                                // module will happen here in the main thread
+		sleep(1000);            // eventually the query processing
+                                // will happen here in the main thread
                                 //
                                 // for now, we'll just sleep & sleep & sleep
 	}

@@ -14,6 +14,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
+#include "sensors.h"
 #include "db/externs.h"
 #include "db/lists.h"
 
@@ -117,8 +118,6 @@ initDb()
     }
 
     SensorLists = firstPtr;
-
-    dumpLists();
 }
 
 
@@ -314,7 +313,7 @@ newSensorId(SENSOR_LIST *listPtr, char *id, char *subId, SENSOR_TYPE type,
     SENSOR_ID_LIST   *idPtr;
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s((0x%lx), \"%s\", \"%s\", %d, %d, %d, %d, %d\n",
+        fprintf(DebugFP, "%s((0x%lx), \"%s\", \"%s\", \'%c\', %d, %d, %d, %d\n",
 		__func__, (long)listPtr, id, subId, type, i1, i2, i3, i4);
     }
 
@@ -343,8 +342,8 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
     int                 subIdLen;
     
     if (DebugLevel >= DEBUG_INFO) {
-        fprintf(DebugFP, "%s: %s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
-                MyName, __func__, (int)sensor, id, subId, i1, i2, i3, i3);
+        fprintf(DebugFP, "%s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
+                __func__, (int)sensor, id, subId, i1, i2, i3, i4);
     }
 
     dumpLists();
@@ -410,9 +409,89 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
 
 
 void
-sensorRecPruneAll(int ttl)
+sensorRecPruneAll()
 {
-#warning    sensorRecPruneAll implementation
+    
+    TTLS                *ttlPtr = SensorTtls;
+    struct timeval      now, timeDiff;
+    SENSOR_LIST         *sensorListPtr;
+    SENSOR_ID_LIST      *sensorIdListPtr;
+    SENSOR_SUBID_LIST   *sensorSubIdListPtr;
+    SENSOR_RECORD       *sensorPtr, *prevSensorPtr;
+
+    if (DebugLevel == DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s() entered\n", __func__);
+    }
+
+    gettimeofday(&now, NULL);
+
+    LOCK_SENSOR_LIST;
+
+    while (ttlPtr->sensor) {   // go through sensor types in the TTL list
+
+        if (DebugLevel == DEBUG_DETAIL) {
+            fprintf(DebugFP, "%s(): pruning sensor \'%c\'\n", __func__, ttlPtr->sensor);
+        }
+
+        sensorListPtr = sensorGetListBySensor(ttlPtr->sensor);
+
+        sensorIdListPtr = sensorListPtr->sensors;
+
+        while (sensorIdListPtr) {           // walk the ids
+            if (DebugLevel == DEBUG_DETAIL) {
+                fprintf(DebugFP, "%s(): pruning SENSOR_ID @ (0x%lx)n",
+                        __func__, (long)sensorIdListPtr);
+            }
+
+            sensorSubIdListPtr = sensorIdListPtr->subIds;
+
+            while (sensorSubIdListPtr) {    // walk the subIds
+ 
+                if (DebugLevel == DEBUG_DETAIL) {
+                    fprintf(DebugFP, "%s(): pruning SENSOR_SUB_ID @ (0x%lx)n",
+                            __func__, (long)sensorSubIdListPtr);
+                }
+
+                sensorPtr     = sensorSubIdListPtr->data;
+
+                prevSensorPtr = sensorPtr;
+
+                while (sensorPtr) {    // walk the sensor data records
+
+                    if (DebugLevel == DEBUG_DETAIL) {
+                        fprintf(DebugFP, "%s(): pruning SENSOR @ (0x%lx)n",
+                                __func__, (long)sensorSubIdListPtr);
+                    }
+
+                    timersub(&now, &(sensorPtr->time), &timeDiff);
+
+                    if (timeDiff.tv_sec > ttlPtr->ttlSecs ||
+                        (timeDiff.tv_sec == ttlPtr->ttlSecs && timeDiff.tv_usec > ttlPtr->ttlUsecs)) {
+                        // start pruning from here
+                        if (prevSensorPtr == sensorPtr) {   // prune them all
+                            sensorSubIdListPtr->data = NULL;
+                        } else {
+                            prevSensorPtr->next = NULL;
+                       }
+
+                        freeSensorRecsFromEnd(sensorPtr);
+
+                    }
+
+                    prevSensorPtr = sensorPtr;
+                    sensorPtr     = sensorPtr->next;
+                }
+
+                sensorSubIdListPtr = sensorSubIdListPtr->next;
+            }
+
+            sensorIdListPtr = sensorIdListPtr->next;
+        }
+
+        ttlPtr++;       // next sensor id on the TTL list
+    }
+
+    UNLOCK_SENSOR_LIST;
 }
 
 
@@ -484,9 +563,9 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
 {
     fprintf(DebugFP, "SENSOR_RECORD(@0x%lx):\n", (long)ptr);
 #ifdef	__APPLE__
-    fprintf(DebugFP, "\tTime:\t%ld.%08d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\tTime:\t%ld.%06d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
 #else
-    fprintf(DebugFP, "\tTime:\t%ld.%08ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\tTime:\t%ld.%06ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
 #endif
     fprintf(DebugFP, "\tType:\t\'%c\' (%d) ", ptr->type, ptr->type);
 
@@ -495,7 +574,7 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
         case SENSOR_CAMERA:
            fprintf(DebugFP, "[Camera]\n");
            fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.camera.x);
-           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.camera.x);
+           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.camera.y);
            fprintf(DebugFP, "\t\tW:\t%d\n", ptr->sensorData.camera.w);
            fprintf(DebugFP, "\t\tH:\t%d\n", ptr->sensorData.camera.h);
            break;

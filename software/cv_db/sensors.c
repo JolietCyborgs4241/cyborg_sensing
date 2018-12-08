@@ -20,7 +20,6 @@
 
 
 
-
 void
 processCamData(char *buffer)
 {
@@ -66,7 +65,7 @@ processCamData(char *buffer)
 
     buffer += 3;                // now point to the real data values
 
-    // seems OK start scan after first 2 chars (camera, space, type, space)
+    // seems OK, start scan
     scanRet = sscanf(buffer, "%s %d %d %d %d",
                      id, &x, &y, &w, &h);
 
@@ -77,7 +76,10 @@ processCamData(char *buffer)
 
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
+        fprintf(DebugFP, "calling sensorRecAdd(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
+                SENSOR_CAMERA, id, camera, x, y, w, h);
     }
+    
     sensorRecAdd(SENSOR_CAMERA, id, camera, x, y, w, h);
 }
 

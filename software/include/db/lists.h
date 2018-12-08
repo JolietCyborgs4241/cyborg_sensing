@@ -117,7 +117,7 @@ void  sensorRecPruneBySensorType(SENSOR_TYPE, int);
 
 /// TTL - prune all sensor records older than TTL
 /// (all instantiations)
-void  sensorRecPruneAll(int);
+void  sensorRecPruneAll();
 
 /// ID - delete all records for a sensor type and ID
 void  sensorRecDeleteById(SENSOR_TYPE, char *);

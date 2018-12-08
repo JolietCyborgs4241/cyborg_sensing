@@ -17,6 +17,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
+#include "sensors.h"
 #include "db/externs.h"
 
 
@@ -43,7 +44,7 @@ void
 init(int argc, char **argv)
 
 {
-    int c;
+    int c, ttl;
 
     // clear HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
@@ -72,11 +73,22 @@ init(int argc, char **argv)
             break;
 
         case 't':
-            Ttl = atoi(optarg);
-            if (Ttl < 0) {
+            ttl = atoi(optarg);
+            if (ttl < 0) {
                 fprintf(stderr, "%s: error: TTL value must be >= 0\n",
                         MyName);
                 exit(1);
+            }
+
+            // set all sensor TTLs to the same for now
+            TTLS    *ttlPtr = SensorTtls;
+
+            while (ttlPtr->sensor) {
+                ttlPtr->ttlSecs  = ttl;
+                ttlPtr->ttlUsecs = 0;
+#warning Need to add floating point value TTL support
+#warning Need to added per SENSOR TTL setting support
+                ttlPtr++;
             }
             break;
 
@@ -136,11 +148,19 @@ static void
 dumpConfig()
 {
     fprintf(DebugFP, "DumpConfig():\n");
-    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t%d\n",
+    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
 
-    fprintf(DebugFP, "\nTTL:\t%d ", Ttl);
+    fprintf(DebugFP, "\nTTLs:\n");
+
+    TTLS *ttlPtr = SensorTtls;
+
+    while (ttlPtr->sensor) {
+        fprintf(DebugFP, "\tSensor \'%c\':\t%d.%06d\n",
+                ttlPtr->sensor, ttlPtr->ttlSecs, ttlPtr->ttlUsecs);
+        ttlPtr++;
+    }
 
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 

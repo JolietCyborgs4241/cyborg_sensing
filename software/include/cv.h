@@ -20,7 +20,10 @@
 
 
 
-#define TTL_DEFAULT         3   // secs
+
+#define PRUNE_FREQUENCY         500 // msecs
+#define TTL_SECS_DEFAULT        3   // secs
+#define TTL_USECS_DEFAULT       0   // microseconds
 
 
 

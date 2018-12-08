@@ -27,7 +27,7 @@
 
 
 
-static void *pruneThread(void *);
+static void *pruneThread();
 pthread_t   tidPrune;
 
 static void *recvSensorDataThread(void *);
@@ -43,40 +43,33 @@ void process9DData(char *);     // all G, roll, and mag look the same
 
 
 void
-startPruneThread(int ttl)
+startPruneThread()
 {
     pthread_attr_t  attr;
-    static  int ttlStatic;      // needs to stay around even after this
-                                // function disappears so a pointer to
-                                // somethign in the stak frame won't work
-                                // unless the thread *IMMEDIATELY* gets
-                                // the value before this function returns
-
-    ttlStatic = ttl;
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): starting pruneThread thread...\n", __func__, ttl);
+        fprintf(DebugFP, "%s(%d): starting pruneThread thread...\n", __func__);
     }
 
     pthread_attr_init(&attr);
 
-    pthread_create(&tidPrune, &attr, pruneThread, &ttlStatic);
+    pthread_create(&tidPrune, &attr, pruneThread, NULL);
 
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): pruneThread thread started.\n", __func__, ttl);
+        fprintf(DebugFP, "%s(): pruneThread thread started.\n", __func__);
     }
 }
 
 
 static void *
-pruneThread(void *ttl)
+pruneThread()
 {
     if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): Starting...\n", __func__, *(int *)ttl);
+        fprintf(DebugFP, "%s(): Starting...\n", __func__);
     }
 
     while (1) {
-        sleep (*(int *)ttl);
+        usleep (PRUNE_FREQUENCY * 1000);
 #ifdef  DEBUG
         struct timeval  tv;
 
@@ -92,7 +85,7 @@ pruneThread(void *ttl)
         }
 #endif  // DEBUG
         
-        sensorRecPruneAll(*(int *)ttl);
+        sensorRecPruneAll();
     }
 }
 
