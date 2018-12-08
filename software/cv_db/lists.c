@@ -49,9 +49,10 @@ static int              getLock(pthread_mutex_t *),
 
 
 static SENSOR_LIST          *allocSensorListRecord(), *sensorListGetHead();
-static SENSOR_ID_LIST       *allocSensorIdRecord();
-static SENSOR_SUBID_LIST    *allocSensorSubIdRecord();
+static SENSOR_ID_LIST       *allocSensorIdListRecord(char *);
+static SENSOR_SUBID_LIST    *allocSensorSubIdListRecord(char *);
 static SENSOR_RECORD        *allocSensorRecord();
+
 
 static SENSOR_LIST          *SensorLists = (SENSOR_LIST *)NULL;
 
@@ -287,7 +288,7 @@ static void
 newSensorSubId(SENSOR_ID_LIST *idPtr, SENSOR_TYPE type, char *subId,
                int i1, int i2, int i3, int i4)
 {
-    SENSOR_SUBID_LIST   *subIdPtr;;
+    SENSOR_SUBID_LIST   *subIdPtr;
 
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s((0x%lx), \'%c\', \"%s\", %d, %d, %d, %d\n",
@@ -310,7 +311,7 @@ static void
 newSensorId(SENSOR_LIST *listPtr, char *id, char *subId, SENSOR_TYPE type,
                 int i1, int i2, int i3, int i4)
 {
-    SENSOR_ID_LIST   *idPtr;;
+    SENSOR_ID_LIST   *idPtr;
 
     if (DebugLevel == DEBUG_DETAIL) {
         fprintf(DebugFP, "%s((0x%lx), \"%s\", \"%s\", %d, %d, %d, %d, %d\n",
@@ -341,10 +342,12 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
     SENSOR_LIST         *sensorPtr;
     int                 subIdLen;
     
-    if (DebugLevel == DEBUG_INFO) {
-        fprintf(DebugFP, "%s: %s(%d, \"%s\", \"%s\", %d, %d, %d, %d)\n",
+    if (DebugLevel >= DEBUG_INFO) {
+        fprintf(DebugFP, "%s: %s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
                 MyName, __func__, (int)sensor, id, subId, i1, i2, i3, i3);
     }
+
+    dumpLists();
 
     // we'll go as far down the list as we can until we don't find something
     // and then add it
@@ -363,18 +366,24 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
 
                     while (subIdPtr) {
                         subIdLen = strlen(subId);   // could be an empty string
-                        if ((subIdLen == 0 && strlen(subIdPtr) == 0) ||
+                        if ((subIdLen == 0 && strlen(subIdPtr->subId) == 0) ||
                             (strcmp(subId, subIdPtr->subId) == 0)) {    // found subId
 
-				// looks like all we need to do is add the sensor data record
-				newSensorRecord(subIdPtr, sensor, i1, i2, i3, i4);
-                                return;
+				            // looks like all we need to do is add the sensor data record
+				            newSensorRecord(subIdPtr, sensor, i1, i2, i3, i4);
+
+                            UNLOCK_SENSOR_LIST;
+
+                            return;
                         }
                         subIdPtr = subIdPtr->next;
                      }
 
                      // looks like we need to add the subId record as well
                      newSensorSubId(idPtr, sensor, subId, i1, i2, i3, i4);
+
+                     UNLOCK_SENSOR_LIST;
+
                      return;
                 }
 
@@ -382,12 +391,17 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
             }
 
             // looks like we need to add the id record as well
-            newSensorId(idPtr, id, subId, sensor, i1, i2, i3, i4);
+            newSensorId(listPtr, id, subId, sensor, i1, i2, i3, i4);
+
+            UNLOCK_SENSOR_LIST;
+
             return;
         }
 
         listPtr = listPtr->next;
     }
+
+    UNLOCK_SENSOR_LIST;
 
     // there should never be a case where we have a sensor type that's not already listed
     fprintf(DebugFP, "%s: warning: %s(%c, \"%s\", \"%s\", %d, %d, %d, %d\n",
@@ -439,9 +453,9 @@ static void
 dumpSensorList(SENSOR_LIST *ptr)
 {
     fprintf(DebugFP, "SENSOR_LIST(@0x%lx):\n", (long)ptr);
-    fprintf(DebugFP, "\tType:\t\"%c\"\n", ptr->type);
+    fprintf(DebugFP, "\tType:\t\t\'%c\'\n", ptr->type);
     fprintf(DebugFP, "\tSensors:\t0x%lx\n", (long)ptr->sensors);
-    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+    fprintf(DebugFP, "\tNext:\t\t0x%lx\n\n", (long)ptr->next);
 }
 
 
@@ -449,7 +463,7 @@ static void
 dumpSensorIdList(SENSOR_ID_LIST *ptr)
 {
     fprintf(DebugFP, "SENSOR_ID_LIST(@0x%lx):\n", (long)ptr);
-    fprintf(DebugFP, "\tID:\t\"%s\"\n", ptr->id);
+    fprintf(DebugFP, "\tID:\t\t\"%s\"\n", ptr->id);
     fprintf(DebugFP, "\tSubIDs:\t0x%lx\n", (long)ptr->subIds);
     fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
 }
@@ -470,16 +484,16 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
 {
     fprintf(DebugFP, "SENSOR_RECORD(@0x%lx):\n", (long)ptr);
 #ifdef	__APPLE__
-    fprintf(DebugFP, "\ttime:\t%ld.%08d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\tTime:\t%ld.%08d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
 #else
-    fprintf(DebugFP, "\ttime:\t%ld.%08ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\tTime:\t%ld.%08ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
 #endif
-    fprintf(DebugFP, "\tType:\t%d ", ptr->type);
+    fprintf(DebugFP, "\tType:\t\'%c\' (%d) ", ptr->type, ptr->type);
 
     switch (ptr->type) {
 
         case SENSOR_CAMERA:
-           fprintf(DebugFP, "(Camera)\n");
+           fprintf(DebugFP, "[Camera]\n");
            fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.camera.x);
            fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.camera.x);
            fprintf(DebugFP, "\t\tW:\t%d\n", ptr->sensorData.camera.w);
@@ -487,33 +501,33 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
            break;
 
         case SENSOR_RANGE:
-           fprintf(DebugFP, "(Range)\n");
+           fprintf(DebugFP, "[Range]\n");
            fprintf(DebugFP, "\t\tRange:\t%d\n", ptr->sensorData.range.range);
            break;
 
         case SENSOR_ACCELL:
-           fprintf(DebugFP, "(Acceleration)\n");
+           fprintf(DebugFP, "[Acceleration]\n");
            fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.accell.x);
            fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.accell.y);
            fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.accell.z);
            break;
 
         case SENSOR_ROLL:
-           fprintf(DebugFP, "(Roll)\n");
+           fprintf(DebugFP, "[Roll]\n");
            fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.roll.x);
            fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.roll.y);
            fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.roll.z);
            break;
 
         case SENSOR_MAGNETIC:
-           fprintf(DebugFP, "(Magnetic)\n");
+           fprintf(DebugFP, "[Magnetic]\n");
            fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.magnetic.x);
            fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.magnetic.y);
            fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.magnetic.z);
            break;
     }
 
-    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+    fprintf(DebugFP, "\n\tNext:\t0x%lx\n\n", (long)ptr->next);
 }
 
 
@@ -705,7 +719,6 @@ allocSensorIdListRecord(char *id)
 }
 
 
-
 /// alloc and zero a SENSOR_SUBID_LIST record
 ///
 /// we do set the subId since we have to allocate memory for it
@@ -789,7 +802,7 @@ freeSensorSubIdListRecord(SENSOR_SUBID_LIST *ptr)
 /// free a SENSOR_RECORD record
 ///
 void
-FreeSensorRecord(SENSOR_RECORD *ptr)
+freeSensorRecord(SENSOR_RECORD *ptr)
 {
     assert( ! ptr);
 

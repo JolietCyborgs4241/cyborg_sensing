@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "cv.h"
 #include "cv_net.h"
@@ -23,7 +24,7 @@
 void
 processCamData(char *buffer)
 {
-    char    id[MAX_SENSOR_READ], camera;
+    char    id[MAX_SENSOR_READ], camera[MAX_SENSOR_READ], *camPtr;
     int     scanRet, x, y, w, h;
 
     // validate and set camera
@@ -35,17 +36,22 @@ processCamData(char *buffer)
 
     buffer += 2;           // Starts with "C " so continue
 
-    if (*buffer != ' ') {
-        camera = *buffer;
-    } else {
+    camPtr = camera;
+
+    while ( ! isspace(*buffer)) {
+        *camPtr++ = *buffer++;
+    }
+
+    if (camPtr == camera) {     // this means there was no camera name
         fprintf(DebugFP, "%s: error: blank camera field\n", MyName);
         return;
     }
 
-    buffer++;
+    *camPtr = '\0';         // terminate the camera string
 
     if (*buffer != ' ') {
-        fprintf(DebugFP, "%s: error: non-space 2nd char '%c'\n", MyName, *(buffer + 1));
+        fprintf(DebugFP, "%s: error: non-space char '%c' following camera name\n",
+                MyName, *buffer);
         return;
     }
 
