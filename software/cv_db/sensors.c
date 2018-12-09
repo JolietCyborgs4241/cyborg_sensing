@@ -74,10 +74,9 @@ processCamData(char *buffer)
         return;
     }
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
-        fprintf(DebugFP, "calling sensorRecAdd(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
-                SENSOR_CAMERA, id, camera, x, y, w, h);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s():calling sensorRecAdd(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
+                __func__, SENSOR_CAMERA, id, camera, x, y, w, h);
     }
     
     sensorRecAdd(SENSOR_CAMERA, id, camera, x, y, w, h);
@@ -136,7 +135,7 @@ processRangerData(char *buffer)
         return;
     }
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
@@ -202,7 +201,7 @@ process9DData(char *buffer)
         return;
     }
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 

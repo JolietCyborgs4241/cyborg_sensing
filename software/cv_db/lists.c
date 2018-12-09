@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <signal.h>
 
 #include "cv.h"
 #include "cv_net.h"
@@ -82,21 +83,42 @@ sensorListGetHead()
 //
 // *****************************************************************
 
+
+// dumpList on signal USR1
+static void
+dumpOnUsr1Signal(int i, siginfo_t *info, void *ptr)
+{
+    dumpListStats();    // debug level doesn't matter - it's on demand
+}
+
+
+// dumpList on signal USR2
+static void
+dumpOnUsr2Signal(int i, siginfo_t *info, void *ptr)
+{
+    dumpLists();        // debug level doesn't matter - it's on demand
+}
+
+
 /// \brief  initialize the database
 ///
 /// one record for each sensor type at the top level
 void
 initDb()
 {
-    SENSOR_TYPE sensors[] = { SENSOR_CAMERA,
-                              SENSOR_RANGE,
-                              SENSOR_ACCELL,
-                              SENSOR_ROLL,
-                              SENSOR_MAGNETIC,
-                              0 };
-    SENSOR_TYPE *sensorPtr = sensors;
-    SENSOR_LIST *ptr, *prevPtr, *firstPtr;
-    int         firstOne = 1;
+    SENSOR_TYPE      sensors[] = { SENSOR_CAMERA,
+                                   SENSOR_RANGE,
+                                   SENSOR_ACCELL,
+                                   SENSOR_ROLL,
+                                   SENSOR_MAGNETIC,
+                                   0 };
+    SENSOR_TYPE      *sensorPtr = sensors;
+    SENSOR_LIST      *ptr, *prevPtr, *firstPtr;
+    struct sigaction sigHandling;
+    int              firstOne = 1;
+
+
+
 
     prevPtr = (SENSOR_LIST *)NULL;
 
@@ -118,6 +140,12 @@ initDb()
     }
 
     SensorLists = firstPtr;
+
+    sigHandling.sa_sigaction = &dumpOnUsr1Signal;
+    sigaction(SIGUSR1, &sigHandling, NULL);
+
+    sigHandling.sa_sigaction = &dumpOnUsr2Signal;
+    sigaction(SIGUSR2, &sigHandling, NULL);
 }
 
 
@@ -234,8 +262,8 @@ newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
 {
     SENSOR_RECORD   *sensorPtr;
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s((0x%lx), \'%c\', %d, %d, %d, %d\n",
+    if (DebugLevel == DEBUG_SUPER) {
+        fprintf(DebugFP, "%s((0x%lx), \'%c\', %d, %d, %d, %d)\n",
                 __func__, (long)subPtr, type, i1, i2, i3, i4);
     }
 
@@ -289,7 +317,7 @@ newSensorSubId(SENSOR_ID_LIST *idPtr, SENSOR_TYPE type, char *subId,
 {
     SENSOR_SUBID_LIST   *subIdPtr;
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_SUPER) {
         fprintf(DebugFP, "%s((0x%lx), \'%c\', \"%s\", %d, %d, %d, %d\n",
 		__func__, (long)idPtr, type, subId, i1, i2, i3, i4);
     }
@@ -312,7 +340,7 @@ newSensorId(SENSOR_LIST *listPtr, char *id, char *subId, SENSOR_TYPE type,
 {
     SENSOR_ID_LIST   *idPtr;
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_SUPER) {
         fprintf(DebugFP, "%s((0x%lx), \"%s\", \"%s\", \'%c\', %d, %d, %d, %d\n",
 		__func__, (long)listPtr, id, subId, type, i1, i2, i3, i4);
     }
@@ -341,12 +369,14 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
     SENSOR_LIST         *sensorPtr;
     int                 subIdLen;
     
-    if (DebugLevel >= DEBUG_INFO) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
                 __func__, (int)sensor, id, subId, i1, i2, i3, i4);
     }
 
-    dumpLists();
+    if (DebugLevel == DEBUG_SUPER) {
+        dumpLists();
+    }
 
     // we'll go as far down the list as we can until we don't find something
     // and then add it
@@ -419,17 +449,18 @@ sensorRecPruneAll()
     SENSOR_SUBID_LIST   *sensorSubIdListPtr;
     SENSOR_RECORD       *sensorPtr, *prevSensorPtr;
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s() entered\n", __func__);
+    gettimeofday(&now, NULL);
+
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s() entered @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
     }
 
-    gettimeofday(&now, NULL);
 
     LOCK_SENSOR_LIST;
 
     while (ttlPtr->sensor) {   // go through sensor types in the TTL list
 
-        if (DebugLevel == DEBUG_DETAIL) {
+        if (DebugLevel == DEBUG_SUPER) {
             fprintf(DebugFP, "%s(): pruning sensor \'%c\'\n", __func__, ttlPtr->sensor);
         }
 
@@ -438,7 +469,7 @@ sensorRecPruneAll()
         sensorIdListPtr = sensorListPtr->sensors;
 
         while (sensorIdListPtr) {           // walk the ids
-            if (DebugLevel == DEBUG_DETAIL) {
+            if (DebugLevel == DEBUG_SUPER) {
                 fprintf(DebugFP, "%s(): pruning SENSOR_ID @ (0x%lx)n",
                         __func__, (long)sensorIdListPtr);
             }
@@ -447,7 +478,7 @@ sensorRecPruneAll()
 
             while (sensorSubIdListPtr) {    // walk the subIds
  
-                if (DebugLevel == DEBUG_DETAIL) {
+                if (DebugLevel == DEBUG_SUPER) {
                     fprintf(DebugFP, "%s(): pruning SENSOR_SUB_ID @ (0x%lx)n",
                             __func__, (long)sensorSubIdListPtr);
                 }
@@ -458,7 +489,7 @@ sensorRecPruneAll()
 
                 while (sensorPtr) {    // walk the sensor data records
 
-                    if (DebugLevel == DEBUG_DETAIL) {
+                    if (DebugLevel == DEBUG_SUPER) {
                         fprintf(DebugFP, "%s(): pruning SENSOR @ (0x%lx)n",
                                 __func__, (long)sensorSubIdListPtr);
                     }
@@ -507,8 +538,9 @@ static void
 freeSensorRecsFromEnd(SENSOR_RECORD *ptr)
 {
 
+#define DEBUG
 #ifdef  DEBUG
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_SUPER) {
         fprintf(DebugFP, "%s(0x%lx) entered\n", __func__, (long)ptr);
     }
 #endif  // DEBUG
@@ -526,7 +558,14 @@ freeSensorRecsFromEnd(SENSOR_RECORD *ptr)
 //
 // dump routines
 //
+//  not dependent on DebugLevel - assume they are called based on it
+//  so once they are called, they just do output
 // *****************************************************************
+
+
+#define DUMP_LIST_CONTENTS      0
+#define DUMP_LIST_STATS         1
+
 
 static void
 dumpSensorList(SENSOR_LIST *ptr)
@@ -541,74 +580,73 @@ dumpSensorList(SENSOR_LIST *ptr)
 static void
 dumpSensorIdList(SENSOR_ID_LIST *ptr)
 {
-    fprintf(DebugFP, "SENSOR_ID_LIST(@0x%lx):\n", (long)ptr);
-    fprintf(DebugFP, "\tID:\t\t\"%s\"\n", ptr->id);
-    fprintf(DebugFP, "\tSubIDs:\t0x%lx\n", (long)ptr->subIds);
-    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+    fprintf(DebugFP, "\tSENSOR_ID_LIST(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\t\tID:\t\t\"%s\"\n", ptr->id);
+    fprintf(DebugFP, "\t\tSubIDs:\t0x%lx\n", (long)ptr->subIds);
+    fprintf(DebugFP, "\t\tNext:\t0x%lx\n\n", (long)ptr->next);
 }
 
 
 static void
 dumpSensorSubIdList(SENSOR_SUBID_LIST *ptr)
 {
-    fprintf(DebugFP, "SENSOR_SUBID_LIST(@0x%lx):\n", (long)ptr);
-    fprintf(DebugFP, "\tSubID:\t\"%s\"\n", ptr->subId);
-    fprintf(DebugFP, "\tData:\t0x%lx\n", (long)ptr->data);
-    fprintf(DebugFP, "\tNext:\t0x%lx\n\n", (long)ptr->next);
+    fprintf(DebugFP, "\t\tSENSOR_SUBID_LIST(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\t\t\tSubID:\t\"%s\"\n", ptr->subId);
+    fprintf(DebugFP, "\t\t\tData:\t0x%lx\n", (long)ptr->data);
+    fprintf(DebugFP, "\t\t\tNext:\t0x%lx\n\n", (long)ptr->next);
 }
 
 
 static void
 dumpSensorRecord(SENSOR_RECORD *ptr)
 {
-    fprintf(DebugFP, "SENSOR_RECORD(@0x%lx):\n", (long)ptr);
+    fprintf(DebugFP, "\t\t\tSENSOR_RECORD(@0x%lx):\n", (long)ptr);
 #ifdef	__APPLE__
-    fprintf(DebugFP, "\tTime:\t%ld.%06d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\t\t\t\tTime:\t%ld.%06d\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
 #else
-    fprintf(DebugFP, "\tTime:\t%ld.%06ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
+    fprintf(DebugFP, "\t\t\t\tTime:\t%ld.%06ld\n\n", ptr->time.tv_sec, ptr->time.tv_usec);
 #endif
-    fprintf(DebugFP, "\tType:\t\'%c\' (%d) ", ptr->type, ptr->type);
+    fprintf(DebugFP, "\t\t\t\tType:\t\'%c\' (%d) ", ptr->type, ptr->type);
 
     switch (ptr->type) {
 
         case SENSOR_CAMERA:
            fprintf(DebugFP, "[Camera]\n");
-           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.camera.x);
-           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.camera.y);
-           fprintf(DebugFP, "\t\tW:\t%d\n", ptr->sensorData.camera.w);
-           fprintf(DebugFP, "\t\tH:\t%d\n", ptr->sensorData.camera.h);
+           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.camera.x);
+           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.camera.y);
+           fprintf(DebugFP, "\t\t\t\t\tW:\t%d\n", ptr->sensorData.camera.w);
+           fprintf(DebugFP, "\t\t\t\t\tH:\t%d\n", ptr->sensorData.camera.h);
            break;
 
         case SENSOR_RANGE:
            fprintf(DebugFP, "[Range]\n");
-           fprintf(DebugFP, "\t\tRange:\t%d\n", ptr->sensorData.range.range);
+           fprintf(DebugFP, "\t\t\t\t\tRange:\t%d\n", ptr->sensorData.range.range);
            break;
 
         case SENSOR_ACCELL:
            fprintf(DebugFP, "[Acceleration]\n");
-           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.accell.x);
-           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.accell.y);
-           fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.accell.z);
+           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.accell.x);
+           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.accell.y);
+           fprintf(DebugFP, "\t\t\t\t\tZ:\t%d\n", ptr->sensorData.accell.z);
            break;
 
         case SENSOR_ROLL:
            fprintf(DebugFP, "[Roll]\n");
-           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.roll.x);
-           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.roll.y);
-           fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.roll.z);
+           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.roll.x);
+           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.roll.y);
+           fprintf(DebugFP, "\t\t\t\t\tZ:\t%d\n", ptr->sensorData.roll.z);
            break;
 
         case SENSOR_MAGNETIC:
            fprintf(DebugFP, "[Magnetic]\n");
-           fprintf(DebugFP, "\t\tX:\t%d\n", ptr->sensorData.magnetic.x);
-           fprintf(DebugFP, "\t\tY:\t%d\n", ptr->sensorData.magnetic.y);
-           fprintf(DebugFP, "\t\tZ:\t%d\n", ptr->sensorData.magnetic.z);
+           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.magnetic.x);
+           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.magnetic.y);
+           fprintf(DebugFP, "\t\t\t\t\tZ:\t%d\n", ptr->sensorData.magnetic.z);
            break;
     }
 
-    fprintf(DebugFP, "\n\tNext:\t0x%lx\n\n", (long)ptr->next);
+    fprintf(DebugFP, "\n\t\t\t\tNext:\t0x%lx\n\n", (long)ptr->next);
 }
-
 
 
 // *****************************************************************
@@ -619,51 +657,79 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
 
 
 void
-walkSensorRecords(SENSOR_RECORD *ptr)
+walkSensorRecords(SENSOR_RECORD *ptr, int flag)
 {
+    int count = 0;
+
     while (ptr) {
-        dumpSensorRecord(ptr);
+        count++;
+
+        if (flag == DUMP_LIST_CONTENTS) {
+            dumpSensorRecord(ptr);
+        }
         
         ptr = ptr->next;
+    }
+
+    if (flag == DUMP_LIST_STATS) {
+        fprintf(DebugFP, "\t\t\t%d SENSOR_RECORD entries\n\n", count);
     }
 }
 
 
 
 void
-walkSensorSubIdList(SENSOR_SUBID_LIST *ptr)
+walkSensorSubIdList(SENSOR_SUBID_LIST *ptr, int flag)
 {
+    int count = 0;
+
     while (ptr) {
-        dumpSensorSubIdList(ptr);
+        count++;
+
+        if (flag == DUMP_LIST_CONTENTS) {
+            dumpSensorSubIdList(ptr);
+        }
         
-        walkSensorRecords(ptr->data);
+        walkSensorRecords(ptr->data, flag);
 
         ptr = ptr->next;
+    }
+
+    if (flag == DUMP_LIST_STATS) {
+        fprintf(DebugFP, "\t\t%d SENSOR_SUBID_LIST entries\n\n", count);
     }
 }
 
 
 
 void
-walkSensorIdList(SENSOR_ID_LIST *ptr)
+walkSensorIdList(SENSOR_ID_LIST *ptr, int flag)
 {
+    int count = 0;
+
     while (ptr) {
-        dumpSensorIdList(ptr);
+        if (flag == DUMP_LIST_CONTENTS) {
+            dumpSensorIdList(ptr);
+        }
         
-        walkSensorSubIdList(ptr->subIds);
+        walkSensorSubIdList(ptr->subIds, flag);
 
         ptr = ptr->next;
+    }
+
+    if (flag == DUMP_LIST_STATS) {
+        fprintf(DebugFP, "\t%d SENSOR_ID_LIST entries\n\n", count);
     }
 }
 
 
 void
-walkSensorList(SENSOR_LIST *ptr)
+walkSensorList(SENSOR_LIST *ptr, int flag)
 {
     while (ptr) {
         dumpSensorList(ptr);
         
-        walkSensorIdList(ptr->sensors);
+        walkSensorIdList(ptr->sensors, flag);
 
         ptr = ptr->next;
     }
@@ -671,11 +737,17 @@ walkSensorList(SENSOR_LIST *ptr)
 
 
 void
-dumpLists()
+dumpListAction(int flag)
 {
     SENSOR_LIST         *sensorListPtr;
+    struct timeval      now;
 
-    fprintf(DebugFP, "dumpLists():\nVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV\n");
+    fprintf(DebugFP, "%s:\nVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV\n",
+            flag == DUMP_LIST_STATS ? "dumpListStats" : "dumpListRecorfds");
+
+    gettimeofday(&now, NULL);
+
+    fprintf(DebugFP, "Started @ %ld.%06ld\n", now.tv_sec, now.tv_usec);
 
     LOCK_SENSOR_LIST;
 
@@ -683,12 +755,26 @@ dumpLists()
         fprintf(DebugFP, "\nNO RECORDS\n\n");
         return;
     } else {
-        walkSensorList(sensorListPtr);
+        walkSensorList(sensorListPtr, flag);
     }
 
     UNLOCK_SENSOR_LIST;
 
     fprintf(DebugFP, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
+}
+
+
+void
+dumpLists()
+{
+    dumpListAction(DUMP_LIST_CONTENTS);
+}
+
+
+void
+dumpListStats()
+{
+    dumpListAction(DUMP_LIST_STATS);
 }
 
 
@@ -925,7 +1011,7 @@ getLock(pthread_mutex_t *lock)
     for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
         if ((retVal = pthread_mutex_lock(lock)) == 0) {    // locked
 #ifdef  DEBUG
-            if (DebugLevel == DEBUG_DETAIL) {
+            if (DebugLevel == DEBUG_SUPER) {
                 fprintf(DebugFP, "%s(0x%lx): took %d attempts to get lock\n",
                         __func__, (long)lock, i);
             }
@@ -939,7 +1025,7 @@ getLock(pthread_mutex_t *lock)
 
               errorString = strerror(errno);
 
-              if (DebugLevel == DEBUG_DETAIL) {
+              if (DebugLevel == DEBUG_SUPER) {
                   fprintf(DebugFP, "%s(0x%lx): pthread_mutex_lock() returned %d (%s)\n", __func__,
                          (long)lock, retVal, (retVal != 0) ? errorString : "Success");
               }
@@ -950,7 +1036,7 @@ getLock(pthread_mutex_t *lock)
         usleep ((useconds_t) LOCK_USLEEP_TIME);
     }
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_SUPER) {
         fprintf(DebugFP, "%s(0x%lx): warning: could not get lock after %d attempts\n",
                 MyName, (long)lock, i);
     }
@@ -972,9 +1058,11 @@ releaseLock(pthread_mutex_t *lock)
     retVal =  pthread_mutex_unlock(lock);
 
 #ifdef  DEBUG
+    char    *errorString;
+
     errorString = strerror(errno);
 
-    if (DebugLevel == DEBUG_DETAIL && retVal) {
+    if (DebugLevel == DEBUG_SUPER && retVal) {
         fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
                (long)lock, retVal, (retVal != 0) ? errorString : "Success");
     }

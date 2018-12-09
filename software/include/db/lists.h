@@ -179,8 +179,8 @@ void zeroSensorDataRecord(SENSOR_TYPE, SENSOR_RECORD *);
 // general list stuff
 //
 
-/// walks and dumps entire object and camera lists
-void dumpLists();
+/// walks and dumps entire object
+void dumpLists(), dumpListStats();
 
 
 #define LOCK_MAX_ATTEMPTS   20

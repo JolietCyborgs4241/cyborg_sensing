@@ -34,7 +34,7 @@ HOST_INFO   HostInfo;
 /// Typical values are in the low integer number of seconds
 // /
 // potentially have different TTLs for different sensors
-TTLS sensorTtls[] = { { SENSOR_CAMERA, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
+TTLS SensorTtls[] = { { SENSOR_CAMERA, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { SENSOR_RANGE,TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { SENSOR_ACCELL, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { SENSOR_ROLL, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
@@ -43,7 +43,7 @@ TTLS sensorTtls[] = { { SENSOR_CAMERA, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
 
 /// Global debug level
 ///
-/// DEBUG_OFF, DEBUG_INFO, DEBUG_DETAIL
+/// DEBUG_OFF, DEBUG_INFO, DEBUG_DETAIL, DEBUG_SUPER
 int         DebugLevel = DEBUG_OFF;
 
 /// Global FILE * for debug output

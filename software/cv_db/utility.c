@@ -27,7 +27,7 @@ cvAlloc(size_t bytes)
     }
 
 #ifdef  DEBUG
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_SUPER) {
         fprintf(DebugFP, "%s(%ld) returning (0x%lx)\n", __func__, bytes, (long)ptr);
     }
 #endif  // DEBUG
@@ -44,7 +44,7 @@ void
 cvFree(void *ptr)
 {
 #ifdef  DEBUG
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel == DEBUG_SUPER) {
         fprintf(DebugFP, "%s(0x%lx)\n", __func__, (long)ptr);
     }
 #endif  // DEBUG

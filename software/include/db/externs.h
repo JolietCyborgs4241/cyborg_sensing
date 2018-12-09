@@ -23,12 +23,13 @@ extern  int         DebugLevel;
 /// Global FP for Debug output
 extern  FILE        *DebugFP;
 
-void    initMutexes();
-void    initDb();
-
 /// time-to-live for sensor data
 ///
 /// could potentially be distinct for each sensor type
-TTLS    SensorTtls[];
+extern  TTLS    SensorTtls[];
+
+
+void    initMutexes();
+void    initDb();
 
 #endif  /* db/externs.h */

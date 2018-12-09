@@ -11,6 +11,7 @@
 #define	DEBUG_OFF           0
 #define	DEBUG_INFO          1
 #define	DEBUG_DETAIL        2
+#define DEBUG_SUPER        3
 
 #define DEBUG_OUT(X, ...)   fprintf(DebugFP X__VA_OPT__(,) __VA_ARGS__)
 //#define G(X, ...) f(0, X __VA_OPT__(,) __VA_ARGS__)

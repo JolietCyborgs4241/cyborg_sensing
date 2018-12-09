@@ -87,7 +87,7 @@ init(int argc, char **argv)
                 ttlPtr->ttlSecs  = ttl;
                 ttlPtr->ttlUsecs = 0;
 #warning Need to add floating point value TTL support
-#warning Need to added per SENSOR TTL setting support
+#warning Need to added per SENSOR TTL setting consiguration support
                 ttlPtr++;
             }
             break;
@@ -100,6 +100,7 @@ init(int argc, char **argv)
             case DEBUG_OFF:
             case DEBUG_INFO:
             case DEBUG_DETAIL:
+            case DEBUG_SUPER:
                 break;  // all valid values
             default:
                 fprintf(stderr, "%s: error: invalid debug value (%d)\n",
@@ -165,15 +166,19 @@ dumpConfig()
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
     switch (DebugLevel) {
-    case 0:
+    case DEBUG_OFF:
         fprintf(DebugFP, "(OFF)\n");
         break;
 
-    case 1:
+    case DEBUG_INFO:
         fprintf(DebugFP, "(INFO)\n");
         break;
 
-    case 2:
+    case DEBUG_DETAIL:
+        fprintf(DebugFP, "(DETAIL)\n");
+        break;
+
+    case DEBUG_SUPER:
         fprintf(DebugFP, "(DETAIL)\n");
         break;
     }
@@ -222,6 +227,6 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2|3]\n",
             MyName, MyName);
 }

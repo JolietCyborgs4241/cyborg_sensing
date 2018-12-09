@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #include "cv.h"
 #include "cv_net.h"
@@ -47,15 +48,15 @@ startPruneThread()
 {
     pthread_attr_t  attr;
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): starting pruneThread thread...\n", __func__);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(): starting pruneThread thread...\n", __func__);
     }
 
     pthread_attr_init(&attr);
 
     pthread_create(&tidPrune, &attr, pruneThread, NULL);
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): pruneThread thread started.\n", __func__);
     }
 }
@@ -64,24 +65,25 @@ startPruneThread()
 static void *
 pruneThread()
 {
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): Starting...\n", __func__);
     }
 
     while (1) {
         usleep (PRUNE_FREQUENCY * 1000);
+#define DEBUG
 #ifdef  DEBUG
         struct timeval  tv;
 
-        gettimeofday(&tv, (struct timezone *)NULL);
+        gettimeofday(&tv, NULL);
 
-        if (DebugLevel == DEBUG_DETAIL) {
+        if (DebugLevel >= DEBUG_DETAIL) {
 #ifdef	__APPLE__
-            fprintf(DebugFP, "%s(%d): awake at %ld.%d\n",
+            fprintf(DebugFP, "%s(): awake at %ld.%d\n",
 #else
-            fprintf(DebugFP, "%s(%d): awake at %ld.%ld\n",
+            fprintf(DebugFP, "%s(): awake at %ld.%ld\n",
 #endif
-                    __func__, *(int *)ttl, tv.tv_sec, tv.tv_usec);
+                    __func__, tv.tv_sec, tv.tv_usec);
         }
 #endif  // DEBUG
         
@@ -101,8 +103,8 @@ startSensorDataThread(int sock)
 
     sockStatic = sock;
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): starting recvCamDataThread thread...\n", __func__, sock);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(%d): starting recvSensorDataThread thread...\n", __func__, sock);
     }
 
     pthread_attr_init(&attr);
@@ -110,7 +112,7 @@ fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, 
 
     pthread_create(&tidPrune, &attr, recvSensorDataThread, &sockStatic);
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(%d): recvSensorDataThread thread started.\n", __func__, sock);
     }
 }
@@ -121,7 +123,7 @@ fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, 
 static void *
 recvSensorDataThread(void *sock)
 {
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(%d): Starting...\n", __func__, *(int *)sock);
     }
 
@@ -144,7 +146,7 @@ processSensorData(int sock)
 
         buffer[readRet] = '\0';
 
-        if (DebugLevel == DEBUG_DETAIL) {
+        if (DebugLevel >= DEBUG_DETAIL) {
             fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
                     MsgNum,  buffer, strlen(buffer));
         }
