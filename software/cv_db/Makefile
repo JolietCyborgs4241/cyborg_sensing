@@ -46,3 +46,8 @@ sensors.o:	sensors.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
 
 clean:
 	rm -rf $(OBJS) $(TARGETS)
+
+
+valgrind:	cv_db
+	valgrind --leak-check=full --show-leak-kinds=all --read-var-info=yes -v ./cv_db -D 2 -d DEBUG 2>stderr
+

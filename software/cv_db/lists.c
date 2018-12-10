@@ -1,6 +1,6 @@
 //    cv_lists.c
 //
-//    manipulation functions for camera data lists
+//    manipulation functions for sensor data lists
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -21,33 +21,31 @@
 
 
 
-#ifdef  DEBUG // show function and line in debug output --------------------------V
+#ifdef  LOCK_DEBUG // show function and line in debug output --------------------------V
 
 #define LOCK_SENSOR_LIST   \
-                        if (DebugLevel == DEBUG_DETAIL) {\
-                            fprintf(DebugFP, "Line %d in %s: getLock(0x%lx)\n", \
-                                    __LINE__, __func__, (long)&camListLock); \
-                        } getLock(&sensorListLock)
+        fprintf(DebugFP, "Line %d in %s: getLock(0x%lx)\n", \
+                __LINE__, __func__, (long)&mainListLock); \
+        getLock(&mainListLock)
 
 #define UNLOCK_SENSOR_LIST \
-                        if (DebugLevel == DEBUG_DETAIL) {\
-                            fprintf(DebugFP, "Line %d in %s: releaseLock(0x%lx)\n", \
-                                    __LINE__, __func__, (long)&camListLock); \
-                        } releaseLock(&sensorListLock)
+        fprintf(DebugFP, "Line %d in %s: releaseLock(0x%lx)\n", \
+                __LINE__, __func__, (long)&mainListLock); \
+        releaseLock(&mainListLock)
 
-#else   //  ! DEBUG ----------------------------------------------------------------
+#else   //  ! LOCK_DEBUG ----------------------------------------------------------------
 
 #define LOCK_SENSOR_LIST    getLock(&mainListLock)
 #define UNLOCK_SENSOR_LIST  releaseLock(&mainListLock)
 
-#endif  //  DEBUG -----------------------------------------------------------------^
+#endif  //  LOCK_DEBUG -----------------------------------------------------------------^
 
 
 
-static pthread_mutex_t  mainListLock;
+static pthread_mutex_t      mainListLock;
 
-static int              getLock(pthread_mutex_t *),
-                        releaseLock(pthread_mutex_t *);
+static int                  getLock(pthread_mutex_t *),
+                            releaseLock(pthread_mutex_t *);
 
 
 static SENSOR_LIST          *allocSensorListRecord(), *sensorListGetHead();
@@ -141,11 +139,13 @@ initDb()
 
     SensorLists = firstPtr;
 
+#ifdef NEVER
     sigHandling.sa_sigaction = &dumpOnUsr1Signal;
     sigaction(SIGUSR1, &sigHandling, NULL);
 
     sigHandling.sa_sigaction = &dumpOnUsr2Signal;
     sigaction(SIGUSR2, &sigHandling, NULL);
+#endif // NEVER
 }
 
 
@@ -156,7 +156,7 @@ initDb()
 /// doesn't lock the sensorlist - at worst it will miss the first entry
 /// which could be added while we are traversing
 ///
-/// no elements ever get removed from the camList headers
+/// no elements ever get removed from the SENSOFR_LIST headers
 SENSOR_LIST *
 sensorGetListBySensor(SENSOR_TYPE sensor)
 {
@@ -188,7 +188,7 @@ sensorGetListBySensor(SENSOR_TYPE sensor)
 /// doesn't lock the camlist - at worst it will miss the first entry
 /// which could be added while we are traversing
 ///
-/// no elements ever get removed from the camList headers
+/// no elements ever get removed from the SENSOR_ID_LIST headers
 SENSOR_ID_LIST *
 sensorGetIdListById(SENSOR_TYPE sensor, char *id)
 {
@@ -359,7 +359,7 @@ newSensorId(SENSOR_LIST *listPtr, char *id, char *subId, SENSOR_TYPE type,
 ///
 /// type, id, subId, #, #, #, #
 ///
-/// locks the camList
+/// locks the sensor list
 void
 sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, int i4)
 {
@@ -374,14 +374,14 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
                 __func__, (int)sensor, id, subId, i1, i2, i3, i4);
     }
 
+    LOCK_SENSOR_LIST;
+
     if (DebugLevel == DEBUG_SUPER) {
         dumpLists();
     }
 
     // we'll go as far down the list as we can until we don't find something
     // and then add it
-
-    LOCK_SENSOR_LIST;
 
     listPtr = sensorListGetHead();
 
@@ -401,9 +401,7 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
 				            // looks like all we need to do is add the sensor data record
 				            newSensorRecord(subIdPtr, sensor, i1, i2, i3, i4);
 
-                            UNLOCK_SENSOR_LIST;
-
-                            return;
+                            goto sensorAdded;
                         }
                         subIdPtr = subIdPtr->next;
                      }
@@ -411,9 +409,7 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
                      // looks like we need to add the subId record as well
                      newSensorSubId(idPtr, sensor, subId, i1, i2, i3, i4);
 
-                     UNLOCK_SENSOR_LIST;
-
-                     return;
+                     goto sensorAdded;
                 }
 
                 idPtr = idPtr->next;
@@ -422,9 +418,7 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
             // looks like we need to add the id record as well
             newSensorId(listPtr, id, subId, sensor, i1, i2, i3, i4);
 
-            UNLOCK_SENSOR_LIST;
-
-            return;
+            goto sensorAdded;
         }
 
         listPtr = listPtr->next;
@@ -435,6 +429,18 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
     // there should never be a case where we have a sensor type that's not already listed
     fprintf(DebugFP, "%s: warning: %s(%c, \"%s\", \"%s\", %d, %d, %d, %d\n",
             MyName, __func__, sensor, id, subId, i1, i2, i3, i4);
+    return;
+
+sensorAdded:
+
+    UNLOCK_SENSOR_LIST;
+
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d) completed\n",
+                __func__, (int)sensor, id, subId, i1, i2, i3, i4);
+    }
+
+    return;
 }
 
 
@@ -455,8 +461,11 @@ sensorRecPruneAll()
         fprintf(DebugFP, "%s() entered @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
     }
 
-
     LOCK_SENSOR_LIST;
+
+    if (DebugLevel >= DEBUG_SUPER) {
+        dumpLists();
+    }
 
     while (ttlPtr->sensor) {   // go through sensor types in the TTL list
 
@@ -612,10 +621,9 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
 
         case SENSOR_CAMERA:
            fprintf(DebugFP, "[Camera]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.camera.x);
-           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.camera.y);
-           fprintf(DebugFP, "\t\t\t\t\tW:\t%d\n", ptr->sensorData.camera.w);
-           fprintf(DebugFP, "\t\t\t\t\tH:\t%d\n", ptr->sensorData.camera.h);
+           fprintf(DebugFP, "\t\t\t\t\tX, Y, W, H:\t%d, %d, %d, %d\n",
+                   ptr->sensorData.camera.x, ptr->sensorData.camera.y,
+                   ptr->sensorData.camera.w, ptr->sensorData.camera.h);
            break;
 
         case SENSOR_RANGE:
@@ -625,23 +633,23 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
 
         case SENSOR_ACCELL:
            fprintf(DebugFP, "[Acceleration]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.accell.x);
-           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.accell.y);
-           fprintf(DebugFP, "\t\t\t\t\tZ:\t%d\n", ptr->sensorData.accell.z);
+           fprintf(DebugFP, "\t\t\t\t\tX, Y, Z:\t%d, %d, %d\n",
+                   ptr->sensorData.accell.x, ptr->sensorData.accell.y,
+                   ptr->sensorData.accell.z);
            break;
 
         case SENSOR_ROLL:
            fprintf(DebugFP, "[Roll]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.roll.x);
-           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.roll.y);
-           fprintf(DebugFP, "\t\t\t\t\tZ:\t%d\n", ptr->sensorData.roll.z);
+           fprintf(DebugFP, "\t\t\t\t\tX, Y, Z:\t%d, %d, %d\n",
+                   ptr->sensorData.roll.x, ptr->sensorData.roll.y,
+                   ptr->sensorData.roll.z);
            break;
 
         case SENSOR_MAGNETIC:
            fprintf(DebugFP, "[Magnetic]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX:\t%d\n", ptr->sensorData.magnetic.x);
-           fprintf(DebugFP, "\t\t\t\t\tY:\t%d\n", ptr->sensorData.magnetic.y);
-           fprintf(DebugFP, "\t\t\t\t\tZ:\t%d\n", ptr->sensorData.magnetic.z);
+           fprintf(DebugFP, "\t\t\t\t\tX, Y, Z:\t%d, %d, %d\n",
+                   ptr->sensorData.magnetic.x, ptr->sensorData.magnetic.y,
+                   ptr->sensorData.magnetic.z);
            break;
     }
 
@@ -1010,15 +1018,15 @@ getLock(pthread_mutex_t *lock)
 
     for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
         if ((retVal = pthread_mutex_lock(lock)) == 0) {    // locked
-#ifdef  DEBUG
+#ifdef  LOCK_DEBUG
             if (DebugLevel == DEBUG_SUPER) {
                 fprintf(DebugFP, "%s(0x%lx): took %d attempts to get lock\n",
                         __func__, (long)lock, i);
             }
-#endif  // DEBUG
+#endif  // LOCK_DEBUG
             return 0;
         }
-#ifdef  DEBUG	// BE CAREFUL!  DEBUG adds 'else' to 'if' above!!
+#ifdef  LOCK_DEBUG	// BE CAREFUL!  LOCK_DEBUG adds 'else' to 'if' above!!
           else {
 
               char    *errorString;
@@ -1030,13 +1038,13 @@ getLock(pthread_mutex_t *lock)
                          (long)lock, retVal, (retVal != 0) ? errorString : "Success");
               }
         }
-#endif  // DEBUG
+#endif  // LOCK_DEBUG
 
         
         usleep ((useconds_t) LOCK_USLEEP_TIME);
     }
 
-    if (DebugLevel == DEBUG_SUPER) {
+    if (DebugLevel == DEBUG_INFO) {
         fprintf(DebugFP, "%s(0x%lx): warning: could not get lock after %d attempts\n",
                 MyName, (long)lock, i);
     }
@@ -1057,7 +1065,7 @@ releaseLock(pthread_mutex_t *lock)
 
     retVal =  pthread_mutex_unlock(lock);
 
-#ifdef  DEBUG
+#ifdef  LOCK_DEBUG
     char    *errorString;
 
     errorString = strerror(errno);
@@ -1066,7 +1074,7 @@ releaseLock(pthread_mutex_t *lock)
         fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
                (long)lock, retVal, (retVal != 0) ? errorString : "Success");
     }
-#endif  // DEBUG
+#endif  // LOCK_DEBUG
 
     return retVal;
 }

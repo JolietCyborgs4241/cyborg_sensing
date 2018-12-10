@@ -20,6 +20,8 @@
 //G(a)       // replaced by f(0, a)
 
 
+void    *cvAlloc(size_t);
+void    cvFree(void *);
 
 
 #define PRUNE_FREQUENCY         500 // msecs
@@ -28,14 +30,6 @@
 
 
 
-/// \brief General purpose memory allocator
-///
-/// Will always return success; exits with a warning message otherwise
-void    *cvAlloc(size_t);
-
-/// \brief General purpose memory free
-///
-void    cvFree(void *);
 
 
 #endif  /* cv.h */
