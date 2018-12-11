@@ -493,7 +493,6 @@ sensorRecPruneAll()
                 }
 
                 sensorPtr     = sensorSubIdListPtr->data;
-
                 prevSensorPtr = sensorPtr;
 
                 while (sensorPtr) {    // walk the sensor data records
@@ -516,10 +515,13 @@ sensorRecPruneAll()
 
                         freeSensorRecsFromEnd(sensorPtr);
 
-                    }
+                        sensorPtr = NULL;
 
-                    prevSensorPtr = sensorPtr;
-                    sensorPtr     = sensorPtr->next;
+                    } else {
+
+                        prevSensorPtr = sensorPtr;
+                        sensorPtr     = sensorPtr->next;
+                    }
                 }
 
                 sensorSubIdListPtr = sensorSubIdListPtr->next;
@@ -1088,7 +1090,6 @@ getLock(pthread_mutex_t *lock)
 static void
 releaseLock(pthread_mutex_t *lock)
 {
-    return;
     if (pthread_mutex_unlock(lock) != 0) {
 
 #ifdef  LOCK_DEBUG
