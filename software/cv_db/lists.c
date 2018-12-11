@@ -42,9 +42,9 @@
 
 
 
-static pthread_mutex_t      mainListLock;
+static pthread_mutex_t      mainListLock = PTHREAD_MUTEX_INITIALIZER;
 
-static int                  getLock(pthread_mutex_t *),
+static void                 getLock(pthread_mutex_t *),
                             releaseLock(pthread_mutex_t *);
 
 
@@ -277,34 +277,34 @@ newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
     switch (type) {
 
     case SENSOR_CAMERA:
-        sensorPtr->sensorData.camera.x = i1;
-        sensorPtr->sensorData.camera.y = i2;
-        sensorPtr->sensorData.camera.w = i3;
-        sensorPtr->sensorData.camera.h = i4;
+        sensorPtr->rawData[CAMERA_X] = i1;
+        sensorPtr->rawData[CAMERA_Y] = i2;
+        sensorPtr->rawData[CAMERA_W] = i3;
+        sensorPtr->rawData[CAMERA_H] = i4;
         break;
 
     case SENSOR_RANGE:
-        sensorPtr->sensorData.range.range = i1;
+        sensorPtr->rawData[RANGE_X] = i1;
         break;
 
     case SENSOR_ACCELL:
-        sensorPtr->sensorData.accell.x = i1;
-        sensorPtr->sensorData.accell.y = i2;
-        sensorPtr->sensorData.accell.z = i3;
+        sensorPtr->rawData[ACCELL_X] = i1;
+        sensorPtr->rawData[ACCELL_Y] = i2;
+        sensorPtr->rawData[ACCELL_Z] = i3;
         break;
 
     case SENSOR_ROLL:
-        sensorPtr->sensorData.roll.x = i1;
-        sensorPtr->sensorData.roll.y = i2;
-        sensorPtr->sensorData.roll.z = i3;
+        sensorPtr->rawData[ROLL_X] = i1;
+        sensorPtr->rawData[ROLL_Y] = i2;
+        sensorPtr->rawData[ROLL_Z] = i3;
         break;
 
     case SENSOR_MAGNETIC:
-        sensorPtr->sensorData.magnetic.x = i1;
-        sensorPtr->sensorData.magnetic.y = i2;
-        sensorPtr->sensorData.magnetic.z = i3;
+        sensorPtr->rawData[MAGNETIC_X] = i1;
+        sensorPtr->rawData[MAGNETIC_Y] = i2;
+        sensorPtr->rawData[MAGNETIC_Z] = i3;
         break;
-
+#warning add filtering and gain calculations to newSensorRecord
     }
 }
 
@@ -458,7 +458,7 @@ sensorRecPruneAll()
     gettimeofday(&now, NULL);
 
     if (DebugLevel >= DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s() entered @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
+        fprintf(DebugFP, "%s() enter @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
     }
 
     LOCK_SENSOR_LIST;
@@ -532,33 +532,12 @@ sensorRecPruneAll()
     }
 
     UNLOCK_SENSOR_LIST;
-}
-
-
-/// \brief frees all sensor records starting at some location in the list
-///
-/// records are freed from the end of the list popping back towards the first
-/// on to be purged
-///
-/// internal list support routine
-///
-/// doesn't lock list - assumes caller did
-static void
-freeSensorRecsFromEnd(SENSOR_RECORD *ptr)
-{
-
-#define DEBUG
-#ifdef  DEBUG
-    if (DebugLevel == DEBUG_SUPER) {
-        fprintf(DebugFP, "%s(0x%lx) entered\n", __func__, (long)ptr);
-    }
-#endif  // DEBUG
-
-    if (ptr->next) {    // keep going
-        freeSensorRecsFromEnd(ptr->next);  // RECURSIVE!!!
+    
+    if (DebugLevel >= DEBUG_DETAIL) {
+        gettimeofday(&now, NULL);
+        fprintf(DebugFP, "%s() exit @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
     }
 
-    cvFree(ptr);    // free ME!
 }
 
 
@@ -621,35 +600,64 @@ dumpSensorRecord(SENSOR_RECORD *ptr)
 
         case SENSOR_CAMERA:
            fprintf(DebugFP, "[Camera]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX, Y, W, H:\t%d, %d, %d, %d\n",
-                   ptr->sensorData.camera.x, ptr->sensorData.camera.y,
-                   ptr->sensorData.camera.w, ptr->sensorData.camera.h);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - X, Y, W, H:\t%d, %d, %d, %d\n",
+                   ptr->rawData[CAMERA_X], ptr->rawData[CAMERA_Y],
+                   ptr->rawData[CAMERA_W], ptr->rawData[CAMERA_H]);
+           fprintf(DebugFP, "\t\t\t\t\tFiltered data - X, Y, W, H:\t%d, %d, %d, %d\n",
+                   ptr->filteredData[CAMERA_X], ptr->filteredData[CAMERA_Y],
+                   ptr->filteredData[CAMERA_W], ptr->filteredData[CAMERA_H]);
+           fprintf(DebugFP, "\t\t\t\t\tGain - X, Y, W, H:\t%d, %d, %d, %d\n",
+                   ptr->gain[CAMERA_X], ptr->gain[CAMERA_Y],
+                   ptr->gain[CAMERA_W], ptr->gain[CAMERA_H]);
            break;
 
         case SENSOR_RANGE:
            fprintf(DebugFP, "[Range]\n");
-           fprintf(DebugFP, "\t\t\t\t\tRange:\t%d\n", ptr->sensorData.range.range);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - Range:\t%d\n",
+                   ptr->rawData[RANGE_X]);
+           fprintf(DebugFP, "\t\t\t\t\tFiltered data - Range:\t%d\n",
+                   ptr->filteredData[RANGE_X]);
+           fprintf(DebugFP, "\t\t\t\t\tGain - Range:\t%d\n",
+                   ptr->gain[RANGE_X]);
            break;
 
         case SENSOR_ACCELL:
            fprintf(DebugFP, "[Acceleration]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX, Y, Z:\t%d, %d, %d\n",
-                   ptr->sensorData.accell.x, ptr->sensorData.accell.y,
-                   ptr->sensorData.accell.z);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->rawData[ACCELL_X], ptr->rawData[ACCELL_Y],
+                   ptr->rawData[ACCELL_Z]);
+           fprintf(DebugFP, "\t\t\t\t\tFiltered data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->filteredData[ACCELL_X], ptr->filteredData[ACCELL_Y],
+                   ptr->filteredData[ACCELL_Z]);
+           fprintf(DebugFP, "\t\t\t\t\tGain - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->gain[ACCELL_X], ptr->gain[ACCELL_Y],
+                   ptr->gain[ACCELL_Z]);
            break;
 
         case SENSOR_ROLL:
            fprintf(DebugFP, "[Roll]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX, Y, Z:\t%d, %d, %d\n",
-                   ptr->sensorData.roll.x, ptr->sensorData.roll.y,
-                   ptr->sensorData.roll.z);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->rawData[ROLL_X], ptr->rawData[ROLL_Y],
+                   ptr->rawData[ROLL_Z]);
+           fprintf(DebugFP, "\t\t\t\t\tFiltered data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->filteredData[ROLL_X], ptr->filteredData[ROLL_Y],
+                   ptr->filteredData[ROLL_Z]);
+           fprintf(DebugFP, "\t\t\t\t\tGain - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->gain[ROLL_X], ptr->gain[ROLL_Y],
+                   ptr->gain[ROLL_Z]);
            break;
 
         case SENSOR_MAGNETIC:
            fprintf(DebugFP, "[Magnetic]\n");
-           fprintf(DebugFP, "\t\t\t\t\tX, Y, Z:\t%d, %d, %d\n",
-                   ptr->sensorData.magnetic.x, ptr->sensorData.magnetic.y,
-                   ptr->sensorData.magnetic.z);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->rawData[MAGNETIC_X], ptr->rawData[MAGNETIC_Y],
+                   ptr->rawData[MAGNETIC_Z]);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->filteredData[MAGNETIC_X], ptr->filteredData[MAGNETIC_Y],
+                   ptr->filteredData[MAGNETIC_Z]);
+           fprintf(DebugFP, "\t\t\t\t\tRaw data - X, Y, Z:\t%d, %d, %d\n",
+                   ptr->gain[MAGNETIC_X], ptr->gain[MAGNETIC_Y],
+                   ptr->gain[MAGNETIC_Z]);
            break;
     }
 
@@ -841,8 +849,15 @@ zeroSensorSubIdListRecord(SENSOR_SUBID_LIST *ptr)
 static void
 zeroSensorRecord(SENSOR_RECORD *ptr)
 {
-    ptr->time.tv_sec  = 0;
-    ptr->time.tv_usec = 0;
+    int i;
+
+    ptr->time.tv_sec   = 0;
+    ptr->time.tv_usec  = 0;
+ 
+    for (i = 0 ; i < MAX_SENSOR_VALUES ; i++) {
+        ptr->rawData[i] = ptr->filteredData[i] = ptr->gain[i] = 0;
+    }
+
     ptr->next          = NULL;
 }
 
@@ -942,6 +957,34 @@ allocSensorRecord()
 //  life of the database
 //  ***************************************************************************
 
+
+/// \brief frees all sensor records starting at some location in the list
+///
+/// records are freed from the end of the list popping back towards the first
+/// on to be purged
+///
+/// doesn't lock list - assumes caller did
+
+
+static void
+freeSensorRecsFromEnd(SENSOR_RECORD *ptr)
+{
+
+#define DEBUG
+#ifdef  DEBUG
+    if (DebugLevel == DEBUG_SUPER) {
+        fprintf(DebugFP, "%s(0x%lx) entered\n", __func__, (long)ptr);
+    }
+#endif  // DEBUG
+
+    if (ptr->next) {    // keep going
+        freeSensorRecsFromEnd(ptr->next);  // RECURSIVE!!!
+    }
+
+    cvFree(ptr);    // free ME!
+}
+
+
 /// free SENSOR_ID_LIST record
 ///
 /// free id as well
@@ -1011,45 +1054,29 @@ initMutexes()
 ///
 /// returns 0 if successful - non-zero if unsuccessful
 ///
-static int
+static void
 getLock(pthread_mutex_t *lock)
 {
-    int i, retVal;
+    int retVal;
 
-    for (i = 0 ; i < LOCK_MAX_ATTEMPTS ; i++) {
-        if ((retVal = pthread_mutex_lock(lock)) == 0) {    // locked
-#ifdef  LOCK_DEBUG
-            if (DebugLevel == DEBUG_SUPER) {
-                fprintf(DebugFP, "%s(0x%lx): took %d attempts to get lock\n",
-                        __func__, (long)lock, i);
-            }
-#endif  // LOCK_DEBUG
-            return 0;
-        }
+    if ((retVal = pthread_mutex_lock(lock)) == 0) {    // locked
+        return;
+    }
 #ifdef  LOCK_DEBUG	// BE CAREFUL!  LOCK_DEBUG adds 'else' to 'if' above!!
-          else {
+      else {
 
-              char    *errorString;
+        char    *errorString;
 
-              errorString = strerror(errno);
+        errorString = strerror(errno);
 
-              if (DebugLevel == DEBUG_SUPER) {
-                  fprintf(DebugFP, "%s(0x%lx): pthread_mutex_lock() returned %d (%s)\n", __func__,
-                         (long)lock, retVal, (retVal != 0) ? errorString : "Success");
-              }
+        if (DebugLevel == DEBUG_SUPER) {
+            fprintf(DebugFP, "%s(0x%lx): pthread_mutex_lock() returned %d (%s)\n", __func__,
+                    (long)lock, retVal, (retVal != 0) ? errorString : "Success");
         }
+    }
 #endif  // LOCK_DEBUG
 
-        
-        usleep ((useconds_t) LOCK_USLEEP_TIME);
-    }
-
-    if (DebugLevel == DEBUG_INFO) {
-        fprintf(DebugFP, "%s(0x%lx): warning: could not get lock after %d attempts\n",
-                MyName, (long)lock, i);
-    }
-
-    return 1;                                   // couldn't get lock
+    exit(1);
 }
 
 
@@ -1058,23 +1085,23 @@ getLock(pthread_mutex_t *lock)
 ///
 /// returns 0 if successful - non-zero if unsuccessful
 ///
-static int
+static void
 releaseLock(pthread_mutex_t *lock)
 {
-	int     retVal;
-
-    retVal =  pthread_mutex_unlock(lock);
+    return;
+    if (pthread_mutex_unlock(lock) != 0) {
 
 #ifdef  LOCK_DEBUG
-    char    *errorString;
+        char    *errorString;
 
-    errorString = strerror(errno);
+        errorString = strerror(errno);
 
-    if (DebugLevel == DEBUG_SUPER && retVal) {
-        fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
-               (long)lock, retVal, (retVal != 0) ? errorString : "Success");
-    }
+        if (DebugLevel == DEBUG_SUPER && retVal) {
+            fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
+                    (long)lock, retVal, (retVal != 0) ? errorString : "Success");
+        }
 #endif  // LOCK_DEBUG
 
-    return retVal;
+        exit(1);
+    }
 }

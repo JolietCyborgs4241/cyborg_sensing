@@ -8,52 +8,34 @@
 
 #include "sensors.h"
 
+
 // ****************************************************************
 // sensor  and sensor list definitions
 //
 
-typedef struct sensorCamRec {
-    /// x, y coordinate of target object
-    int                 x, y;
-    /// w, h of object bounding box
-    int                 w, h;
-} SENSOR_CAMERA_RECORD;
+#define MAX_SENSOR_VALUES   4
+
+/// offsets for data values for each sensor type
+#define CAMERA_X            0
+#define CAMERA_Y            1
+#define CAMERA_W            2
+#define CAMERA_H            3
+
+#define RANGE_X             0
+
+#define ACCELL_X            0
+#define ACCELL_Y            1
+#define ACCELL_Z            2
+
+#define ROLL_X              0
+#define ROLL_Y              1
+#define ROLL_Z              2
+
+#define MAGNETIC_X          0
+#define MAGNETIC_Y          1
+#define MAGNETIC_Z          2
 
 
-typedef struct sensorRangeRec {
-    /// range to target (cm)
-    int                 range;
-} SENSOR_RANGE_RECORD;
-
-
-typedef struct sensorAccellRec {
-    /// acceleration X axis
-    int                 x;
-    /// acceleration Y axis
-    int                 y;
-    /// acceleration Z axis
-    int                 z;
-} SENSOR_ACCELL_RECORD;
-
-
-typedef struct sensorRollRec {
-    /// roll rate X axis
-    int                 x;
-    /// roll rate Y axis
-    int                 y;
-    /// roll rate Z axis
-    int                 z;
-} SENSOR_ROLL_RECORD;
-
-
-typedef struct sensorMagRec {
-    /// mag inclination X axis
-    int                 x;
-    /// mag inclination Y axis
-    int                 y;
-    /// mag inclination Z axis
-    int                 z;
-} SENSOR_MAG_RECORD;
 
 
 typedef struct sensorRecord {
@@ -62,16 +44,31 @@ typedef struct sensorRecord {
     SENSOR_TYPE         type;
     /// arrival of sensor message (actually insertion time in list)
     struct timeval      time;
-    /// union of all non-camera sensor records
-    union {
-        SENSOR_CAMERA_RECORD camera;
-        SENSOR_RANGE_RECORD  range;
-        SENSOR_ACCELL_RECORD accell;
-        SENSOR_ROLL_RECORD   roll;
-        SENSOR_MAG_RECORD    magnetic;
-    } sensorData;
+    /// rawData values
+    ///
+    /// camera:
+    /// x, y coordinate of target object
+    /// w, h of object bounding box
+    ///
+    /// range:
+    /// distance
+    ///
+    /// accelleration:
+    /// x, y, z axis
+    ///
+    /// roll:
+    /// x, y, z
+    ///
+    /// magnetic:
+    ///
+    /// x, y, z
+    int                 rawData[MAX_SENSOR_VALUES];
+    /// filtered value after kalman filtering
+    int                 filteredData[MAX_SENSOR_VALUES];
+    /// kalman filter gain values (maintained per value)
+    int                 gain[MAX_SENSOR_VALUES];
     /// pointer to next sensor record
-    struct sensorRecord    *next;
+    struct sensorRecord *next;
 } SENSOR_RECORD;
 
 
