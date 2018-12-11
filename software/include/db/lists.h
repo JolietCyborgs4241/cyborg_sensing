@@ -1,194 +1,172 @@
 //  lists.h
 //
-//  structures for storing and manipulating camera data records
+//  structures function prototypes for storing and
+//  manipulating sensor data records
 
 #ifndef _CYBORG_DB_LISTS_H_
 #define _CYBORG_DB_LISTS_H_ 1
 
-
-// ****************************************************************
-// camera stuff
-//
-
-typedef struct camRecord {
-    /// arrival of camera message (actually insertion time in list)
-    struct timeval       time;
-    /// source camera identifier (right or left)
-    char                camera;
-    /// x coordinate of object
-    int                 x;
-    /// y coordinate of object
-    int                 y;
-    /// width of bounding box
-    int                 w;
-    /// height of bounding box
-    int                 h;
-    /// pointer to next camera record
-    struct camRecord    *next;
-} CAMERA_RECORD;
-
-typedef struct camListHdr {
-    /// Identifier of the object being reported
-    char                *id;
-    /// \brief pointer to individual camera records about this object
-    ///
-    /// object records from R / L cameras are on separate lists
-    CAMERA_RECORD       *recs[NUM_OF_CAMERAS];
-    /// pointer to next object header
-    struct camListHdr   *next;
-} CAMERA_LIST_HDR;
-
-
-/// Get cam list record for a specific object id
-CAMERA_LIST_HDR    *camListGetHdrById(char *);
-
-
-/// ID, camera, x, y, w, h - add a new object (if needed) and camera record (always; newest at front of list)
-int  camRecAdd(char *, char, int, int, int, int);
-
-/// ID, TTL - delete old records for only a specific object id (all cameras)
-void  camRecPruneById(char *, int);
-
-/// TTL - prune all camera records older than TTL (regardless of camera or object id)
-void  camRecPruneAll(int);
-
-/// ID - delete all records for an id (all cameras)
-int  camRecDeleteById(char *);
-
-/// get latest record for an id (both cameras)
-///
-/// pointer to a 2-element CAMERA_RECORD array
-///
-/// CAMERA_RECORD array is zeroed
-int camRecGetLatest(char *, CAMERA_RECORD *);
-
-/// get average x, y, w, h, values for a specific (both cameras)
-int camRecGetAvg(char *, CAMERA_RECORD *);
-
-/// zero-out a CAMERA_RECORD object
-void zeroCamRecord(CAMERA_RECORD *);
-
-/// dump an individual CAMERA_RECORD
-void dumpCamRecord(CAMERA_RECORD *);
-
-/// zero an individual CAMERA_RECORD
-void zeroCamRecord(CAMERA_RECORD *);
-
-
+#include "sensors.h"
 
 
 // ****************************************************************
-// general sensor stuff
+// sensor  and sensor list definitions
 //
 
-typedef struct sensorRangeRec {
-    /// distance (in cm) for ranging sensor type
-    int                 range;
-} SENSOR_RANGE_RECORD;
+#define MAX_SENSOR_VALUES   4
 
-typedef struct sensorGRec {
-    /// acceleration X axis
-    int                 x;
-    /// acceleration X axis
-    int                 y;
-    /// acceleration X axis
-    int                 z;
-} SENSOR_G_RECORD;
+/// offsets for data values for each sensor type
+#define CAMERA_X            0
+#define CAMERA_Y            1
+#define CAMERA_W            2
+#define CAMERA_H            3
 
-typedef struct sensorRollRec {
-    /// roll rate X axis
-    int                 x;
-    /// roll rate X axis
-    int                 y;
-    /// roll rate X axis
-    int                 z;
-} SENSOR_ROLL_RECORD;
+#define RANGE_X             0
+
+#define ACCELL_X            0
+#define ACCELL_Y            1
+#define ACCELL_Z            2
+
+#define ROLL_X              0
+#define ROLL_Y              1
+#define ROLL_Z              2
+
+#define MAGNETIC_X          0
+#define MAGNETIC_Y          1
+#define MAGNETIC_Z          2
 
 
-typedef struct sensorMagRec {
-    /// mag inclination X axis
-    int                 x;
-    /// mag inclination X axis
-    int                 y;
-    /// mag inclination X axis
-    int                 z;
-} SENSOR_MAG_RECORD;
 
 
 typedef struct sensorRecord {
+    /// Sensor type (repeated here because it's convenient to have close
+    /// to the union of sensor records
+    SENSOR_TYPE         type;
     /// arrival of sensor message (actually insertion time in list)
     struct timeval      time;
-    /// union of all non-camera sensor records
-    union {
-        SENSOR_RANGE_RECORD    range;
-        SENSOR_G_RECORD        gForce;
-        SENSOR_ROLL_RECORD     roll;
-        SENSOR_MAG_RECORD      mag;
-    } sensorData;
+    /// rawData values
+    ///
+    /// camera:
+    /// x, y coordinate of target object
+    /// w, h of object bounding box
+    ///
+    /// range:
+    /// distance
+    ///
+    /// accelleration:
+    /// x, y, z axis
+    ///
+    /// roll:
+    /// x, y, z
+    ///
+    /// magnetic:
+    ///
+    /// x, y, z
+    int                 rawData[MAX_SENSOR_VALUES];
+    /// filtered value after kalman filtering
+    int                 filteredData[MAX_SENSOR_VALUES];
+    /// kalman filter gain values (maintained per value)
+    int                 gain[MAX_SENSOR_VALUES];
     /// pointer to next sensor record
-    void                *next;
+    struct sensorRecord *next;
 } SENSOR_RECORD;
 
 
-typedef struct sensorIdRecord {
-    /// source sensor identifier
-    char                id;
-    /// pointer to actual sensor data records
-    SENSOR_RECORD       *recs;
-    /// pointer to next sensor id record
-    struct sensorIdRecord       *next;
-} SENSOR_ID_RECORD;
+typedef struct sensorSubIdList {
+    /// sensor type
+    char                   *subId;
+    /// pointer to next lower level (sensor data records)
+    SENSOR_RECORD          *data;
+    /// pointer to next sensor sub id list record
+    struct sensorSubIdList *next;
+} SENSOR_SUBID_LIST;
 
 
-typedef struct sensorListHdr {
-    /// type of sensor (see sensors.h)
-    char                 sensorType;
-    ///  pointer to individual sensor records about this object
-    SENSOR_ID_RECORD        *recs;
-    /// pointer to next object header
-    struct sensorListHdr *next;
-} SENSOR_LIST_HDR;
+typedef struct sensorIdList {
+    /// sensor id
+    char                    *id;
+    /// pointer to next lower level (sensor sub id records)
+    SENSOR_SUBID_LIST       *subIds;
+    /// pointer to next sensor id list record
+    struct sensorIdList     *next;
+} SENSOR_ID_LIST;
 
 
-/// type, ID, i1, i2, i3, i4 - add a new sensor type (if needed)
+typedef struct sensorList {
+    /// sensor type
+    SENSOR_TYPE         type;
+    /// pointer to next lower level (starting with sensor id records)
+    SENSOR_ID_LIST      *sensors;
+    /// pointer to next sensor list record
+    struct sensorList   *next;
+} SENSOR_LIST;
+
+
+
+
+/// type, ID, subID, i1, i2, i3, i4 - adds a new sensor type (if needed)
 /// and sensor record (always; newest at front of list)
-int  sensorRecAdd(char, char, int, int, int, int);
+void  sensorRecAdd(SENSOR_TYPE, char *, char *, int, int, int, int);
 
-/// ID, TTL - delete old records for only a specific sensor
+/// ID, TTL - delete old records for only a specific type of sensor
 /// (all instantiations of that sensor)
-void  sensorRecPruneBySensor(char, int);
+void  sensorRecPruneBySensorType(SENSOR_TYPE, int);
 
 /// TTL - prune all sensor records older than TTL
 /// (all instantiations)
-void  sensorRecPruneAll(int);
+void  sensorRecPruneAll();
 
-/// ID - delete all records for a sensor type
-void  sensorRecDeleteById(char);
+/// ID - delete all records for a sensor type and ID
+void  sensorRecDeleteById(SENSOR_TYPE, char *);
 
-/// get latest record for a specific sensor in all instantiations
+/// ID, subID - delete all records for a sensor type, ID, and subID
+void  sensorRecDeleteByIdSubId(SENSOR_TYPE, char *, char *);
+
+/// get latest record for a specific sensor in all subIds
 /// of a specific sensor type
 ///
-/// pointer to where an array of sensor records will be returned
+/// pointer to an array of sensor records will be returned
+/// (must be freed when no longer needed)
 ///
 /// count is number of sensor instantiations returned
-int sensorRecGetLatest(char, void *);
+int sensorRecGetLatest(SENSOR_TYPE, char *, void *);
+
+/// get latest record for a specific sensor and subId
+/// of a specific sensor type
+///
+/// pointer to an array of sensor records will be returned
+/// (must be freed when no longer needed)
+///
+/// count is number of sensor instantiations returned
+int sensorRecGetLatestSubId(SENSOR_TYPE, char *, char *, void *);
 
 /// get average values for a specific sensor in all instantiations
 /// of a specific sensor type
 ///
 /// pointer to where an array of sensor records will be returned
+/// (must be freed when no longer needed)
 ///
 /// count is number of sensor instantiations returned
 /// get average x, y, w, h, values for a specific (both cameras)
-int sensorRecGetAvg(char, void *);
+int sensorRecGetAvg(SENSOR_TYPE, char *, void *);
 
-/// zero an individual sensor record
+/// get average values for a specific sensor and subID
+/// of a specific sensor type
+///
+/// pointer to where an array of sensor records will be returned
+/// (must be freed when no longer needed)
+///
+/// count is number of sensor instantiations returned
+/// get average x, y, w, h, values for a specific (both cameras)
+int sensorRecGetAvgSubId(SENSOR_TYPE, char *, char *, void *);
+
+/// zero an individual sensor data record
 ///
 /// sensor type and pointer to record
 ////
 /// zeroes only the fields applicable for that sensor and
 /// sets sensor type
-void zeroSensorRecord(char, void *);
+void zeroSensorDataRecord(SENSOR_TYPE, SENSOR_RECORD *);
 
 
 
@@ -198,8 +176,8 @@ void zeroSensorRecord(char, void *);
 // general list stuff
 //
 
-/// walks and dumps entire object and camera lists
-void dumpLists();
+/// walks and dumps entire object
+void dumpLists(), dumpListStats();
 
 
 #define LOCK_MAX_ATTEMPTS   20

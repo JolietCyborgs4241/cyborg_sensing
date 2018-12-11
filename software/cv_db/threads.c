@@ -9,10 +9,10 @@
 #include <pthread.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_cam.h"
 #include "db/lists.h"
 #include "db/externs.h"
 #include "sensors.h"
@@ -28,7 +28,7 @@
 
 
 
-static void *pruneThread(void *);
+static void *pruneThread();
 pthread_t   tidPrune;
 
 static void *recvSensorDataThread(void *);
@@ -36,66 +36,58 @@ pthread_t   tidRecieve;
 
 static void processSensorData(int sock);
 
-void processCamData(char *);      // all in sensors.c
+void processCamData(char *);    // all in sensors.c
 void processRangerData(char *);
-void processGData(char *);
-void processRollData(char *);
-void processMagData(char *);
+void process9DData(char *);     // all G, roll, and mag look the same
 
 
 
 
 void
-startPruneThread(int ttl)
+startPruneThread()
 {
     pthread_attr_t  attr;
-    static  int ttlStatic;      // needs to stay around even after this
-                                // function disappears so a pointer to
-                                // somethign in the stak frame won't work
-                                // unless the thread *IMMEDIATELY* gets
-                                // the value before this function returns
 
-    ttlStatic = ttl;
-
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): starting pruneThread thread...\n", __func__, ttl);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(): starting pruneThread thread...\n", __func__);
     }
 
     pthread_attr_init(&attr);
 
-    pthread_create(&tidPrune, &attr, pruneThread, &ttlStatic);
+    pthread_create(&tidPrune, &attr, pruneThread, NULL);
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): pruneThread thread started.\n", __func__, ttl);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(): pruneThread thread started.\n", __func__);
     }
 }
 
 
 static void *
-pruneThread(void *ttl)
+pruneThread()
 {
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): Starting...\n", __func__, *(int *)ttl);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(): Starting...\n", __func__);
     }
 
     while (1) {
-        sleep (*(int *)ttl);
+        usleep (PRUNE_FREQUENCY * 1000);
+#define DEBUG
 #ifdef  DEBUG
         struct timeval  tv;
 
-        gettimeofday(&tv, (struct timezone *)NULL);
+        gettimeofday(&tv, NULL);
 
-        if (DebugLevel == DEBUG_DETAIL) {
+        if (DebugLevel >= DEBUG_DETAIL) {
 #ifdef	__APPLE__
-            fprintf(DebugFP, "%s(%d): awake at %ld.%d\n",
+            fprintf(DebugFP, "%s(): awake at %ld.%d\n",
 #else
-            fprintf(DebugFP, "%s(%d): awake at %ld.%ld\n",
+            fprintf(DebugFP, "%s(): awake at %ld.%ld\n",
 #endif
-                    __func__, *(int *)ttl, tv.tv_sec, tv.tv_usec);
+                    __func__, tv.tv_sec, tv.tv_usec);
         }
 #endif  // DEBUG
         
-        camRecPruneAll(*(int *)ttl);
+        sensorRecPruneAll();
     }
 }
 
@@ -111,8 +103,8 @@ startSensorDataThread(int sock)
 
     sockStatic = sock;
 
-    if (DebugLevel == DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(%d): starting recvCamDataThread thread...\n", __func__, sock);
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(%d): starting recvSensorDataThread thread...\n", __func__, sock);
     }
 
     pthread_attr_init(&attr);
@@ -120,7 +112,7 @@ fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, 
 
     pthread_create(&tidPrune, &attr, recvSensorDataThread, &sockStatic);
 
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(%d): recvSensorDataThread thread started.\n", __func__, sock);
     }
 }
@@ -131,7 +123,7 @@ fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, 
 static void *
 recvSensorDataThread(void *sock)
 {
-    if (DebugLevel == DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(%d): Starting...\n", __func__, *(int *)sock);
     }
 
@@ -154,14 +146,14 @@ processSensorData(int sock)
 
         buffer[readRet] = '\0';
 
-        if (DebugLevel == DEBUG_DETAIL) {
+        if (DebugLevel >= DEBUG_DETAIL) {
             fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
                     MsgNum,  buffer, strlen(buffer));
         }
 
         switch (*buffer) {               // first character identifies sensor type
 
-        case SENSOR_CAM:
+        case SENSOR_CAMERA:
             processCamData(buffer);
             break;
 
@@ -169,16 +161,10 @@ processSensorData(int sock)
             processRangerData(buffer);
             break;
 
-        case SENSOR_G:
-            processGData(buffer);
-            break;
-
+        case SENSOR_ACCELL:
         case SENSOR_ROLL:
-            processRollData(buffer);
-            break;
-
-        case SENSOR_MAG:
-            processMagData(buffer);
+        case SENSOR_MAGNETIC:
+            process9DData(buffer);
             break;
 
         default:

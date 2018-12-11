@@ -24,17 +24,19 @@
 #define DEF_HOST_PORT_DB_POST   12345
 /// default port for querying data from cv_db
 #define DEF_HOST_PORT_DB_QUERY  12346
-/// default port for querying data from cv_db
+
+/// default port sending status messages to cv_status
 #define DEF_HOST_PORT_STATUS    12347
+
 
 /// used for storing host addressing information
 typedef struct {
-    /// host interface to listen for incoming UDP packets from cameras
+    /// host interface to use
     char    *hostIPString;
     struct  sockaddr_in hostIP;
-    /// host port to listen for incoming UDP packets from cameras
+    /// host port to use
     int     hostPort;
-    /// socket to recieve camera packets on
+    /// socket for this connection
     int     sock;
 } HOST_INFO;
 

@@ -1,4 +1,4 @@
-//    cv_proc_init.c
+//    cv_db_init.c
 //
 //    vision processor initialization
 
@@ -17,7 +17,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
-#include "cv_cam.h"
+#include "sensors.h"
 #include "db/externs.h"
 
 
@@ -44,7 +44,7 @@ void
 init(int argc, char **argv)
 
 {
-    int c;
+    int c, ttl;
 
     // clear HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
@@ -73,11 +73,22 @@ init(int argc, char **argv)
             break;
 
         case 't':
-            Ttl = atoi(optarg);
-            if (Ttl < 0) {
+            ttl = atoi(optarg);
+            if (ttl < 0) {
                 fprintf(stderr, "%s: error: TTL value must be >= 0\n",
                         MyName);
                 exit(1);
+            }
+
+            // set all sensor TTLs to the same for now
+            TTLS    *ttlPtr = SensorTtls;
+
+            while (ttlPtr->sensor) {
+                ttlPtr->ttlSecs  = ttl;
+                ttlPtr->ttlUsecs = 0;
+#warning Need to add floating point value TTL support
+#warning Need to added per SENSOR TTL setting consiguration support
+                ttlPtr++;
             }
             break;
 
@@ -89,6 +100,7 @@ init(int argc, char **argv)
             case DEBUG_OFF:
             case DEBUG_INFO:
             case DEBUG_DETAIL:
+            case DEBUG_SUPER:
                 break;  // all valid values
             default:
                 fprintf(stderr, "%s: error: invalid debug value (%d)\n",
@@ -119,7 +131,9 @@ init(int argc, char **argv)
         }
     }
 
-    initMutex();
+    initMutexes();
+
+    initDb();
 
     openIncomingPort(&HostInfo);
 
@@ -135,24 +149,36 @@ static void
 dumpConfig()
 {
     fprintf(DebugFP, "DumpConfig():\n");
-    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t%d\n",
+    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
 
-    fprintf(DebugFP, "\nTTL:\t%d ", Ttl);
+    fprintf(DebugFP, "\nTTLs:\n");
+
+    TTLS *ttlPtr = SensorTtls;
+
+    while (ttlPtr->sensor) {
+        fprintf(DebugFP, "\tSensor \'%c\':\t%d.%06d\n",
+                ttlPtr->sensor, ttlPtr->ttlSecs, ttlPtr->ttlUsecs);
+        ttlPtr++;
+    }
 
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
     switch (DebugLevel) {
-    case 0:
+    case DEBUG_OFF:
         fprintf(DebugFP, "(OFF)\n");
         break;
 
-    case 1:
+    case DEBUG_INFO:
         fprintf(DebugFP, "(INFO)\n");
         break;
 
-    case 2:
+    case DEBUG_DETAIL:
+        fprintf(DebugFP, "(DETAIL)\n");
+        break;
+
+    case DEBUG_SUPER:
         fprintf(DebugFP, "(DETAIL)\n");
         break;
     }
@@ -201,6 +227,6 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2|3]\n",
             MyName, MyName);
 }
