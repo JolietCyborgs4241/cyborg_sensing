@@ -11,41 +11,48 @@
 #define	MAX_SENSOR_READ     (2*1024)
 
 
+typedef char                SENSOR_TYPE;
+
+typedef struct ttl_info {
+    SENSOR_TYPE sensor;
+    int         ttlSecs;
+    int         ttlUsecs;
+} TTLS;
 
 
 /// camera sensor
 ///
-/// C id thing x y w h
+/// C id subid (really the thing the camera sees) x y w h
 ///
-#define	SENSOR_CAM          'C'
+#define	SENSOR_CAMERA       'C'
 
 /// range sensor
 ///
-/// assume all rangers return similar records regardless of technology
+/// assume all range sensors return similar records regardless of technology
 ///
 /// range is reported in cm normalized from the output edge of the robot
 ///
-/// R id d
+/// R id subid (likely just a fixed dummy value) d
 ///
 #define SENSOR_RANGE        'R'
 
 /// g-force sensor (3-D)
 ///
-/// G id x y z
+/// G id subid (likely just a fixed dummy value) x y z
 ///
-#define SENSOR_G            'G'
+#define SENSOR_ACCELL       'G'
 
 /// roll rate sensor (3-D)
 ///
-/// O id x y z
+/// O id subid (likely just a fixed dummy value) x y z
 ///
 #define SENSOR_ROLL         'O'
 
 /// magnetometer (3-D)
 ///
-/// M id x y z
+/// M id subid (likely just a fixed dummy value) x y z
 //
-#define SENSOR_MAG          'M'
+#define SENSOR_MAGNETIC     'M'
 
 #endif  /* sensors.h */
 

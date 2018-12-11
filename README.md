@@ -1,5 +1,39 @@
 # Autonomous-related code for FRC #4241 autonomous operation efforts
 
+## Introduction
+
+One of the key aspects to creating a solution for autonomous control (or for any sort of complex system really) is to develop a strategy to manage, coorelate, and analyze information from a number of different sources.
+
+The goal here is to give the robot a sense of situational awareness potentially including:
+
+* Location
+
+* Distances from other objects
+
+* Orientation to other objects and general playfield
+
+With this information, the robot has the potential to be able to perform non-trivial high-level tasks without human intervention.  This is a continous process often refered to as an "**OODA loop*:
+
+* **O** - Observe (what is around the robot?)
+
+* **O** - Orient (how is the robot oriented in regards to its observed surroundings?)
+
+* **D** - Decide (what should the robot do?  As in *now*; turn, move, lift, drop, shoot, etc.?  This probably is and should be part of a bigger goal.)
+
+* **A** - Act (how should the robot instantiate its decision?)
+
+* Repeat...
+
+Each of these is a discrete step in the autononmous process and is repeated over and over with updated inputs and goals as appropriate.   This is not an easy to reach goal.
+
+One of the first challenges is the collection and management of this informaton which may be coming from a significant number of individual sensors and other data sources.  Maintaining the timeliness of this information is key - much of the robots actions will be driven by very near term observations of its surroundings, likely limited to a few seconds of history (at most, maybe even less).  To this end, the core of the autonomous system is the database of sensed information and providing a set of ways to analyze, normalize (if needed), and make this raw or conditioned information available to the robot control logic (which could reside on or off the RoboRio).
+
+This a longer term and more comprehensive approach - it might yield payoffs in the short term (I feel we can use the information even for a simple robot control scenario) but it also provides an architecture for a longer term and more sophisticated method of awareness and subsequent control.
+
+The architecture is designed around a series of functional blocks which should give the ability to modify, replace, and re-work substantial components with minimal impacts on other parts of the system.  Each component can be thought of as having a specific responsibility with connections to and from other components over which data and commands move between functional blocks.  Looking at the system in that way can make it easier to understand the overall approach without having to dig into the details of implementation of any individual component.
+
+**Note:**  This is an evolving document and is trying to be maintained as the thinking about this approach is evolving as well.  You might see repetition or even contradictions; excuse the first but please point out the second.
+
 ## Overview
 Architecture is a set of servers collecting information (such as cv_cam for each camera that watches the serial camera output) and sending the sensor data via a UDP packet to the centralized database (cv_db).  In the case of a camera, each cv_cam modules passes robot object and visual field location information to cv_db as well as some identifying information tying this visual information to a specific camera.  Similar processing happens for other sensors (like ultrasonic rangers for example).
 
@@ -56,6 +90,10 @@ It may also send measurement to cv_db to make them available to the robot contro
 The Cyborg-Vision Database (cv_db) gets readings from various sensor servers and saves their values.  In addition to saving the values, it also regularly "prunes" the database to remove older values (typically referred to as a TTL, or **T**ime-**t**o-**L**ive).  Whenever it finds values older than the TTL limit, it removes these from the database.  Think of it terms of keeping only the most recent sensor history; who cares what a camera saw 30 seconds ago?  The robot has probably moved, turned, or something else has changed; we mostly want to know what's happening right now (or at least within only the last few seconds).  This database is essentially an enhanced "Last Value" cache ("Last Few Values" essentially) and will be retained fully in memory (so it will be lost when the robot powers down).  It will however log all incoming data messages and queries for later reference.
 
 Processes that want to find out about the conditions around the robot (whether visual, ranging, etc.) can query cv_db and get the status of a specific sensor, a set of sensors, or potentially even an average sensor reading across the values available.
+
+Here is a high level diagram showing how the various structures that correspond to the different sensors are stored and how the data is related to it's associated sensor (which generally provides the context for the data in terms of where this data applies in terms of it's relatonship with the robot:
+
+ ![Cyborg-vision Sensor Data Storage Diagram](https://github.com/cgzog/cyborg_vision/blob/master/sensor_db_structure.png "Cyborg-vision Sensor Data Storage Diagram")
 
 #### Robot Driver
 

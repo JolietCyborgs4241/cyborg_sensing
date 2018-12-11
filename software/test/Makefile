@@ -1,8 +1,9 @@
 #   Makefle for test data and tools
 
-DATA_FILES_SRC = cam_ball.data cam_square.data cam_stuff.data cam_thing.data
-SCRIPTS        = prep_data run_tests
-SENSOR_DATA    = sensor_data.out
+DATA_FILES  = cam_ball.data cam_square.data cam_stuff.data \
+			  cam_thing.data magnetic.data gforce.data ranger.data
+SCRIPTS     = prep_data run_tests
+SENSOR_DATA = sensor_records.out
 
 HOST_IP=127.0.0.1
 HOST_PORT=12345
