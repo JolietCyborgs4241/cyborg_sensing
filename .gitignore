@@ -1,0 +1,12 @@
+
+software/cv_db/cv_db
+
+*.o
+
+software/test/gettimeofday
+
+software/test/prep_data
+
+software/test/run_tests
+
+software/test/sensor_records\.out
