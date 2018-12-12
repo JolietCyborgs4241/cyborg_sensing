@@ -14,6 +14,7 @@
 #include <termios.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 
 #include "cv.h"
 #include "cv_net.h"
@@ -45,6 +46,8 @@ init(int argc, char **argv)
 
 {
     int c, ttl;
+
+    gettimeofday(&StartTime, NULL);
 
     // clear HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;

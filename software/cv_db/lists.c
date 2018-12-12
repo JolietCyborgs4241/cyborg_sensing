@@ -262,7 +262,7 @@ newSensorRecord(SENSOR_SUBID_LIST *subPtr, SENSOR_TYPE type,
 {
     SENSOR_RECORD   *sensorPtr;
 
-    if (DebugLevel == DEBUG_SUPER) {
+    if (DebugLevel >= DEBUG_SUPER) {
         fprintf(DebugFP, "%s((0x%lx), \'%c\', %d, %d, %d, %d)\n",
                 __func__, (long)subPtr, type, i1, i2, i3, i4);
     }
@@ -317,7 +317,7 @@ newSensorSubId(SENSOR_ID_LIST *idPtr, SENSOR_TYPE type, char *subId,
 {
     SENSOR_SUBID_LIST   *subIdPtr;
 
-    if (DebugLevel == DEBUG_SUPER) {
+    if (DebugLevel >= DEBUG_SUPER) {
         fprintf(DebugFP, "%s((0x%lx), \'%c\', \"%s\", %d, %d, %d, %d\n",
 		__func__, (long)idPtr, type, subId, i1, i2, i3, i4);
     }
@@ -340,7 +340,7 @@ newSensorId(SENSOR_LIST *listPtr, char *id, char *subId, SENSOR_TYPE type,
 {
     SENSOR_ID_LIST   *idPtr;
 
-    if (DebugLevel == DEBUG_SUPER) {
+    if (DebugLevel >= DEBUG_SUPER) {
         fprintf(DebugFP, "%s((0x%lx), \"%s\", \"%s\", \'%c\', %d, %d, %d, %d\n",
 		__func__, (long)listPtr, id, subId, type, i1, i2, i3, i4);
     }
@@ -458,7 +458,11 @@ sensorRecPruneAll()
     gettimeofday(&now, NULL);
 
     if (DebugLevel >= DEBUG_DETAIL) {
+#ifdef  __APPLE__
+        fprintf(DebugFP, "%s() enter @ %ld.%06d\n", __func__, now.tv_sec, now.tv_usec);
+#else   // ! __APPLE__
         fprintf(DebugFP, "%s() enter @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
+#endif  // __APPLE__
     }
 
     LOCK_SENSOR_LIST;
@@ -469,7 +473,7 @@ sensorRecPruneAll()
 
     while (ttlPtr->sensor) {   // go through sensor types in the TTL list
 
-        if (DebugLevel == DEBUG_SUPER) {
+        if (DebugLevel >= DEBUG_SUPER) {
             fprintf(DebugFP, "%s(): pruning sensor \'%c\'\n", __func__, ttlPtr->sensor);
         }
 
@@ -478,7 +482,7 @@ sensorRecPruneAll()
         sensorIdListPtr = sensorListPtr->sensors;
 
         while (sensorIdListPtr) {           // walk the ids
-            if (DebugLevel == DEBUG_SUPER) {
+            if (DebugLevel >= DEBUG_SUPER) {
                 fprintf(DebugFP, "%s(): pruning SENSOR_ID @ (0x%lx)n",
                         __func__, (long)sensorIdListPtr);
             }
@@ -487,7 +491,7 @@ sensorRecPruneAll()
 
             while (sensorSubIdListPtr) {    // walk the subIds
  
-                if (DebugLevel == DEBUG_SUPER) {
+                if (DebugLevel >= DEBUG_SUPER) {
                     fprintf(DebugFP, "%s(): pruning SENSOR_SUB_ID @ (0x%lx)n",
                             __func__, (long)sensorSubIdListPtr);
                 }
@@ -497,7 +501,7 @@ sensorRecPruneAll()
 
                 while (sensorPtr) {    // walk the sensor data records
 
-                    if (DebugLevel == DEBUG_SUPER) {
+                    if (DebugLevel >= DEBUG_SUPER) {
                         fprintf(DebugFP, "%s(): pruning SENSOR @ (0x%lx)n",
                                 __func__, (long)sensorSubIdListPtr);
                     }
@@ -537,7 +541,11 @@ sensorRecPruneAll()
     
     if (DebugLevel >= DEBUG_DETAIL) {
         gettimeofday(&now, NULL);
+#ifdef  __APPLE__
+        fprintf(DebugFP, "%s() exit @ %ld.%06d\n", __func__, now.tv_sec, now.tv_usec);
+#else   // ! __APPLE__
         fprintf(DebugFP, "%s() exit @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
+#endif  // __APPLE__
     }
 
 }
@@ -765,7 +773,11 @@ dumpListAction(int flag)
 
     gettimeofday(&now, NULL);
 
+#ifdef  __APPLE__
+    fprintf(DebugFP, "Started @ %ld.%06d\n", now.tv_sec, now.tv_usec);
+#else   // ! __APPLE__
     fprintf(DebugFP, "Started @ %ld.%06ld\n", now.tv_sec, now.tv_usec);
+#endif  // __APPLE__
 
     LOCK_SENSOR_LIST;
 
@@ -972,12 +984,9 @@ static void
 freeSensorRecsFromEnd(SENSOR_RECORD *ptr)
 {
 
-#define DEBUG
-#ifdef  DEBUG
-    if (DebugLevel == DEBUG_SUPER) {
+    if (DebugLevel >= DEBUG_SUPER) {
         fprintf(DebugFP, "%s(0x%lx) entered\n", __func__, (long)ptr);
     }
-#endif  // DEBUG
 
     if (ptr->next) {    // keep going
         freeSensorRecsFromEnd(ptr->next);  // RECURSIVE!!!
@@ -1071,7 +1080,7 @@ getLock(pthread_mutex_t *lock)
 
         errorString = strerror(errno);
 
-        if (DebugLevel == DEBUG_SUPER) {
+        if (DebugLevel >= DEBUG_SUPER) {
             fprintf(DebugFP, "%s(0x%lx): pthread_mutex_lock() returned %d (%s)\n", __func__,
                     (long)lock, retVal, (retVal != 0) ? errorString : "Success");
         }
@@ -1097,7 +1106,7 @@ releaseLock(pthread_mutex_t *lock)
 
         errorString = strerror(errno);
 
-        if (DebugLevel == DEBUG_SUPER && retVal) {
+        if (DebugLevel >= DEBUG_SUPER && retVal) {
             fprintf(DebugFP, "%s(0x%lx): pthread_mutex_unlock() returned %d (%s)\n", __func__,
                     (long)lock, retVal, (retVal != 0) ? errorString : "Success");
         }

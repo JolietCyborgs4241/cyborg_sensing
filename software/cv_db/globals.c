@@ -5,10 +5,12 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #include "cv.h"
 #include "cv_net.h"
 #include "sensors.h"
+#include "db/externs.h"
 
 
 /// Program name
@@ -50,4 +52,15 @@ int         DebugLevel = DEBUG_OFF;
 ///
 /// it's standard error unless it gets as part of the command line (-d option)
 FILE        *DebugFP;                               // set to stderr at startup
+
+
+// Global start time
+struct timeval StartTime;
+
+
+/// Global massage rate reporting cadence
+//
+// every Nth message print out message ratre stats if DEBUG_INFO or more detailed level specified
+
+int MsgRateReportingCadence = DEF_MSG_RATE_REPORTING_CADENCE;
 
