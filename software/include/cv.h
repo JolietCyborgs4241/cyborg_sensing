@@ -28,7 +28,7 @@ void    cvFree(void *);
 #define TTL_SECS_DEFAULT        3   // secs
 #define TTL_USECS_DEFAULT       0   // microseconds
 
-
+#define DEF_MSG_RATE_REPORTING_CADENCE    100   // report message rates per sec every X msgs
 
 
 

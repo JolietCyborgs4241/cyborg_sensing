@@ -27,7 +27,8 @@ cv_db.o:	cv_db.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
 init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 			$(CV_INC_DIR)/db/externs.h
 
-globals.o:	globals.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h
+globals.o:	globals.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
+			$(CV_INC_DIR)/db/externs.h
 
 lists.o:	lists.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 			$(CV_INC_DIR)/db/externs.h $(CV_INC_DIR)/db/lists.h

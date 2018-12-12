@@ -71,21 +71,6 @@ pruneThread()
 
     while (1) {
         usleep (PRUNE_FREQUENCY * 1000);
-#define DEBUG
-#ifdef  DEBUG
-        struct timeval  tv;
-
-        gettimeofday(&tv, NULL);
-
-        if (DebugLevel >= DEBUG_DETAIL) {
-#ifdef	__APPLE__
-            fprintf(DebugFP, "%s(): awake at %ld.%d\n",
-#else
-            fprintf(DebugFP, "%s(): awake at %ld.%ld\n",
-#endif
-                    __func__, tv.tv_sec, tv.tv_usec);
-        }
-#endif  // DEBUG
         
         sensorRecPruneAll();
     }
@@ -108,7 +93,6 @@ startSensorDataThread(int sock)
     }
 
     pthread_attr_init(&attr);
-fprintf(DebugFP, "%s(%d) &sock (0x%lx -> [%d])\n", __func__, sock, (long)&sock, *((int *)&sock));
 
     pthread_create(&tidPrune, &attr, recvSensorDataThread, &sockStatic);
 
@@ -139,16 +123,31 @@ int MsgNum = 0;
 static void
 processSensorData(int sock)
 {
-        char    buffer[MAX_SENSOR_READ];
-        int     readRet;
+    char    buffer[MAX_SENSOR_READ];
+    int     readRet, msgRate;
+    struct  timeval now, timeDiff;
+    float   floatTime;
+
+    gettimeofday(&now, NULL);
 
     if ((readRet = recvfrom(sock, buffer, MAX_SENSOR_READ, 0, (struct sockaddr *)NULL, 0)) > 0) {
 
         buffer[readRet] = '\0';
 
-        if (DebugLevel >= DEBUG_DETAIL) {
+        if (DebugLevel >= DEBUG_INFO) {
             fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
                     MsgNum,  buffer, strlen(buffer));
+            if ( MsgNum && (MsgNum % MsgRateReportingCadence) == 0) {
+
+                timersub(&now, &StartTime, &timeDiff);
+
+                // convert the time difference to a decimal number of seconds
+                // we convert the integer microsecond field into a fraction of a second
+                floatTime = (float)timeDiff.tv_sec + ((float)timeDiff.tv_usec / 1000000.0);
+                msgRate = (float)MsgNum / floatTime;
+
+                fprintf(DebugFP, "<<<< Message rate @ %d msgs per second >>>>\n", msgRate);
+            }
         }
 
         switch (*buffer) {               // first character identifies sensor type

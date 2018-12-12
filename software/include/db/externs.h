@@ -28,8 +28,14 @@ extern  FILE        *DebugFP;
 /// could potentially be distinct for each sensor type
 extern  TTLS    SensorTtls[];
 
+/// Program start time
+extern  struct timeval  StartTime;
+
 
 void    initMutexes();
 void    initDb();
+
+
+int     MsgRateReportingCadence;
 
 #endif  /* db/externs.h */
