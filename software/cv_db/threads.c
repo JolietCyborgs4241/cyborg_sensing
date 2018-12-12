@@ -71,20 +71,6 @@ pruneThread()
 
     while (1) {
         usleep (PRUNE_FREQUENCY * 1000);
-#ifdef  DEBUG
-        struct timeval  tv;
-
-        gettimeofday(&tv, NULL);
-
-        if (DebugLevel >= DEBUG_DETAIL) {
-#ifdef	__APPLE__
-            fprintf(DebugFP, "%s(): awake at %ld.%d\n",
-#else
-            fprintf(DebugFP, "%s(): awake at %ld.%ld\n",
-#endif
-                    __func__, tv.tv_sec, tv.tv_usec);
-        }
-#endif  // DEBUG
         
         sensorRecPruneAll();
     }
