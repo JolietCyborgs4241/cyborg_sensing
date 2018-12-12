@@ -90,7 +90,7 @@ init(int argc, char **argv)
                 ttlPtr->ttlSecs  = ttl;
                 ttlPtr->ttlUsecs = 0;
 #warning Need to add floating point value TTL support
-#warning Need to added per SENSOR TTL setting consiguration support
+#warning Need to add per SENSOR TTL setting configuration support
                 ttlPtr++;
             }
             break;
