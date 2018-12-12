@@ -71,7 +71,6 @@ pruneThread()
 
     while (1) {
         usleep (PRUNE_FREQUENCY * 1000);
-#define DEBUG
 #ifdef  DEBUG
         struct timeval  tv;
 
