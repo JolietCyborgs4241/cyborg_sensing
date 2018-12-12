@@ -10,3 +10,5 @@ software/test/prep_data
 software/test/run_tests
 
 software/test/sensor_records\.out
+
+software/cv_db/DEBUG
