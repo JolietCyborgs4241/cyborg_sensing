@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>FRC #4221 Joliet Cyborgs Computer Targetting and Ranging: /home/zog/cyborgs/cyborg_vision/cv_db/lists.c File Reference</title>
+<title>FRC #4221 Joliet Cyborgs Autonomous Control System: /home/zog/cyborgs/cyborg_vision/software/cv_db/lists.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,9 +21,10 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">FRC #4221 Joliet Cyborgs Computer Targetting and Ranging
+   <div id="projectname">FRC #4221 Joliet Cyborgs Autonomous Control System
    &#160;<span id="projectnumber">1.0</span>
    </div>
+   <div id="projectbrief">Building the autonomous killbots of the future, today</div>
   </td>
  </tr>
  </tbody>
@@ -77,391 +78,160 @@ $(function() {
 <code>#include &lt;errno.h&gt;</code><br />
 <code>#include &lt;sys/types.h&gt;</code><br />
 <code>#include &lt;pthread.h&gt;</code><br />
+<code>#include &lt;sys/time.h&gt;</code><br />
+<code>#include &lt;assert.h&gt;</code><br />
+<code>#include &lt;signal.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="cv_8h_source.html">cv.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="cv__net_8h_source.html">cv_net.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="cv__cam_8h_source.html">cv_cam.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="cv__externs_8h_source.html">cv_externs.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="cv__lists_8h_source.html">cv_lists.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sensors_8h_source.html">sensors.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="externs_8h_source.html">db/externs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="lists_8h_source.html">db/lists.h</a>&quot;</code><br />
 </div>
 <p><a href="lists_8c_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:abcae1584f54cecb5bbf6431cfcb19a06"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#abcae1584f54cecb5bbf6431cfcb19a06">LOCK_CAMLIST</a>&#160;&#160;&#160;getLock(&amp;camListLock)</td></tr>
-<tr class="separator:abcae1584f54cecb5bbf6431cfcb19a06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa015db9c0bb0c7fd1e048c8e9beead51"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#aa015db9c0bb0c7fd1e048c8e9beead51">UNLOCK_CAMLIST</a>&#160;&#160;&#160;<a class="el" href="lists_8c.html#a3a7a9b33fc08b4ca9be5825b409beb17">releaseLock</a>(&amp;camListLock)</td></tr>
-<tr class="separator:aa015db9c0bb0c7fd1e048c8e9beead51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a982cb8784061a153e22fbe8cc408ed13"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a982cb8784061a153e22fbe8cc408ed13">LOCK_SENSOR_LIST</a>&#160;&#160;&#160;getLock(&amp;mainListLock)</td></tr>
+<tr class="separator:a982cb8784061a153e22fbe8cc408ed13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa58d2510b873010da7c1fa2d49079069"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#aa58d2510b873010da7c1fa2d49079069">UNLOCK_SENSOR_LIST</a>&#160;&#160;&#160;<a class="el" href="lists_8c.html#a1d0dbd4b24d1edbfd2ab3a98610d20a2">releaseLock</a>(&amp;mainListLock)</td></tr>
+<tr class="separator:aa58d2510b873010da7c1fa2d49079069"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaed755aaabed4e9c15e2534d28c4c454"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#aaed755aaabed4e9c15e2534d28c4c454">DUMP_LIST_CONTENTS</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:aaed755aaabed4e9c15e2534d28c4c454"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe0e7ff000f15ae6d8850241e4bfd275"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#afe0e7ff000f15ae6d8850241e4bfd275">DUMP_LIST_STATS</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:afe0e7ff000f15ae6d8850241e4bfd275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a3a7a9b33fc08b4ca9be5825b409beb17"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a3a7a9b33fc08b4ca9be5825b409beb17">releaseLock</a> (pthread_mutex_t *lock)</td></tr>
-<tr class="memdesc:a3a7a9b33fc08b4ca9be5825b409beb17"><td class="mdescLeft">&#160;</td><td class="mdescRight">try release the specified lock  <a href="#a3a7a9b33fc08b4ca9be5825b409beb17">More...</a><br /></td></tr>
-<tr class="separator:a3a7a9b33fc08b4ca9be5825b409beb17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa9280ce032e78c383c52d90418d16dd"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#aaa9280ce032e78c383c52d90418d16dd">dumpCamListHdr</a> (<a class="el" href="cv__lists_8h.html#a47b329a35153275f3684be2ddf20c828">CAMERA_LIST_HDR</a> *ptr)</td></tr>
-<tr class="memdesc:aaa9280ce032e78c383c52d90418d16dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">dump an individual CAMERA_LIST_HDR object to the debug output  <a href="#aaa9280ce032e78c383c52d90418d16dd">More...</a><br /></td></tr>
-<tr class="separator:aaa9280ce032e78c383c52d90418d16dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d399e1db4e9d0654e8c5b87d5e0bf07"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a4d399e1db4e9d0654e8c5b87d5e0bf07">freeCamRecsFromEnd</a> (<a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *ptr)</td></tr>
-<tr class="memdesc:a4d399e1db4e9d0654e8c5b87d5e0bf07"><td class="mdescLeft">&#160;</td><td class="mdescRight">frees all camera records starting at some location in the list  <a href="#a4d399e1db4e9d0654e8c5b87d5e0bf07">More...</a><br /></td></tr>
-<tr class="separator:a4d399e1db4e9d0654e8c5b87d5e0bf07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d2275e982d7989e95f704b6d3272608"><td class="memItemLeft" align="right" valign="top"><a class="el" href="cv__lists_8h.html#a47b329a35153275f3684be2ddf20c828">CAMERA_LIST_HDR</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a0d2275e982d7989e95f704b6d3272608">camListGetHdrById</a> (char *id)</td></tr>
-<tr class="memdesc:a0d2275e982d7989e95f704b6d3272608"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a CAMERA_LIST_HDR for a specific object id.  <a href="#a0d2275e982d7989e95f704b6d3272608">More...</a><br /></td></tr>
-<tr class="separator:a0d2275e982d7989e95f704b6d3272608"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d408d381b3ca06de8eb54b675871623"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a8d408d381b3ca06de8eb54b675871623">camRecAdd</a> (char *id, char camera, int x, int y, int w, int h)</td></tr>
-<tr class="memdesc:a8d408d381b3ca06de8eb54b675871623"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a new camera record.  <a href="#a8d408d381b3ca06de8eb54b675871623">More...</a><br /></td></tr>
-<tr class="separator:a8d408d381b3ca06de8eb54b675871623"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f58f7633c546af010bd4d61b8073ea1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a5f58f7633c546af010bd4d61b8073ea1">camRecPruneById</a> (char *id, int ttl)</td></tr>
-<tr class="memdesc:a5f58f7633c546af010bd4d61b8073ea1"><td class="mdescLeft">&#160;</td><td class="mdescRight">remove any camera records that are beyond the ttl (in secs) for a specific object only  <a href="#a5f58f7633c546af010bd4d61b8073ea1">More...</a><br /></td></tr>
-<tr class="separator:a5f58f7633c546af010bd4d61b8073ea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4bda8ed2776cd80b172f468459020f61"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a4bda8ed2776cd80b172f468459020f61">camRecPruneAll</a> (int ttl)</td></tr>
-<tr class="memdesc:a4bda8ed2776cd80b172f468459020f61"><td class="mdescLeft">&#160;</td><td class="mdescRight">remove any camera records that are beyond the ttl (in secs)  <a href="#a4bda8ed2776cd80b172f468459020f61">More...</a><br /></td></tr>
-<tr class="separator:a4bda8ed2776cd80b172f468459020f61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a26bcc480516e4f3ed624f9f7e38e7d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a7a26bcc480516e4f3ed624f9f7e38e7d">camRecDeleteById</a> (char *id)</td></tr>
-<tr class="memdesc:a7a26bcc480516e4f3ed624f9f7e38e7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">removes all camera recors for a specific object id  <a href="#a7a26bcc480516e4f3ed624f9f7e38e7d">More...</a><br /></td></tr>
-<tr class="separator:a7a26bcc480516e4f3ed624f9f7e38e7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a084ad1699e03d56f55f4597b8b1e5bb3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a084ad1699e03d56f55f4597b8b1e5bb3">camRecGetLatest</a> (char *id, <a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *rlCamArray)</td></tr>
-<tr class="memdesc:a084ad1699e03d56f55f4597b8b1e5bb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the latest right / left camera records for a specific id  <a href="#a084ad1699e03d56f55f4597b8b1e5bb3">More...</a><br /></td></tr>
-<tr class="separator:a084ad1699e03d56f55f4597b8b1e5bb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a546ed4a9071fdecb25f74f7d6272181e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a546ed4a9071fdecb25f74f7d6272181e">camRecGetAvg</a> (char *id, <a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *rlCamArray)</td></tr>
-<tr class="memdesc:a546ed4a9071fdecb25f74f7d6272181e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get average x, y, w, h, values for a specific id (both cameras)  <a href="#a546ed4a9071fdecb25f74f7d6272181e">More...</a><br /></td></tr>
-<tr class="separator:a546ed4a9071fdecb25f74f7d6272181e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d0dbd4b24d1edbfd2ab3a98610d20a2"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a1d0dbd4b24d1edbfd2ab3a98610d20a2">releaseLock</a> (pthread_mutex_t *lock)</td></tr>
+<tr class="memdesc:a1d0dbd4b24d1edbfd2ab3a98610d20a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">release the specified lock  <a href="#a1d0dbd4b24d1edbfd2ab3a98610d20a2">More...</a><br /></td></tr>
+<tr class="separator:a1d0dbd4b24d1edbfd2ab3a98610d20a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7769c613a623dc2a110090e78f4cc175"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="lists_8h.html#ad6892c0ebf89c628a6daa9f3f2efd81f">SENSOR_LIST</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a7769c613a623dc2a110090e78f4cc175">sensorListGetHead</a> ()</td></tr>
+<tr class="memdesc:a7769c613a623dc2a110090e78f4cc175"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the <a class="el" href="structsensor_list.html">sensorList</a> hdr  <a href="#a7769c613a623dc2a110090e78f4cc175">More...</a><br /></td></tr>
+<tr class="separator:a7769c613a623dc2a110090e78f4cc175"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08b0778f30de7689a0c617b9fe45c734"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a08b0778f30de7689a0c617b9fe45c734">initDb</a> ()</td></tr>
+<tr class="memdesc:a08b0778f30de7689a0c617b9fe45c734"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize the database  <a href="#a08b0778f30de7689a0c617b9fe45c734">More...</a><br /></td></tr>
+<tr class="separator:a08b0778f30de7689a0c617b9fe45c734"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30ec1e5828bf92391ab9111960361c71"><td class="memItemLeft" align="right" valign="top"><a class="el" href="lists_8h.html#ad6892c0ebf89c628a6daa9f3f2efd81f">SENSOR_LIST</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a30ec1e5828bf92391ab9111960361c71">sensorGetListBySensor</a> (<a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a> sensor)</td></tr>
+<tr class="memdesc:a30ec1e5828bf92391ab9111960361c71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get pointer to a SENSOR_LIST for a specific sensor type.  <a href="#a30ec1e5828bf92391ab9111960361c71">More...</a><br /></td></tr>
+<tr class="separator:a30ec1e5828bf92391ab9111960361c71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b5d470b93f66840cddb711d90f165d4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="lists_8h.html#ae55168296bb670f8b7a5d6ec1fac23e8">SENSOR_ID_LIST</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a4b5d470b93f66840cddb711d90f165d4">sensorGetIdListById</a> (<a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a> sensor, char *id)</td></tr>
+<tr class="memdesc:a4b5d470b93f66840cddb711d90f165d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get pointer to a SENSOR_ID_LIST for a specific sensor and id.  <a href="#a4b5d470b93f66840cddb711d90f165d4">More...</a><br /></td></tr>
+<tr class="separator:a4b5d470b93f66840cddb711d90f165d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affb8cf72a9c82d7361ffdc4662a27ba2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="lists_8h.html#ac25617b6d3d038bf9826291cfadb7042">SENSOR_SUBID_LIST</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#affb8cf72a9c82d7361ffdc4662a27ba2">sensorSubIdListBySubid</a> (<a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a> sensor, char *id, char *subId)</td></tr>
+<tr class="memdesc:affb8cf72a9c82d7361ffdc4662a27ba2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get pointer to a SENSOR_SUBID_LIST for a specific sensor, id, and subid.  <a href="#affb8cf72a9c82d7361ffdc4662a27ba2">More...</a><br /></td></tr>
+<tr class="separator:affb8cf72a9c82d7361ffdc4662a27ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcc9396b7ec6ccd569031e1864177854"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#afcc9396b7ec6ccd569031e1864177854">sensorRecAdd</a> (<a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a> sensor, char *id, char *subId, int i1, int i2, int i3, int i4)</td></tr>
+<tr class="memdesc:afcc9396b7ec6ccd569031e1864177854"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a sensor record.  <a href="#afcc9396b7ec6ccd569031e1864177854">More...</a><br /></td></tr>
+<tr class="separator:afcc9396b7ec6ccd569031e1864177854"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16238c5d7686a1b29a199ab33746a3fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a16238c5d7686a1b29a199ab33746a3fc">sensorRecPruneAll</a> ()</td></tr>
+<tr class="separator:a16238c5d7686a1b29a199ab33746a3fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e9d36651dbc885153b529fa640b66f3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a0e9d36651dbc885153b529fa640b66f3">walkSensorRecords</a> (<a class="el" href="lists_8h.html#a84b999f49746211c535773e67ffb7582">SENSOR_RECORD</a> *ptr, int flag)</td></tr>
+<tr class="separator:a0e9d36651dbc885153b529fa640b66f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a051ca07fbc6328010ba4cea72e2e10ab"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a051ca07fbc6328010ba4cea72e2e10ab">walkSensorSubIdList</a> (<a class="el" href="lists_8h.html#ac25617b6d3d038bf9826291cfadb7042">SENSOR_SUBID_LIST</a> *ptr, int flag)</td></tr>
+<tr class="separator:a051ca07fbc6328010ba4cea72e2e10ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63bd7d62ba615b179e8c753714e78c63"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a63bd7d62ba615b179e8c753714e78c63">walkSensorIdList</a> (<a class="el" href="lists_8h.html#ae55168296bb670f8b7a5d6ec1fac23e8">SENSOR_ID_LIST</a> *ptr, int flag)</td></tr>
+<tr class="separator:a63bd7d62ba615b179e8c753714e78c63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8888c8359f43a33cbd794e6b95adc424"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a8888c8359f43a33cbd794e6b95adc424">walkSensorList</a> (<a class="el" href="lists_8h.html#ad6892c0ebf89c628a6daa9f3f2efd81f">SENSOR_LIST</a> *ptr, int flag)</td></tr>
+<tr class="separator:a8888c8359f43a33cbd794e6b95adc424"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f40df0c51295389f3dda224b5c3912b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a6f40df0c51295389f3dda224b5c3912b">dumpListAction</a> (int flag)</td></tr>
+<tr class="separator:a6f40df0c51295389f3dda224b5c3912b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d1dae45e8e0b5cf7c1f4f8c796d070e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a3d1dae45e8e0b5cf7c1f4f8c796d070e">dumpLists</a> ()</td></tr>
-<tr class="memdesc:a3d1dae45e8e0b5cf7c1f4f8c796d070e"><td class="mdescLeft">&#160;</td><td class="mdescRight">walks and dumps entire object and camera lists  <a href="#a3d1dae45e8e0b5cf7c1f4f8c796d070e">More...</a><br /></td></tr>
 <tr class="separator:a3d1dae45e8e0b5cf7c1f4f8c796d070e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8053b8de6f5b133107c44646872c3030"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a8053b8de6f5b133107c44646872c3030">dumpCamRecord</a> (<a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *ptr)</td></tr>
-<tr class="memdesc:a8053b8de6f5b133107c44646872c3030"><td class="mdescLeft">&#160;</td><td class="mdescRight">dump an individual CAMERA_RECORD object to the debug output  <a href="#a8053b8de6f5b133107c44646872c3030">More...</a><br /></td></tr>
-<tr class="separator:a8053b8de6f5b133107c44646872c3030"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a6908ba770683d57e3e4949475766d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a5a6908ba770683d57e3e4949475766d4">zeroCamRecord</a> (<a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *ptr)</td></tr>
-<tr class="memdesc:a5a6908ba770683d57e3e4949475766d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">zero all fields in an individual CAMERA_RECORD object to the debug output  <a href="#a5a6908ba770683d57e3e4949475766d4">More...</a><br /></td></tr>
-<tr class="separator:a5a6908ba770683d57e3e4949475766d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2651be2bc45f4b20c67d4347d156d885"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a2651be2bc45f4b20c67d4347d156d885">initMutex</a> ()</td></tr>
-<tr class="memdesc:a2651be2bc45f4b20c67d4347d156d885"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize the mutex for the coordinated CamList access  <a href="#a2651be2bc45f4b20c67d4347d156d885">More...</a><br /></td></tr>
-<tr class="separator:a2651be2bc45f4b20c67d4347d156d885"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a235115494140f32bac4e711a723d530e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a235115494140f32bac4e711a723d530e">dumpListStats</a> ()</td></tr>
+<tr class="separator:a235115494140f32bac4e711a723d530e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a747388365c7ea6b2e4657d9ad2aa9b77"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a747388365c7ea6b2e4657d9ad2aa9b77">freeSensorIdListRecord</a> (<a class="el" href="lists_8h.html#ae55168296bb670f8b7a5d6ec1fac23e8">SENSOR_ID_LIST</a> *ptr)</td></tr>
+<tr class="separator:a747388365c7ea6b2e4657d9ad2aa9b77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55a4595a975fe7d09af26c26224ba6bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a55a4595a975fe7d09af26c26224ba6bf">freeSensorSubIdListRecord</a> (<a class="el" href="lists_8h.html#ac25617b6d3d038bf9826291cfadb7042">SENSOR_SUBID_LIST</a> *ptr)</td></tr>
+<tr class="separator:a55a4595a975fe7d09af26c26224ba6bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade684f4262b73f85b1c0858d0dfe1924"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#ade684f4262b73f85b1c0858d0dfe1924">freeSensorRecord</a> (<a class="el" href="lists_8h.html#a84b999f49746211c535773e67ffb7582">SENSOR_RECORD</a> *ptr)</td></tr>
+<tr class="separator:ade684f4262b73f85b1c0858d0dfe1924"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a588b11abf9973fd6acb15886263e4a6a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lists_8c.html#a588b11abf9973fd6acb15886263e4a6a">initMutexes</a> ()</td></tr>
+<tr class="memdesc:a588b11abf9973fd6acb15886263e4a6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize the mutex for the coordinated sensor list access  <a href="#a588b11abf9973fd6acb15886263e4a6a">More...</a><br /></td></tr>
+<tr class="separator:a588b11abf9973fd6acb15886263e4a6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="abcae1584f54cecb5bbf6431cfcb19a06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abcae1584f54cecb5bbf6431cfcb19a06">&#9670;&nbsp;</a></span>LOCK_CAMLIST</h2>
+<a id="aaed755aaabed4e9c15e2534d28c4c454"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaed755aaabed4e9c15e2534d28c4c454">&#9670;&nbsp;</a></span>DUMP_LIST_CONTENTS</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define LOCK_CAMLIST&#160;&#160;&#160;getLock(&amp;camListLock)</td>
+          <td class="memname">#define DUMP_LIST_CONTENTS&#160;&#160;&#160;0</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00034">34</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00564">564</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>
-<a id="aa015db9c0bb0c7fd1e048c8e9beead51"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa015db9c0bb0c7fd1e048c8e9beead51">&#9670;&nbsp;</a></span>UNLOCK_CAMLIST</h2>
+<a id="afe0e7ff000f15ae6d8850241e4bfd275"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe0e7ff000f15ae6d8850241e4bfd275">&#9670;&nbsp;</a></span>DUMP_LIST_STATS</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define UNLOCK_CAMLIST&#160;&#160;&#160;<a class="el" href="lists_8c.html#a3a7a9b33fc08b4ca9be5825b409beb17">releaseLock</a>(&amp;camListLock)</td>
+          <td class="memname">#define DUMP_LIST_STATS&#160;&#160;&#160;1</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00035">35</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00565">565</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a982cb8784061a153e22fbe8cc408ed13"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a982cb8784061a153e22fbe8cc408ed13">&#9670;&nbsp;</a></span>LOCK_SENSOR_LIST</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOCK_SENSOR_LIST&#160;&#160;&#160;getLock(&amp;mainListLock)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00038">38</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="aa58d2510b873010da7c1fa2d49079069"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa58d2510b873010da7c1fa2d49079069">&#9670;&nbsp;</a></span>UNLOCK_SENSOR_LIST</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define UNLOCK_SENSOR_LIST&#160;&#160;&#160;<a class="el" href="lists_8c.html#a1d0dbd4b24d1edbfd2ab3a98610d20a2">releaseLock</a>(&amp;mainListLock)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00039">39</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a0d2275e982d7989e95f704b6d3272608"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d2275e982d7989e95f704b6d3272608">&#9670;&nbsp;</a></span>camListGetHdrById()</h2>
+<a id="a6f40df0c51295389f3dda224b5c3912b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f40df0c51295389f3dda224b5c3912b">&#9670;&nbsp;</a></span>dumpListAction()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="cv__lists_8h.html#a47b329a35153275f3684be2ddf20c828">CAMERA_LIST_HDR</a>* camListGetHdrById </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>id</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Get a CAMERA_LIST_HDR for a specific object id. </p>
-<p>Get cam list record for a specific object id.</p>
-<p>id</p>
-<p>doesn't lock the camlist - at worst it will miss the first entry which could be added while we are traversing</p>
-<p>no elements ever get removed from the camList headers </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00079">79</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a8d408d381b3ca06de8eb54b675871623"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d408d381b3ca06de8eb54b675871623">&#9670;&nbsp;</a></span>camRecAdd()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int camRecAdd </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char&#160;</td>
-          <td class="paramname"><em>camera</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>y</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>w</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>h</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Add a new camera record. </p>
-<p>ID, camera, x, y, w, h - add a new object (if needed) and camera record (always; newest at front of list)</p>
-<p>id, camera, x, y, w, h</p>
-<p>locks the camList </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00111">111</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a7a26bcc480516e4f3ed624f9f7e38e7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a26bcc480516e4f3ed624f9f7e38e7d">&#9670;&nbsp;</a></span>camRecDeleteById()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int camRecDeleteById </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>id</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>removes all camera recors for a specific object id </p>
-<p>ID - delete all records for an id (all cameras)</p>
-<p>locks camList </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00369">369</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a546ed4a9071fdecb25f74f7d6272181e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a546ed4a9071fdecb25f74f7d6272181e">&#9670;&nbsp;</a></span>camRecGetAvg()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int camRecGetAvg </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *&#160;</td>
-          <td class="paramname"><em>rlCamArray</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>get average x, y, w, h, values for a specific id (both cameras) </p>
-<p>get average x, y, w, h, values for a specific (both cameras)</p>
-<p>Returns the average right and left camera records for the specified id via a 2-element array</p>
-<p>Averages x, y, w, and h values for each camera</p>
-<p>returns the number of records found</p>
-<p>-1 - object id not found</p>
-<p>0 - no records found (return array zeroed)</p>
-<p>1 - 1 record found (missing record returns 0s for all fields</p>
-<p>2 - 2 records found</p>
-<p>locks camlist </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00468">468</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a084ad1699e03d56f55f4597b8b1e5bb3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a084ad1699e03d56f55f4597b8b1e5bb3">&#9670;&nbsp;</a></span>camRecGetLatest()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int camRecGetLatest </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *&#160;</td>
-          <td class="paramname"><em>rlCamArray</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>get the latest right / left camera records for a specific id </p>
-<p>Returns the latest right and left camera records for the specified id via a 2-element array</p>
-<p>returns the number of records found</p>
-<p>-1 - object id not found</p>
-<p>0 - no records found (return array zeroed)</p>
-<p>1 - 1 record found (missing record returns 0s for all fields</p>
-<p>2 - 2 records found</p>
-<p>locks camList </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00399">399</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a4bda8ed2776cd80b172f468459020f61"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4bda8ed2776cd80b172f468459020f61">&#9670;&nbsp;</a></span>camRecPruneAll()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void camRecPruneAll </td>
+          <td class="memname">void dumpListAction </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ttl</em></td><td>)</td>
+          <td class="paramname"><em>flag</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>remove any camera records that are beyond the ttl (in secs) </p>
-<p>TTL - prune all camera records older than TTL (regardless of camera or object id)</p>
-<p>The list of camera records is ordered with the newest at the front so once we find one that is past the TTL, they are all past the TTL from that point onward</p>
-<p>locaks the camList </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00236">236</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a5f58f7633c546af010bd4d61b8073ea1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f58f7633c546af010bd4d61b8073ea1">&#9670;&nbsp;</a></span>camRecPruneById()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void camRecPruneById </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ttl</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>remove any camera records that are beyond the ttl (in secs) for a specific object only </p>
-<p>ID, TTL - delete old records for only a specific object id (all cameras)</p>
-<p>The list of camera records is ordered with the newest at the front so once we find one that is past the TTL, they are all past the TTL from that point onward</p>
-<p>locks the camlist </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00196">196</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="aaa9280ce032e78c383c52d90418d16dd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaa9280ce032e78c383c52d90418d16dd">&#9670;&nbsp;</a></span>dumpCamListHdr()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void dumpCamListHdr </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="cv__lists_8h.html#a47b329a35153275f3684be2ddf20c828">CAMERA_LIST_HDR</a> *&#160;</td>
-          <td class="paramname"><em>ptr</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>dump an individual CAMERA_LIST_HDR object to the debug output </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00600">600</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a8053b8de6f5b133107c44646872c3030"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8053b8de6f5b133107c44646872c3030">&#9670;&nbsp;</a></span>dumpCamRecord()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void dumpCamRecord </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *&#160;</td>
-          <td class="paramname"><em>ptr</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>dump an individual CAMERA_RECORD object to the debug output </p>
-<p>dump an individual CAMERA_RECORD </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00615">615</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00766">766</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>
@@ -480,45 +250,18 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>walks and dumps entire object and camera lists </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00553">553</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00798">798</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>
-<a id="a4d399e1db4e9d0654e8c5b87d5e0bf07"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4d399e1db4e9d0654e8c5b87d5e0bf07">&#9670;&nbsp;</a></span>freeCamRecsFromEnd()</h2>
+<a id="a235115494140f32bac4e711a723d530e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a235115494140f32bac4e711a723d530e">&#9670;&nbsp;</a></span>dumpListStats()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">static void freeCamRecsFromEnd </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *&#160;</td>
-          <td class="paramname"><em>ptr</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>frees all camera records starting at some location in the list </p>
-<p>records are freed from the end of the list popping back towards the first on to be purged</p>
-<p>internal list support routine</p>
-<p>doesn't lock camList - assumes caller did </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00347">347</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
-
-</div>
-</div>
-<a id="a2651be2bc45f4b20c67d4347d156d885"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2651be2bc45f4b20c67d4347d156d885">&#9670;&nbsp;</a></span>initMutex()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void initMutex </td>
+          <td class="memname">void dumpListStats </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -526,20 +269,126 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>initialize the mutex for the coordinated CamList access </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00653">653</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00805">805</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>
-<a id="a3a7a9b33fc08b4ca9be5825b409beb17"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a7a9b33fc08b4ca9be5825b409beb17">&#9670;&nbsp;</a></span>releaseLock()</h2>
+<a id="a747388365c7ea6b2e4657d9ad2aa9b77"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a747388365c7ea6b2e4657d9ad2aa9b77">&#9670;&nbsp;</a></span>freeSensorIdListRecord()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">static int releaseLock </td>
+          <td class="memname">void freeSensorIdListRecord </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#ae55168296bb670f8b7a5d6ec1fac23e8">SENSOR_ID_LIST</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>free SENSOR_ID_LIST record</p>
+<p>free id as well </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l01003">1003</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="ade684f4262b73f85b1c0858d0dfe1924"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade684f4262b73f85b1c0858d0dfe1924">&#9670;&nbsp;</a></span>freeSensorRecord()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void freeSensorRecord </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#a84b999f49746211c535773e67ffb7582">SENSOR_RECORD</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>free a SENSOR_RECORD record </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l01032">1032</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a55a4595a975fe7d09af26c26224ba6bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55a4595a975fe7d09af26c26224ba6bf">&#9670;&nbsp;</a></span>freeSensorSubIdListRecord()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void freeSensorSubIdListRecord </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#ac25617b6d3d038bf9826291cfadb7042">SENSOR_SUBID_LIST</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>free SENSOR_SUBID_LIST record</p>
+<p>frees subId string as well </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l01018">1018</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a08b0778f30de7689a0c617b9fe45c734"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08b0778f30de7689a0c617b9fe45c734">&#9670;&nbsp;</a></span>initDb()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void initDb </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initialize the database </p>
+<p>one record for each sensor type at the top level </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00105">105</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a588b11abf9973fd6acb15886263e4a6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a588b11abf9973fd6acb15886263e4a6a">&#9670;&nbsp;</a></span>initMutexes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void initMutexes </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initialize the mutex for the coordinated sensor list access </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l01052">1052</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a1d0dbd4b24d1edbfd2ab3a98610d20a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d0dbd4b24d1edbfd2ab3a98610d20a2">&#9670;&nbsp;</a></span>releaseLock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void releaseLock </td>
           <td>(</td>
           <td class="paramtype">pthread_mutex_t *&#160;</td>
           <td class="paramname"><em>lock</em></td><td>)</td>
@@ -548,35 +397,337 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>try release the specified lock </p>
+<p>release the specified lock </p>
 <p>returns 0 if successful - non-zero if unsuccessful </p>
 
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00727">727</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l01100">1100</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>
-<a id="a5a6908ba770683d57e3e4949475766d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5a6908ba770683d57e3e4949475766d4">&#9670;&nbsp;</a></span>zeroCamRecord()</h2>
+<a id="a4b5d470b93f66840cddb711d90f165d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b5d470b93f66840cddb711d90f165d4">&#9670;&nbsp;</a></span>sensorGetIdListById()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void zeroCamRecord </td>
+          <td class="memname"><a class="el" href="lists_8h.html#ae55168296bb670f8b7a5d6ec1fac23e8">SENSOR_ID_LIST</a>* sensorGetIdListById </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="cv__lists_8h.html#acbdb50135636ff0b3525058251533c18">CAMERA_RECORD</a> *&#160;</td>
-          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a>&#160;</td>
+          <td class="paramname"><em>sensor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get pointer to a SENSOR_ID_LIST for a specific sensor and id. </p>
+<p>type, id</p>
+<p>doesn't lock the camlist - at worst it will miss the first entry which could be added while we are traversing</p>
+<p>no elements ever get removed from the SENSOR_ID_LIST headers </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00193">193</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a30ec1e5828bf92391ab9111960361c71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30ec1e5828bf92391ab9111960361c71">&#9670;&nbsp;</a></span>sensorGetListBySensor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="lists_8h.html#ad6892c0ebf89c628a6daa9f3f2efd81f">SENSOR_LIST</a>* sensorGetListBySensor </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a>&#160;</td>
+          <td class="paramname"><em>sensor</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>zero all fields in an individual CAMERA_RECORD object to the debug output </p>
-<p>zero-out a CAMERA_RECORD object</p>
-<p>zero an individual CAMERA_RECORD</p>
-<p>general utility function - useful for testing as well </p>
+<p>Get pointer to a SENSOR_LIST for a specific sensor type. </p>
+<p>type</p>
+<p>doesn't lock the sensorlist - at worst it will miss the first entry which could be added while we are traversing</p>
+<p>no elements ever get removed from the SENSOFR_LIST headers </p>
 
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00636">636</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00161">161</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a7769c613a623dc2a110090e78f4cc175"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7769c613a623dc2a110090e78f4cc175">&#9670;&nbsp;</a></span>sensorListGetHead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="lists_8h.html#ad6892c0ebf89c628a6daa9f3f2efd81f">SENSOR_LIST</a> * sensorListGetHead </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>return the <a class="el" href="structsensor_list.html">sensorList</a> hdr </p>
+<p>internal support routine</p>
+<p>doesn't lock <a class="el" href="structsensor_list.html">sensorList</a> - assumes caller has locked it (if needed) </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00071">71</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="afcc9396b7ec6ccd569031e1864177854"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afcc9396b7ec6ccd569031e1864177854">&#9670;&nbsp;</a></span>sensorRecAdd()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sensorRecAdd </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a>&#160;</td>
+          <td class="paramname"><em>sensor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>subId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i3</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i4</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add a sensor record. </p>
+<p>type, id, subId, #, #, #, #</p>
+<p>locks the sensor list </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00364">364</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a16238c5d7686a1b29a199ab33746a3fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16238c5d7686a1b29a199ab33746a3fc">&#9670;&nbsp;</a></span>sensorRecPruneAll()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sensorRecPruneAll </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>TTL - prune all sensor records older than TTL (all instantiations) </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00448">448</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="affb8cf72a9c82d7361ffdc4662a27ba2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affb8cf72a9c82d7361ffdc4662a27ba2">&#9670;&nbsp;</a></span>sensorSubIdListBySubid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="lists_8h.html#ac25617b6d3d038bf9826291cfadb7042">SENSOR_SUBID_LIST</a>* sensorSubIdListBySubid </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="sensors_8h.html#ac6ac0245038bae8b13eb97c634e52a69">SENSOR_TYPE</a>&#160;</td>
+          <td class="paramname"><em>sensor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>subId</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get pointer to a SENSOR_SUBID_LIST for a specific sensor, id, and subid. </p>
+<p>type, id</p>
+<p>doesn't lock the camlist </p>
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00226">226</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a63bd7d62ba615b179e8c753714e78c63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a63bd7d62ba615b179e8c753714e78c63">&#9670;&nbsp;</a></span>walkSensorIdList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void walkSensorIdList </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#ae55168296bb670f8b7a5d6ec1fac23e8">SENSOR_ID_LIST</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00732">732</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a8888c8359f43a33cbd794e6b95adc424"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8888c8359f43a33cbd794e6b95adc424">&#9670;&nbsp;</a></span>walkSensorList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void walkSensorList </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#ad6892c0ebf89c628a6daa9f3f2efd81f">SENSOR_LIST</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00753">753</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a0e9d36651dbc885153b529fa640b66f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e9d36651dbc885153b529fa640b66f3">&#9670;&nbsp;</a></span>walkSensorRecords()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void walkSensorRecords </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#a84b999f49746211c535773e67ffb7582">SENSOR_RECORD</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00686">686</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+
+</div>
+</div>
+<a id="a051ca07fbc6328010ba4cea72e2e10ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a051ca07fbc6328010ba4cea72e2e10ab">&#9670;&nbsp;</a></span>walkSensorSubIdList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void walkSensorSubIdList </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="lists_8h.html#ac25617b6d3d038bf9826291cfadb7042">SENSOR_SUBID_LIST</a> *&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00708">708</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
 
 </div>
 </div>

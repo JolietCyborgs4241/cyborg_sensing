@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>FRC #4221 Joliet Cyborgs Computer Targetting and Ranging: Data Fields - Variables</title>
+<title>FRC #4221 Joliet Cyborgs Autonomous Control System: Data Fields - Variables</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,9 +21,10 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">FRC #4221 Joliet Cyborgs Computer Targetting and Ranging
+   <div id="projectname">FRC #4221 Joliet Cyborgs Autonomous Control System
    &#160;<span id="projectnumber">1.0</span>
    </div>
+   <div id="projectbrief">Building the autonomous killbots of the future, today</div>
   </td>
  </tr>
  </tbody>
@@ -60,11 +61,14 @@ $(function() {
 
 <div class="contents">
 &#160;<ul>
-<li>camera
-: <a class="el" href="structcam_record.html#acababe729f00aea1485911d985e0b740">camRecord</a>
+<li>data
+: <a class="el" href="structsensor_sub_id_list.html#a5a43f693178a3cf4c014eaea1fa0aeb2">sensorSubIdList</a>
 </li>
-<li>h
-: <a class="el" href="structcam_record.html#a16611451551e3d15916bae723c3f59f7">camRecord</a>
+<li>filteredData
+: <a class="el" href="structsensor_record.html#af3c124bdc4d912779609a5dffd3cf02c">sensorRecord</a>
+</li>
+<li>gain
+: <a class="el" href="structsensor_record.html#a5ec89997e17846d662fc01e3720d1c8f">sensorRecord</a>
 </li>
 <li>hostIP
 : <a class="el" href="struct_h_o_s_t___i_n_f_o.html#ae5e954f89a4ccf1ab960d8317d150264">HOST_INFO</a>
@@ -76,29 +80,44 @@ $(function() {
 : <a class="el" href="struct_h_o_s_t___i_n_f_o.html#ab58db93259ac4b89d8ee4801b29a0379">HOST_INFO</a>
 </li>
 <li>id
-: <a class="el" href="structcam_list_hdr.html#aecb3b0d045ada529257a2fbf8f829599">camListHdr</a>
+: <a class="el" href="structsensor_id_list.html#aecb3b0d045ada529257a2fbf8f829599">sensorIdList</a>
 </li>
 <li>next
-: <a class="el" href="structcam_list_hdr.html#a8782bcec3b85af4e0f1e27e522f3a208">camListHdr</a>
-, <a class="el" href="structcam_record.html#ad9a3c7fc971d096edfa85f48280e90bb">camRecord</a>
+: <a class="el" href="structsensor_id_list.html#a498c40b9b159a0a7155052fc62c76c4b">sensorIdList</a>
+, <a class="el" href="structsensor_list.html#a9a261ac6e9b3d1a00a1884a0d0f6d478">sensorList</a>
+, <a class="el" href="structsensor_record.html#a84e5b2fcc589a3c18a9c3a6a98728e0e">sensorRecord</a>
+, <a class="el" href="structsensor_sub_id_list.html#a5ad2e01e476d584d73070a802ba9715e">sensorSubIdList</a>
 </li>
-<li>recs
-: <a class="el" href="structcam_list_hdr.html#a5e7e14d86e1607e5f3b1730cb57a6b3b">camListHdr</a>
+<li>rawData
+: <a class="el" href="structsensor_record.html#a3f0e57ff8df28a0154b331b8e0299931">sensorRecord</a>
+</li>
+<li>sensor
+: <a class="el" href="structttl__info.html#a16f6a613263f4133402d44386efdf9eb">ttl_info</a>
+</li>
+<li>sensors
+: <a class="el" href="structsensor_list.html#add2d82a67d45e7fba6f913f98810797d">sensorList</a>
 </li>
 <li>sock
 : <a class="el" href="struct_h_o_s_t___i_n_f_o.html#a5903d0b282fc5eae503de618f896b5e1">HOST_INFO</a>
 </li>
+<li>subId
+: <a class="el" href="structsensor_sub_id_list.html#a3f1d56a63d214a4f5536a27cf0c3b210">sensorSubIdList</a>
+</li>
+<li>subIds
+: <a class="el" href="structsensor_id_list.html#a9c1865a79dc8947e4c1a1b7cdc3337cc">sensorIdList</a>
+</li>
 <li>time
-: <a class="el" href="structcam_record.html#a48b0549e79bd9c322fd060c093d88ced">camRecord</a>
+: <a class="el" href="structsensor_record.html#a48b0549e79bd9c322fd060c093d88ced">sensorRecord</a>
 </li>
-<li>w
-: <a class="el" href="structcam_record.html#aac374e320caaadeca4874add33b62af2">camRecord</a>
+<li>ttlSecs
+: <a class="el" href="structttl__info.html#a38eb2298f422560e61a9dfd205016b63">ttl_info</a>
 </li>
-<li>x
-: <a class="el" href="structcam_record.html#a6150e0515f7202e2fb518f7206ed97dc">camRecord</a>
+<li>ttlUsecs
+: <a class="el" href="structttl__info.html#ac8bb5352f1d1882b4071551aea6058b5">ttl_info</a>
 </li>
-<li>y
-: <a class="el" href="structcam_record.html#a0a2f84ed7838f07779ae24c5a9086d33">camRecord</a>
+<li>type
+: <a class="el" href="structsensor_list.html#a32fcfc498e56195bcf764ce5ea8cf3e7">sensorList</a>
+, <a class="el" href="structsensor_record.html#a32fcfc498e56195bcf764ce5ea8cf3e7">sensorRecord</a>
 </li>
 </ul>
 </div><!-- contents -->

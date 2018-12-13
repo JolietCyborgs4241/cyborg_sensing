@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>FRC #4221 Joliet Cyborgs Computer Targetting and Ranging: /home/zog/cyborgs/cyborg_vision/include/cv.h File Reference</title>
+<title>FRC #4221 Joliet Cyborgs Autonomous Control System: /home/zog/cyborgs/cyborg_vision/software/include/cv.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,9 +21,10 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">FRC #4221 Joliet Cyborgs Computer Targetting and Ranging
+   <div id="projectname">FRC #4221 Joliet Cyborgs Autonomous Control System
    &#160;<span id="projectnumber">1.0</span>
    </div>
+   <div id="projectbrief">Building the autonomous killbots of the future, today</div>
   </td>
  </tr>
  </tbody>
@@ -81,20 +82,27 @@ Macros</h2></td></tr>
 <tr class="separator:a4407b4d6eae3ba7fe9538b1242a7e165"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32bda381eb3fed8144a88bdf79c348a6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a32bda381eb3fed8144a88bdf79c348a6">DEBUG_DETAIL</a>&#160;&#160;&#160;2</td></tr>
 <tr class="separator:a32bda381eb3fed8144a88bdf79c348a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd2cc2422a69e0c6c16c99c7b7db4a7d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#abd2cc2422a69e0c6c16c99c7b7db4a7d">TTL_DEFAULT</a>&#160;&#160;&#160;3</td></tr>
-<tr class="separator:abd2cc2422a69e0c6c16c99c7b7db4a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13ce78720623dfcc48879b40f76b34e9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a13ce78720623dfcc48879b40f76b34e9">DEBUG_SUPER</a>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:a13ce78720623dfcc48879b40f76b34e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab20ab5b09277be4bdb3bf083dfc34a6d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#ab20ab5b09277be4bdb3bf083dfc34a6d">DEBUG_OUT</a>(X, ...)&#160;&#160;&#160;fprintf(<a class="el" href="externs_8h.html#add1e3e945a8cbe4a5e54b4a19f007a72">DebugFP</a> X__VA_OPT__(,) __VA_ARGS__)</td></tr>
+<tr class="separator:ab20ab5b09277be4bdb3bf083dfc34a6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ef0faaeb189526ee98452f53101f406"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a9ef0faaeb189526ee98452f53101f406">PRUNE_FREQUENCY</a>&#160;&#160;&#160;500</td></tr>
+<tr class="separator:a9ef0faaeb189526ee98452f53101f406"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dc634e1dd68a7a4fe4eea9574d9cfd5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a0dc634e1dd68a7a4fe4eea9574d9cfd5">TTL_SECS_DEFAULT</a>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:a0dc634e1dd68a7a4fe4eea9574d9cfd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a076466265a2d5b91284ba093e5e96b2e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a076466265a2d5b91284ba093e5e96b2e">TTL_USECS_DEFAULT</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:a076466265a2d5b91284ba093e5e96b2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a168fc3db817be4aa359f2e9a7b06d66c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a168fc3db817be4aa359f2e9a7b06d66c">DEF_MSG_RATE_REPORTING_CADENCE</a>&#160;&#160;&#160;100</td></tr>
+<tr class="separator:a168fc3db817be4aa359f2e9a7b06d66c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ab87e2a8dbe0dcb91ec15d71dd7822824"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#ab87e2a8dbe0dcb91ec15d71dd7822824">cvAlloc</a> (size_t)</td></tr>
-<tr class="memdesc:ab87e2a8dbe0dcb91ec15d71dd7822824"><td class="mdescLeft">&#160;</td><td class="mdescRight">General purpose memory allocator.  <a href="#ab87e2a8dbe0dcb91ec15d71dd7822824">More...</a><br /></td></tr>
+<tr class="memdesc:ab87e2a8dbe0dcb91ec15d71dd7822824"><td class="mdescLeft">&#160;</td><td class="mdescRight">cyborg vision malloc front end  <a href="#ab87e2a8dbe0dcb91ec15d71dd7822824">More...</a><br /></td></tr>
 <tr class="separator:ab87e2a8dbe0dcb91ec15d71dd7822824"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71e3aef0f71d33f8d0f24300d07564d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a71e3aef0f71d33f8d0f24300d07564d8">cvFree</a> (void *)</td></tr>
-<tr class="memdesc:a71e3aef0f71d33f8d0f24300d07564d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">General purpose memory free.  <a href="#a71e3aef0f71d33f8d0f24300d07564d8">More...</a><br /></td></tr>
+<tr class="memdesc:a71e3aef0f71d33f8d0f24300d07564d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">cyborg vision free front end  <a href="#a71e3aef0f71d33f8d0f24300d07564d8">More...</a><br /></td></tr>
 <tr class="separator:a71e3aef0f71d33f8d0f24300d07564d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2651be2bc45f4b20c67d4347d156d885"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv_8h.html#a2651be2bc45f4b20c67d4347d156d885">initMutex</a> ()</td></tr>
-<tr class="memdesc:a2651be2bc45f4b20c67d4347d156d885"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize the mutex for the coordinated CamList access  <a href="#a2651be2bc45f4b20c67d4347d156d885">More...</a><br /></td></tr>
-<tr class="separator:a2651be2bc45f4b20c67d4347d156d885"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a32bda381eb3fed8144a88bdf79c348a6"></a>
@@ -145,19 +153,113 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="abd2cc2422a69e0c6c16c99c7b7db4a7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abd2cc2422a69e0c6c16c99c7b7db4a7d">&#9670;&nbsp;</a></span>TTL_DEFAULT</h2>
+<a id="ab20ab5b09277be4bdb3bf083dfc34a6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab20ab5b09277be4bdb3bf083dfc34a6d">&#9670;&nbsp;</a></span>DEBUG_OUT</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define TTL_DEFAULT&#160;&#160;&#160;3</td>
+          <td class="memname">#define DEBUG_OUT</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">X, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;fprintf(<a class="el" href="externs_8h.html#add1e3e945a8cbe4a5e54b4a19f007a72">DebugFP</a> X__VA_OPT__(,) __VA_ARGS__)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00015">15</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00016">16</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
+
+</div>
+</div>
+<a id="a13ce78720623dfcc48879b40f76b34e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13ce78720623dfcc48879b40f76b34e9">&#9670;&nbsp;</a></span>DEBUG_SUPER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEBUG_SUPER&#160;&#160;&#160;3</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00014">14</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
+
+</div>
+</div>
+<a id="a168fc3db817be4aa359f2e9a7b06d66c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a168fc3db817be4aa359f2e9a7b06d66c">&#9670;&nbsp;</a></span>DEF_MSG_RATE_REPORTING_CADENCE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEF_MSG_RATE_REPORTING_CADENCE&#160;&#160;&#160;100</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00031">31</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
+
+</div>
+</div>
+<a id="a9ef0faaeb189526ee98452f53101f406"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ef0faaeb189526ee98452f53101f406">&#9670;&nbsp;</a></span>PRUNE_FREQUENCY</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PRUNE_FREQUENCY&#160;&#160;&#160;500</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00027">27</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
+
+</div>
+</div>
+<a id="a0dc634e1dd68a7a4fe4eea9574d9cfd5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0dc634e1dd68a7a4fe4eea9574d9cfd5">&#9670;&nbsp;</a></span>TTL_SECS_DEFAULT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define TTL_SECS_DEFAULT&#160;&#160;&#160;3</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00028">28</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
+
+</div>
+</div>
+<a id="a076466265a2d5b91284ba093e5e96b2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a076466265a2d5b91284ba093e5e96b2e">&#9670;&nbsp;</a></span>TTL_USECS_DEFAULT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define TTL_USECS_DEFAULT&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="cv_8h_source.html#l00029">29</a> of file <a class="el" href="cv_8h_source.html">cv.h</a>.</p>
 
 </div>
 </div>
@@ -178,12 +280,10 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>General purpose memory allocator. </p>
-<p>Will always return success; exits with a warning message otherwise</p>
-<p>General purpose memory allocator.</p>
+<p>cyborg vision malloc front end </p>
 <p>exits with an error to DebugFP if malloc() fails </p>
 
-<p class="definition">Definition at line <a class="el" href="utility_8c_source.html#l00018">18</a> of file <a class="el" href="utility_8c_source.html">utility.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="utility_8c_source.html#l00019">19</a> of file <a class="el" href="utility_8c_source.html">utility.c</a>.</p>
 
 </div>
 </div>
@@ -203,32 +303,10 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>General purpose memory free. </p>
-<p>General purpose memory free.</p>
+<p>cyborg vision free front end </p>
 <p>doesn't do anything special rifht now - calls free() directly </p>
 
-<p class="definition">Definition at line <a class="el" href="utility_8c_source.html#l00043">43</a> of file <a class="el" href="utility_8c_source.html">utility.c</a>.</p>
-
-</div>
-</div>
-<a id="a2651be2bc45f4b20c67d4347d156d885"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2651be2bc45f4b20c67d4347d156d885">&#9670;&nbsp;</a></span>initMutex()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void initMutex </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>initialize the mutex for the coordinated CamList access </p>
-
-<p class="definition">Definition at line <a class="el" href="lists_8c_source.html#l00653">653</a> of file <a class="el" href="lists_8c_source.html">lists.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="utility_8c_source.html#l00038">38</a> of file <a class="el" href="utility_8c_source.html">utility.c</a>.</p>
 
 </div>
 </div>
