@@ -7,7 +7,7 @@ There are several files in this directory:
    * ExpressSCH from ExpressPCB
        * Free and easy to use schematic design tool
        * Only runs under Windows
-* PCB Layout (or at least there will be)
+* PCB Layout
    * ExpressPCB from ExpressPCB
         * Free and easy to use
         * Decent library of user-define components available

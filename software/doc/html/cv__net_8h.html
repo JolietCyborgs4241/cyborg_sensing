@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>FRC #4221 Joliet Cyborgs Computer Targetting and Ranging: /home/zog/cyborgs/cyborg_vision/include/cv_net.h File Reference</title>
+<title>FRC #4221 Joliet Cyborgs Autonomous Control System: /home/zog/cyborgs/cyborg_vision/software/include/cv_net.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,9 +21,10 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">FRC #4221 Joliet Cyborgs Computer Targetting and Ranging
+   <div id="projectname">FRC #4221 Joliet Cyborgs Autonomous Control System
    &#160;<span id="projectnumber">1.0</span>
    </div>
+   <div id="projectbrief">Building the autonomous killbots of the future, today</div>
   </td>
  </tr>
  </tbody>
@@ -82,14 +83,22 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_o_s_t___i_n_f_o.html">HOST_INFO</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">used for storing host addressing information  <a href="struct_h_o_s_t___i_n_f_o.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:adc10218cadcf4aa44adbe8716c05a1f2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv__net_8h.html#adc10218cadcf4aa44adbe8716c05a1f2">DEF_HOST_IP_STRING</a>&#160;&#160;&#160;&quot;127.0.0.1&quot;</td></tr>
 <tr class="separator:adc10218cadcf4aa44adbe8716c05a1f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bb3fc51a2ce1b60b92facde7a443617"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv__net_8h.html#a0bb3fc51a2ce1b60b92facde7a443617">DEF_HOST_PORT</a>&#160;&#160;&#160;12345</td></tr>
-<tr class="separator:a0bb3fc51a2ce1b60b92facde7a443617"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56a8f2e9e586a9c940f85ab7c3cd0847"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv__net_8h.html#a56a8f2e9e586a9c940f85ab7c3cd0847">DEF_HOST_PORT_DB_POST</a>&#160;&#160;&#160;12345</td></tr>
+<tr class="memdesc:a56a8f2e9e586a9c940f85ab7c3cd0847"><td class="mdescLeft">&#160;</td><td class="mdescRight">default port for posting data to cv_db  <a href="#a56a8f2e9e586a9c940f85ab7c3cd0847">More...</a><br /></td></tr>
+<tr class="separator:a56a8f2e9e586a9c940f85ab7c3cd0847"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c221456e61115ad88a20a4a237f17f4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv__net_8h.html#a7c221456e61115ad88a20a4a237f17f4">DEF_HOST_PORT_DB_QUERY</a>&#160;&#160;&#160;12346</td></tr>
+<tr class="memdesc:a7c221456e61115ad88a20a4a237f17f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">default port for querying data from cv_db  <a href="#a7c221456e61115ad88a20a4a237f17f4">More...</a><br /></td></tr>
+<tr class="separator:a7c221456e61115ad88a20a4a237f17f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5b88a3ea94f5e7d133ef6ecc9fae70a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cv__net_8h.html#af5b88a3ea94f5e7d133ef6ecc9fae70a">DEF_HOST_PORT_STATUS</a>&#160;&#160;&#160;12347</td></tr>
+<tr class="memdesc:af5b88a3ea94f5e7d133ef6ecc9fae70a"><td class="mdescLeft">&#160;</td><td class="mdescRight">default port sending status messages to cv_status  <a href="#af5b88a3ea94f5e7d133ef6ecc9fae70a">More...</a><br /></td></tr>
+<tr class="separator:af5b88a3ea94f5e7d133ef6ecc9fae70a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="adc10218cadcf4aa44adbe8716c05a1f2"></a>
@@ -108,19 +117,57 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a id="a0bb3fc51a2ce1b60b92facde7a443617"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0bb3fc51a2ce1b60b92facde7a443617">&#9670;&nbsp;</a></span>DEF_HOST_PORT</h2>
+<a id="a56a8f2e9e586a9c940f85ab7c3cd0847"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a56a8f2e9e586a9c940f85ab7c3cd0847">&#9670;&nbsp;</a></span>DEF_HOST_PORT_DB_POST</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define DEF_HOST_PORT&#160;&#160;&#160;12345</td>
+          <td class="memname">#define DEF_HOST_PORT_DB_POST&#160;&#160;&#160;12345</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="cv__net_8h_source.html#l00022">22</a> of file <a class="el" href="cv__net_8h_source.html">cv_net.h</a>.</p>
+<p>default port for posting data to cv_db </p>
+
+<p class="definition">Definition at line <a class="el" href="cv__net_8h_source.html#l00024">24</a> of file <a class="el" href="cv__net_8h_source.html">cv_net.h</a>.</p>
+
+</div>
+</div>
+<a id="a7c221456e61115ad88a20a4a237f17f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c221456e61115ad88a20a4a237f17f4">&#9670;&nbsp;</a></span>DEF_HOST_PORT_DB_QUERY</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEF_HOST_PORT_DB_QUERY&#160;&#160;&#160;12346</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>default port for querying data from cv_db </p>
+
+<p class="definition">Definition at line <a class="el" href="cv__net_8h_source.html#l00026">26</a> of file <a class="el" href="cv__net_8h_source.html">cv_net.h</a>.</p>
+
+</div>
+</div>
+<a id="af5b88a3ea94f5e7d133ef6ecc9fae70a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5b88a3ea94f5e7d133ef6ecc9fae70a">&#9670;&nbsp;</a></span>DEF_HOST_PORT_STATUS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEF_HOST_PORT_STATUS&#160;&#160;&#160;12347</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>default port sending status messages to cv_status </p>
+
+<p class="definition">Definition at line <a class="el" href="cv__net_8h_source.html#l00029">29</a> of file <a class="el" href="cv__net_8h_source.html">cv_net.h</a>.</p>
 
 </div>
 </div>

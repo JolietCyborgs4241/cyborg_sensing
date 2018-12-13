@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>FRC #4221 Joliet Cyborgs Computer Targetting and Ranging: /home/zog/cyborgs/cyborg_vision/cv_db/threads.c File Reference</title>
+<title>FRC #4221 Joliet Cyborgs Autonomous Control System: /home/zog/cyborgs/cyborg_vision/software/cv_db/threads.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -21,9 +21,10 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">FRC #4221 Joliet Cyborgs Computer Targetting and Ranging
+   <div id="projectname">FRC #4221 Joliet Cyborgs Autonomous Control System
    &#160;<span id="projectnumber">1.0</span>
    </div>
+   <div id="projectbrief">Building the autonomous killbots of the future, today</div>
   </td>
  </tr>
  </tbody>
@@ -76,20 +77,28 @@ $(function() {
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;pthread.h&gt;</code><br />
 <code>#include &lt;time.h&gt;</code><br />
+<code>#include &lt;errno.h&gt;</code><br />
+<code>#include &lt;sys/time.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="cv_8h_source.html">cv.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="cv__net_8h_source.html">cv_net.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="cv__cam_8h_source.html">cv_cam.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="cv__lists_8h_source.html">cv_lists.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="cv__externs_8h_source.html">cv_externs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="lists_8h_source.html">db/lists.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="externs_8h_source.html">db/externs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sensors_8h_source.html">sensors.h</a>&quot;</code><br />
 </div>
 <p><a href="threads_8c_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a4325aeaf383716a73e0a127b1914a138"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#a4325aeaf383716a73e0a127b1914a138">startPruneThread</a> (int ttl)</td></tr>
-<tr class="separator:a4325aeaf383716a73e0a127b1914a138"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75511069e16d8dbcb10ffccb2c711384"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#a75511069e16d8dbcb10ffccb2c711384">startCamDataThread</a> (int sock)</td></tr>
-<tr class="separator:a75511069e16d8dbcb10ffccb2c711384"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4098fe84c527dc1406c9c3f472b8871"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#ae4098fe84c527dc1406c9c3f472b8871">processCamData</a> (char *)</td></tr>
+<tr class="separator:ae4098fe84c527dc1406c9c3f472b8871"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc9f3b3853180d808d6ba74b4741316c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#acc9f3b3853180d808d6ba74b4741316c">processRangerData</a> (char *)</td></tr>
+<tr class="separator:acc9f3b3853180d808d6ba74b4741316c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a067070c90ad83ab04db836ac38fbb367"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#a067070c90ad83ab04db836ac38fbb367">process9DData</a> (char *)</td></tr>
+<tr class="separator:a067070c90ad83ab04db836ac38fbb367"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd6a154325e7f96949ca909c56b6b862"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#afd6a154325e7f96949ca909c56b6b862">startPruneThread</a> ()</td></tr>
+<tr class="separator:afd6a154325e7f96949ca909c56b6b862"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad25646c7f990fc4a909d5a9e5a5161fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="threads_8c.html#ad25646c7f990fc4a909d5a9e5a5161fc">startSensorDataThread</a> (int sock)</td></tr>
+<tr class="separator:ad25646c7f990fc4a909d5a9e5a5161fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -101,14 +110,95 @@ Variables</h2></td></tr>
 <tr class="separator:a94ac94fbda492e6222510324cb4b37bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a75511069e16d8dbcb10ffccb2c711384"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a75511069e16d8dbcb10ffccb2c711384">&#9670;&nbsp;</a></span>startCamDataThread()</h2>
+<a id="a067070c90ad83ab04db836ac38fbb367"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a067070c90ad83ab04db836ac38fbb367">&#9670;&nbsp;</a></span>process9DData()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void startCamDataThread </td>
+          <td class="memname">void process9DData </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sensors_8c_source.html#l00149">149</a> of file <a class="el" href="sensors_8c_source.html">sensors.c</a>.</p>
+
+</div>
+</div>
+<a id="ae4098fe84c527dc1406c9c3f472b8871"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4098fe84c527dc1406c9c3f472b8871">&#9670;&nbsp;</a></span>processCamData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void processCamData </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sensors_8c_source.html#l00024">24</a> of file <a class="el" href="sensors_8c_source.html">sensors.c</a>.</p>
+
+</div>
+</div>
+<a id="acc9f3b3853180d808d6ba74b4741316c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc9f3b3853180d808d6ba74b4741316c">&#9670;&nbsp;</a></span>processRangerData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void processRangerData </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sensors_8c_source.html#l00090">90</a> of file <a class="el" href="sensors_8c_source.html">sensors.c</a>.</p>
+
+</div>
+</div>
+<a id="afd6a154325e7f96949ca909c56b6b862"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd6a154325e7f96949ca909c56b6b862">&#9670;&nbsp;</a></span>startPruneThread()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void startPruneThread </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Start the purging thread</p>
+<p>ttl </p>
+
+<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00047">47</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
+
+</div>
+</div>
+<a id="ad25646c7f990fc4a909d5a9e5a5161fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad25646c7f990fc4a909d5a9e5a5161fc">&#9670;&nbsp;</a></span>startSensorDataThread()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void startSensorDataThread </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -119,29 +209,7 @@ Variables</h2></td></tr>
 <p>start the receiving thread</p>
 <p>socket fd </p>
 
-<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00102">102</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
-
-</div>
-</div>
-<a id="a4325aeaf383716a73e0a127b1914a138"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4325aeaf383716a73e0a127b1914a138">&#9670;&nbsp;</a></span>startPruneThread()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void startPruneThread </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Start the purging thread</p>
-<p>ttl </p>
-
-<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00044">44</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00084">84</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
 
 </div>
 </div>
@@ -158,7 +226,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00140">140</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00121">121</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
 
 </div>
 </div>
@@ -174,7 +242,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00030">30</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00032">32</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
 
 </div>
 </div>
@@ -190,7 +258,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00033">33</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
+<p class="definition">Definition at line <a class="el" href="threads_8c_source.html#l00035">35</a> of file <a class="el" href="threads_8c_source.html">threads.c</a>.</p>
 
 </div>
 </div>

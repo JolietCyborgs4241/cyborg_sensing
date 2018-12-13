@@ -1,0 +1,15 @@
+/home/zog/cyborgs/cyborg_vision/hardware/status-display/README.md:39: warning: Invalid list item found
+/home/zog/cyborgs/cyborg_vision/hardware/status-display/README.md:41: warning: Invalid list item found
+/home/zog/cyborgs/cyborg_vision/hardware/ultrasonic-ranger_hc-sr04/README.md:34: warning: Invalid list item found
+/home/zog/cyborgs/cyborg_vision/hardware/ultrasonic-ranger_hc-sr04/README.md:40: warning: Invalid list item found
+/home/zog/cyborgs/cyborg_vision/README.md:220: warning: explicit link request to 'define' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:222: warning: explicit link request to 'define' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:222: warning: explicit link request to 'ifdef' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:222: warning: explicit link request to 'ifndef' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:222: warning: explicit link request to 'else' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:222: warning: explicit link request to 'endif' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:238: warning: explicit link request to 'define' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:240: warning: explicit link request to 'define' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:247: warning: explicit link request to 'define' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:249: warning: explicit link request to 'defines' could not be resolved
+/home/zog/cyborgs/cyborg_vision/README.md:249: warning: explicit link request to 'something' could not be resolved
