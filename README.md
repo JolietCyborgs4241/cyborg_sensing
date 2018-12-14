@@ -12,7 +12,7 @@ The goal here is to give the robot a sense of situational awareness potentially 
 
 * Orientation to other objects and general playfield
 
-With this information, the robot has the potential to be able to perform non-trivial high-level tasks without human intervention.  This is a continous process often refered to as an "**OODA loop*:
+With this information, the robot has the potential to be able to perform non-trivial high-level tasks without human intervention.  This is a continous process sometimes refered to as an "*OODA loop*":
 
 * **O** - Observe (what is around the robot?)
 
@@ -125,7 +125,7 @@ The interface to the RoboRIO will be through a serial port.  There will need to 
 
 ##### Robot Driver Fallback Approach
 
-If we can't get the logic to control the robot the level we like in the Robot Driver module, we can fallbck to making the sensor data available directly to the Robo Rio.  In this case, the autonomous system is reduced to a sensor database that provides sets of sensor data to the main robot controller.
+If we can't get the logic to control the robot to the level we like in the Robot Driver module, we can fallback to making the sensor data available directly to the Robo Rio.  In this case, the autonomous system is reduced to a sensor database that provides sets of sensor data to the main robot controller.
 
 #### Visual Status Display
 
@@ -160,6 +160,48 @@ There are a few key considerations to make this work well:
 * If we will lose power, we need to ensure that the log records are not damaged by the log-supporting device losing power.  We can take some steps to try and minimize the chances of this and try to make things record log information as synchronously as we can.
 
 We need to extend this to the Robo Rio-based control code as well.  If possible, we should timestamp and log each command input from the human operators for later review and use as test data for a further robot testing and debugging.
+
+##### Logging Formats
+
+The most obvious information we want to log is the the sensor data.  We could probably get away with just logging it at the central database but we should take a strong look at whether we can afford to it at the individual sensor level (or more specifically the server for that sensor on the Raspberry Pi).  If we can timestamp the data when it leaves a sensor processor as well as when it arrives at the database, we'll not only have two copies of the data but we'll also have the information that tells us the latency of the sensor data as it moves through the system.  Latency is the time difference from between the information being sent and the time it is received; as an example from the physical world, the latency of First Class mail is usually 2 days from when it arrives at the sending Post Office to the destination within the continental United States.  With timestamps at both ends of the data write to the database from the sensor server, we'll have the ability to figure out how long it takes sensor data to move through our system and make adjustments, if we feel we need to.
+
+Different parts of the system might log their information a litle differently; for instance, we might want to log ensor data in a way that saves it in the same sort of form that a sensor generates it.  Other aspects of the system might log their information differently such as logging any queries made to the database and what the results are (which potentially might involve several records being returned).
+
+Each component should log it's information to a separate file and shoud include enough information in each record so that we identify the component that wrote it and when that specific record was generated.
+
+Here is a potential log record for record of sensor data received by the central database:
+
+1544748781.810069 db i C ball 3 100 250 75 75
+
+This could be decoded like this:
+
+* "ts" - time stamp in seconds and microseconds from the epoch (epoch in terms of Lunix is seconds since midnight, Jan 1, 1970, UTC - the timestamp shown in the example above is the actual system time at the time of writing this line)
+
+* "db" - produced by the central sensor database (each component has some sor of identifying code so that if we merge all of the log records, we can still identify the originating component)
+
+* "i" - incoming record
+
+* "C" - camera record
+
+* "ball" - sensor ID
+
+* "3" - sensor subID
+
+* "100 250 75 75" - "ball" object coordinates and bounding box (this part of the record is specific to the type of sensor being reported and might include more or less data depending on the sensor)
+
+Currently defined sensor record types are:
+
+* **C** - "camera" sensor - C ID subID X Y W H
+
+* **R** - "ranger" sensor - R ID subID R
+
+* **G** - 3-axis Accelerometer sensor - G ID subID x y z
+
+* **O** - 3-axis Roll sensor - O ID subID x y z
+
+* **M** - 3-axis Magnetic orientation sensor - M ID subID x y z
+
+It's important to note that the sensor record is all about the *type* of the sensor and not the technology involved in sensing that, well, sense of the robot.  We could use an electronic roll sensor just as well as we could strap a freshman into the robot so long as they report "180! 180! 180!" when the robot rolls upside down.  My preference would be for the electronic sensor but we do have a budget to work within and underclassman may be the better economic choice for some sensing scenarios.  More realistically, we could try different ranging technologies or implementations such as sonar or LIDAR and swap a sensor based on one of those technologied for another one without any changes to the code so long as they return the same style record for their data.  So long as they return the same record type, none of the software needs to be changed or even cares about the sensor swap.
 
 #### Visual Tracing
 
@@ -338,7 +380,7 @@ Complimentary function to malloc is [free](https://linux.die.net/man/3/malloc)()
 
 Behind the scenes, there is a memory management routine running that allocates memory for your program in bigger chunks.  This is typically referred to as the *heap*.  The malloc() routine keeps a list of memory addresses it handed out and how big of an area that pointer was associated with.  If you look at the documentation for the calls to malloc(), you'll see it's pretty much an all or nothing interface as you either get a pointer back meaning you got what you asked for or you get back nothing.  Likewise, when you call free() with a pointer value you got from a malloc() call, you're also not passing the size of the amount of memory you're freeing, just a pointer to it.  The free routines looks into a list of pointers that were already handed out, which include how much memory that pointer was pointing to, and marks it internally as being available.  If you pass a different value, you really gum up the works.  In the pro world, we refer to that as *heap corruption* and done enough times (or honestly just once), it messes up the lists this library call uses to track, manage, and return memory to the point where it could lose track of some memory (creating a dreaded *leak*) or even worse, it could give out some memory *twice* causing some very, very, very hard to find find data corruption bugs (imagine you had two variables, **x** and **y** and somehow they ended up overlapping the memory used to store what you thought were two very simple, completely distinct variables and when you updated one, you subtly altered the value of the other in a program section far, far away.  That will be *very* tough to find.
 
-So the pro tip of the day:  make sure you give back what you got, and only what you got, and only once (because free()ing something more than once will also lead to *heap corruption).
+So the pro tip of the day:  make sure you give back what you got, and only what you got, and only once (because free()ing something more than once will also lead to *heap corruption* - whihc is not good and will usually result in the program crashing or corrupting data, usually in very subtle, very non-obvious, and very hard to find ways).
 
 Some resources for learning more about C memory management:
 
@@ -362,8 +404,6 @@ This might all seem like a giant pain but it really isn't; you actually learn to
 First off, you need to know how to pronounce "mutex" (syllable break between the "u" and the "t") - check out how "Julia" pronounces it at [Definitions.net](https://www.definitions.net/pronounce/mutex) - listen *ONLY* to Julia, everyone else is pronouncing it, well, *WRONG* (OK, "Oliver" and "Emily" are pretty solid too but skip the US English dudes for sure as they clearly are not programmers).
 
 Mu-tex - OK, now we can move on.
-
-
 
 ## Conclusion
 There is a lot going on in this design and corresponding code.  Depending on your level of experience with C and the Linux environment, this might be the most complicated code you've dealt with to date.  Don't hesitate to search for and read about some of the topics to learn more; also don't hesitate to ask me to help explain something as I'll be glad to do so.
