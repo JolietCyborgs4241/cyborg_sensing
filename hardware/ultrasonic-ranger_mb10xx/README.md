@@ -1,7 +1,7 @@
-# Cyborg-Autonomous Ultrasonic Sensor (HC-SR04)
+# Cyborg-Autonomous Ultrasonic Sensor (MaxBotix MB10xx)
 
 ## Files
-There are several files in this directory:
+There are i(or will be) several files in this directory:
 
 * Sensor Schematic
    * ExpressSCH from ExpressPCB
@@ -41,4 +41,4 @@ For now, the sensor will output a string giving the detected distance to whateve
 * "Distance:  # (cm)"
 
 In the future it will output something which identifies the sensor type and specific sensor identifier - something like:
-* "U 2 45" (interpreted as ultrasonic sensor type, #2, detecting a target at 45cm)
+* "U 2 x 45" (interpreted as ultrasonic sensor type, ID "2", subID "x", detecting a target at 45cm)
