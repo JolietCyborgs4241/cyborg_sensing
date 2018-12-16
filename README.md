@@ -173,7 +173,7 @@ Here is a potential log record format as well as an example record of sensor dat
 
 name: ts id direction data
 
-xyz_server: 1544748781.810069 db "C ball 3 100 250 75 75"
+xyz_server: 1544748781.810069 db i "C ball 3 100 250 75 75"
 
 This could be decoded like this:
 
@@ -187,13 +187,13 @@ This could be decoded like this:
 
 * "data" - this is dependent on the component, sensor, or other aspect of the data and will likely vary depending on the type of data being logged.  What is important is that we can idetify the type for later analysis whether implicilty in the data itself (like this example shows it is a "camera" record) or explicitly where needed (by adding something in addition to the data).
 
-    * "C" - camera record
+  * "C" - camera record
 
-    * "ball" - sensor ID
+  * "ball" - sensor ID
 
-    * "3" - sensor subID
+  * "3" - sensor subID
 
-    * "100 250 75 75" - "ball" object coordinates and bounding box (this part of the record is specific to the type of sensor being reported and might include more or less data depending on the sensor)
+  * "100 250 75 75" - "ball" object coordinates and bounding box (this part of the record is specific to the type of sensor being reported and might include more or less data depending on the sensor)
 
 Currently defined sensor record types are:
 
