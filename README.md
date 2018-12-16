@@ -165,29 +165,35 @@ We need to extend this to the Robo Rio-based control code as well.  If possible,
 
 The most obvious information we want to log is the the sensor data.  We could probably get away with just logging it at the central database but we should take a strong look at whether we can afford to it at the individual sensor level (or more specifically the server for that sensor on the Raspberry Pi).  If we can timestamp the data when it leaves a sensor processor as well as when it arrives at the database, we'll not only have two copies of the data but we'll also have the information that tells us the latency of the sensor data as it moves through the system.  Latency is the time difference from between the information being sent and the time it is received; as an example from the physical world, the latency of First Class mail is usually 2 days from when it arrives at the sending Post Office to the destination within the continental United States.  With timestamps at both ends of the data write to the database from the sensor server, we'll have the ability to figure out how long it takes sensor data to move through our system and make adjustments, if we feel we need to.
 
-Different parts of the system might log their information a litle differently; for instance, we might want to log ensor data in a way that saves it in the same sort of form that a sensor generates it.  Other aspects of the system might log their information differently such as logging any queries made to the database and what the results are (which potentially might involve several records being returned).
+Different parts of the system might log their information a litle differently; for instance, we might want to log sensor data in a way that saves it in the same sort of form that a sensor generates it in.  Other aspects of the system might log their information differently such as logging any queries made to the database and what the results are (which potentially might involve several records being returned).  The key is that the information is as "raw" or "native" as practical so we diagnose whether there are issues with the sensor or otehr data staring right from the sensor or coming into play through other, more subsequent, processing steps.
 
-Each component should log it's information to a separate file and shoud include enough information in each record so that we identify the component that wrote it and when that specific record was generated.
+Each component should log it's information to a separate file and should include enough information in each record so that we identify the component that wrote it and when that specific record was generated.
 
-Here is a potential log record for record of sensor data received by the central database:
+Here is a potential log record format as well as an example record of sensor data received by the central database:
 
-1544748781.810069 db i C ball 3 100 250 75 75
+name: ts id direction data
+
+xyz_server: 1544748781.810069 db "C ball 3 100 250 75 75"
 
 This could be decoded like this:
 
-* "ts" - time stamp in seconds and microseconds from the epoch (epoch in terms of Lunix is seconds since midnight, Jan 1, 1970, UTC - the timestamp shown in the example above is the actual system time at the time of writing this line)
+* "name" - name of the executable that generated this log record; argv[0] in C/C++ terms
 
-* "db" - produced by the central sensor database (each component has some sor of identifying code so that if we merge all of the log records, we can still identify the originating component)
+* "ts" - time stamp in seconds and microseconds from the epoch (epoch in terms of Lunix is seconds since midnight, Jan 1, 1970, UTC - the timestamp shown in the example above is the actual system time at the time of writing this line).  It's important that the microsecond component get printed out with 6 digits including leading 0s and trailing 0s as appropriate; there is a huge difference between "123.456" and "123.000456" for example and we need the correct representation
 
-* "i" - incoming record
+* "db" - produced by the central sensor database (each component has some sort of identifying code so that if we merge all of the log records, we can still identify the originating component)
 
-* "C" - camera record
+* "direction" - this could indicate "i" for incoming (being recieved) or "o" for outgoing (being sent to something else) records
 
-* "ball" - sensor ID
+* "data" - this is dependent on the component, sensor, or other aspect of the data and will likely vary depending on the type of data being logged.  What is important is that we can idetify the type for later analysis whether implicilty in the data itself (like this example shows it is a "camera" record) or explicitly where needed (by adding something in addition to the data).
 
-* "3" - sensor subID
+    * "C" - camera record
 
-* "100 250 75 75" - "ball" object coordinates and bounding box (this part of the record is specific to the type of sensor being reported and might include more or less data depending on the sensor)
+    * "ball" - sensor ID
+
+    * "3" - sensor subID
+
+    * "100 250 75 75" - "ball" object coordinates and bounding box (this part of the record is specific to the type of sensor being reported and might include more or less data depending on the sensor)
 
 Currently defined sensor record types are:
 
@@ -201,7 +207,7 @@ Currently defined sensor record types are:
 
 * **M** - 3-axis Magnetic orientation sensor - M ID subID x y z
 
-It's important to note that the sensor record is all about the *type* of the sensor and not the technology involved in sensing that, well, sense of the robot.  We could use an electronic roll sensor just as well as we could strap a freshman into the robot so long as they report "180! 180! 180!" when the robot rolls upside down.  My preference would be for the electronic sensor but we do have a budget to work within and underclassman may be the better economic choice for some sensing scenarios.  More realistically, we could try different ranging technologies or implementations such as sonar or LIDAR and swap a sensor based on one of those technologied for another one without any changes to the code so long as they return the same style record for their data.  So long as they return the same record type, none of the software needs to be changed or even cares about the sensor swap.
+It's important to note that the sensor record is all about the *type* of the sensor and not the technology involved in sensing that, well, sense of the robot.  We could use an electronic roll sensor just as well as we could strap a freshman into the robot so long as they report "180! 180! 180!" when the robot rolls upside down.  My preference would be for the electronic sensor but we do have a budget to work within and underclassman may be the better economic choice for some specific sensing scenarios.  More realistically, we could try different ranging technologies or implementations such as sonar or LIDAR and swap a sensor based on one of those technologied for another one without any changes to the code so long as they return the same style record for their data.  So long as they return the same record type, none of the software needs to be changed or even cares about the sensor swap.
 
 #### Visual Tracing
 
