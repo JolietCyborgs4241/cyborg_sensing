@@ -261,7 +261,7 @@ openSerialPort(char *port, int speed)
         speedVal = B115200;
         break;
 
-    case 23400:
+    case 230400:
         speedVal = B230400;
         break;
 
