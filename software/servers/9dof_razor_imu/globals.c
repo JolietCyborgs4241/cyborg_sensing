@@ -39,6 +39,7 @@ FILE        *DebugFP;                               // set to stderr at startup
 
 /// Log file
 FILE        *LogFP = (FILE *)NULL;
+char        *LogID = "9dof";
 
 /// Serial port & speed
 char    *SerialPort = NULL;;

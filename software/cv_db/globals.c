@@ -54,7 +54,8 @@ int         DebugLevel = DEBUG_OFF;
 FILE        *DebugFP;                               // set to stderr at startup
 
 /// Log file
-FILE        *LogFP;
+FILE        *LogFP = NULL;
+char        *LogID = "DB";
 
 
 // Global start time

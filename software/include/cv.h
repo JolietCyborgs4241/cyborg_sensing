@@ -11,7 +11,7 @@
 #define	DEBUG_OFF           0
 #define	DEBUG_INFO          1
 #define	DEBUG_DETAIL        2
-#define DEBUG_SUPER        3
+#define DEBUG_SUPER         3
 
 #define DEBUG_OUT(X, ...)   fprintf(DebugFP X__VA_OPT__(,) __VA_ARGS__)
 //#define G(X, ...) f(0, X __VA_OPT__(,) __VA_ARGS__)
@@ -31,5 +31,7 @@ void    cvFree(void *);
 #define DEF_MSG_RATE_REPORTING_CADENCE    100   // report message rates per sec every X msgs
 
 
+#define LOG_DIR_IN              "i"
+#define LOG_DIR_OUT             "o"
 
 #endif  /* cv.h */

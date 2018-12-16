@@ -24,6 +24,7 @@ extern  FILE        *DebugFP;
 
 /// Global FP for Logging output
 extern  FILE        *LogFP;
+extern  char        *LogID;
 
 /// serial port values
 extern  int     SerialFd;

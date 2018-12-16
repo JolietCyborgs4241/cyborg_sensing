@@ -68,11 +68,17 @@ main(int argc, char **argv)
 
         inBuffer[readRet] = '\0';
 
+        if (readRet > 2) {          // kill CR/LF @ end
+            inBuffer[readRet-2] = '\0';
+        }
+
         if (LogFP) {
             gettimeofday(&now, NULL);
 
             fprintf(LogFP,
-                    "%ld.%08ld: \"%s\"\n", now.tv_sec, now.tv_usec, inBuffer);
+                    "%s: LOG %ld.%06ld %s %s \"%s\"\n",
+                    MyName, now.tv_sec, now.tv_usec,
+                    LogID, LOG_DIR_IN, inBuffer);
         }
 
         process9dofRecord(inBuffer);
@@ -118,8 +124,8 @@ process9dofRecord(char *record)
     intAccY  = accY  * SCALE_FACTOR;
     intAccZ  = accZ  * SCALE_FACTOR;
     intRollX = rollX * SCALE_FACTOR;
-    intRollX = rollY * SCALE_FACTOR;
-    intRollX = rollZ * SCALE_FACTOR;
+    intRollY = rollY * SCALE_FACTOR;
+    intRollZ = rollZ * SCALE_FACTOR;
     intMagX  = magX  * SCALE_FACTOR;
     intMagY  = magY  * SCALE_FACTOR;
     intMagZ  = magZ  * SCALE_FACTOR;
@@ -136,13 +142,23 @@ process9dofRecord(char *record)
 void
 setAndSend(char *fullBuffer, char *start, int x, int y, int z)
 {
-    ssize_t retVal;
+    ssize_t         retVal;
+    struct timeval  now;
 
     sprintf(start, "%d %d %d", x, y, z);
 
     if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s(): buffer to send \"%s\"\n",
                 __func__, fullBuffer);
+    }
+
+    if (LogFP) {
+        gettimeofday(&now, NULL);
+
+        fprintf(LogFP,
+                "%s: LOG %ld.%06ld %s %s \"%s\"\n",
+                MyName, now.tv_sec, now.tv_usec,
+                LogID, LOG_DIR_OUT, fullBuffer);
     }
 
     if ((retVal = sendto(HostInfo.sock, fullBuffer, strlen(fullBuffer), 0,

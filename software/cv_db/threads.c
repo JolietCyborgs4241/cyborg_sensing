@@ -134,6 +134,12 @@ processSensorData(int sock)
 
         buffer[readRet] = '\0';
 
+        if (LogFP) { 
+            fprintf(LogFP, "%s LOG %ld.%06ld %s %s \"%s\"\n",
+                    MyName, now.tv_sec, now.tv_usec,
+                    LogID, LOG_DIR_IN, buffer);
+        }
+
         if (DebugLevel >= DEBUG_INFO) {
             fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
                     MsgNum,  buffer, strlen(buffer));

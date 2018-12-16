@@ -26,6 +26,7 @@ extern  FILE        *DebugFP;
 
 /// Global FP for Logging output
 extern  FILE        *LogFP;
+extern  char        *LogID;
 
 /// time-to-live for sensor data
 ///

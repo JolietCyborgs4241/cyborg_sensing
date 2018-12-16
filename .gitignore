@@ -18,3 +18,7 @@ software/servers/9dof_razor_imu/LOG
 software/servers/9dof_razor_imu/9dof_server
 
 software/servers/9dof_razor_imu/DEBUG
+
+software/cv_db/DEBUG
+
+software/cv_db/LOG
