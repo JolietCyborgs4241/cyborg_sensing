@@ -14,3 +14,7 @@ software/test/sensor_records\.out
 *.swp
 
 software/servers/9dof_razor_imu/LOG
+
+software/servers/9dof_razor_imu/9dof_server
+
+software/servers/9dof_razor_imu/DEBUG
