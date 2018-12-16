@@ -10,3 +10,7 @@ software/test/prep_data
 software/test/run_tests
 
 software/test/sensor_records\.out
+
+*.swp
+
+software/servers/9dof_razor_imu/LOG

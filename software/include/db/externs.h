@@ -20,8 +20,12 @@ extern  int         Ttl;
 /// 1 - INFO
 /// 2 - DETAILED
 extern  int         DebugLevel;
+
 /// Global FP for Debug output
 extern  FILE        *DebugFP;
+
+/// Global FP for Logging output
+extern  FILE        *LogFP;
 
 /// time-to-live for sensor data
 ///

@@ -53,7 +53,7 @@ init(int argc, char **argv)
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
     HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
 
-    while ((c = getopt(argc, argv, "h:p:D:d:t:")) != -1) {
+    while ((c = getopt(argc, argv, "h:p:D:d:t:l:")) != -1) {
 
         switch (c) {
 
@@ -120,7 +120,17 @@ init(int argc, char **argv)
                 exit(1);
             }
 
-            setbuf(DebugFP, (char *)NULL);
+            setbuf(DebugFP, (char *)NULL);      // no buffering
+
+            break;
+
+        case 'l':
+            if ((LogFP = fopen(optarg, "w")) == (FILE *)NULL) {
+                fprintf(stderr, "%s: error: cannot open log file \"%s\"\n", MyName, optarg);
+                exit(1);
+            }
+
+            setbuf(LogFP, (char *)NULL);      // no buffering
 
             break;
 
@@ -129,7 +139,7 @@ init(int argc, char **argv)
             exit(1);
             break;
 
-       default:
+        default:
             fprintf(stderr, "?? getopt returned character code 0x%x ??\n", c);
         }
     }
