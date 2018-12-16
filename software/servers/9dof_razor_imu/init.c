@@ -45,6 +45,8 @@ static  int         openSerialPort(char *, int);
 ///
 /// -D Debug level
 ///
+/// -l Log output file
+///
 /// Also opens UDP socket for sending messages to database
 void
 init(int argc, char **argv)
@@ -316,6 +318,6 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-I ID] [-S SubID] [-c 9dof comm port] [-s speed] [-d debug file ] [-D 0|1|2|3]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-I ID] [-S SubID] [-c 9dof comm port] [-s speed] [-d debug file ] [-D 0|1|2|3] [ -l log file ]\n",
             MyName, MyName);
 }
