@@ -128,4 +128,6 @@ recvSensorDataThread(void *sensor)
         fprintf(LogFP, "%s(): error: read failure from serial port \"%s\" (%s)\n",
                 __func__, thisSensor->serialPort, strerror(errno));
     }
+
+    return NULL;
 }
