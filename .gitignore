@@ -19,3 +19,9 @@ software/servers/9dof_razor_imu/DEBUG
 software/cv_db/LOG
 software/servers/gen_sss/DEBUG
 
+
+*.plist
+
+software/servers/gen_sss/gen_sss
+
+software/servers/9dof_razor_imu/9dof_server\.dSYM/
