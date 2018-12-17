@@ -12,3 +12,10 @@ software/test/run_tests
 software/test/sensor_records\.out
 
 software/cv_db/DEBUG
+*.swp
+software/servers/9dof_razor_imu/LOG
+software/servers/9dof_razor_imu/9dof_server
+software/servers/9dof_razor_imu/DEBUG
+software/cv_db/LOG
+software/servers/gen_sss/DEBUG
+

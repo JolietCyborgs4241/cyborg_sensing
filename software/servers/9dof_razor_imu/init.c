@@ -1,6 +1,7 @@
-//    cv_db_init.c
+//    9dof init.c
 //
-//    vision processor initialization
+//    server for 9 degrees of freedom sensor
+//
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,41 +20,45 @@
 #include "cv.h"
 #include "cv_net.h"
 #include "sensors.h"
-#include "db/externs.h"
+#include "9dof/externs.h"
 
 
 
 
-static  void        usage(), openIncomingPort(HOST_INFO *),
+static  void        usage(), openOutgoingPort(HOST_INFO *),
                     dumpConfig();
+
+static  int         openSerialPort(char *, int);
 
 
 /// \brief process command line and perform other initializations
 ///
-/// -h Host IP
+/// -h Host IP of database
 ///
-/// -p Host port
+/// -p Host port of database
 ///
-/// -t TTL (seconds - 0 disables any purging)
+/// -c serial port to read from
+///
+/// -s serial port speed
 ///
 /// -d Debug output file
 ///
 /// -D Debug level
 ///
-/// Also opens UDP socket for receiving camera messages
+/// -l Log output file
+///
+/// Also opens UDP socket for sending messages to database
 void
 init(int argc, char **argv)
 
 {
     int c, ttl;
 
-    gettimeofday(&StartTime, NULL);
-
     // clear HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
     HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
 
-    while ((c = getopt(argc, argv, "h:p:D:d:t:l:")) != -1) {
+    while ((c = getopt(argc, argv, "h:p:c:s:D:d:t:l:I:S:")) != -1) {
 
         switch (c) {
 
@@ -75,23 +80,24 @@ init(int argc, char **argv)
             }
             break;
 
-        case 't':
-            ttl = atoi(optarg);
-            if (ttl < 0) {
-                fprintf(stderr, "%s: error: TTL value must be >= 0\n",
+        case 'I':
+            SensorId = optarg;
+            break;
+
+        case 'S':
+            SensorSubId = optarg;
+            break;
+
+        case 'c':
+            SerialPort = optarg;
+            break;
+
+        case 's':
+            SerialSpeed = atoi(optarg);
+            if (SerialSpeed < 0) {  // other checks happen later
+                fprintf(stderr, "%s: error: serial port speed value must be >= 0\n",
                         MyName);
                 exit(1);
-            }
-
-            // set all sensor TTLs to the same for now
-            TTLS    *ttlPtr = SensorTtls;
-
-            while (ttlPtr->sensor) {
-                ttlPtr->ttlSecs  = ttl;
-                ttlPtr->ttlUsecs = 0;
-#warning Need to add floating point value TTL support
-#warning Need to add per SENSOR TTL setting configuration support
-                ttlPtr++;
             }
             break;
 
@@ -144,11 +150,26 @@ init(int argc, char **argv)
         }
     }
 
-    initMutexes();
+    if (SerialPort == NULL) {
+        fprintf(stderr, "%s: error: serial port (-c) must be specified\n",
+                MyName);
+        exit(1);
+    }
 
-    initDb();
+    if (SerialSpeed == 0) {
+        fprintf(stderr, "%s: error: serial speed (-s) must be specified\n",
+                MyName);
+        exit(1);
+    }
 
-    openIncomingPort(&HostInfo);
+    if (strlen(SensorId) == 0) {
+        fprintf(stderr, "%s: error: SensorID must be specified\n",
+                MyName);
+        exit(1);
+    }
+    openOutgoingPort(&HostInfo);
+
+    SerialFd = openSerialPort(SerialPort, SerialSpeed);
 
     if (DebugLevel) {   // any debug level
         dumpConfig();
@@ -162,19 +183,11 @@ static void
 dumpConfig()
 {
     fprintf(DebugFP, "DumpConfig():\n");
-    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t\t%d\n",
+    fprintf(DebugFP, "Network:\n\tSending to:\t%s:%d\n\tSock fd:\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
 
-    fprintf(DebugFP, "\nTTLs:\n");
-
-    TTLS *ttlPtr = SensorTtls;
-
-    while (ttlPtr->sensor) {
-        fprintf(DebugFP, "\tSensor \'%c\':\t%d.%06d\n",
-                ttlPtr->sensor, ttlPtr->ttlSecs, ttlPtr->ttlUsecs);
-        ttlPtr++;
-    }
+    fprintf(DebugFP, "Serial:\t\"%s\" @ %d baud\n", SerialPort, SerialSpeed);
 
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
@@ -201,15 +214,87 @@ dumpConfig()
 
 
 
-/// \brief Open UDP port for receiving camera messages
+/// \brief Open UDP port for receiving 9dof sensor messages
+///
+/// sets to 8n1 @ specified speed
+//
+/// returns fd
+static int
+openSerialPort(char *port, int speed)
+{
+    int             fd;
+    speed_t         speedVal;
+    struct termios  settings;
+
+    if ((fd = open(port, O_RDWR)) == -1) {
+        fprintf(stderr, "%s: error: cannot open 9dof port \"%s\" (%s)\n",
+                MyName, port, strerror(errno));
+        exit(1);
+    }
+
+    if (tcgetattr(fd, &settings) == -1) {
+        fprintf(stderr,
+                "%s: error: cannot get settings for 9dof port \"%s\"(%s)\n",
+                MyName, port, strerror(errno));
+        exit(1);
+    }
+
+    switch (speed) {
+
+    case 9600:
+        speedVal = B9600;
+        break;
+
+    case 19200:
+        speedVal = B19200;
+        break;
+
+    case 38400:
+        speedVal = B38400;
+        break;
+
+    case 57600:
+        speedVal = B57600;
+        break;
+
+    case 115200:
+        speedVal = B115200;
+        break;
+
+    case 230400:
+        speedVal = B230400;
+        break;
+
+    default:
+        fprintf(stderr, "%s: error: invalid serial port speed (%d)\n",
+                MyName, speed);
+        exit(1);
+    }
+
+    cfsetspeed(&settings, speedVal);
+
+    settings.c_cflag &= ~(CSIZE | PARENB);
+    settings.c_cflag  = CS8 | CLOCAL;
+
+    if (tcsetattr(fd, TCSANOW, &settings) == -1) {
+        fprintf(stderr,
+                "%s: error: cannot set settings for 9dof port \"%s\"(%s)\n",
+                MyName, port, strerror(errno));
+        exit(1);
+    }
+
+    return fd;
+}
+
+
+
+/// \brief Open UDP port for sending messages to database
 ///
 /// Create socket
 ///
-/// Bind to appropriate address
-///
 /// Socket is set in HOST_INFO structure
 static void
-openIncomingPort(HOST_INFO *host)
+openOutgoingPort(HOST_INFO *host)
 {
     if ((host->sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {      // UDP
         fprintf(stderr, "%s: error: cannot open socket (%s)\n",
@@ -221,13 +306,6 @@ openIncomingPort(HOST_INFO *host)
     inet_pton(AF_INET, host->hostIPString, &(host->hostIP.sin_addr.s_addr));
     host->hostIP.sin_port   = htons(host->hostPort);
     host->hostIP.sin_family = AF_INET; // Use IPv4
-
-    if (bind(host->sock, (struct sockaddr *)&(host->hostIP),
-             sizeof(struct sockaddr_in)) == -1) {
-        fprintf(stderr, "%s: error: cannot bind socket (%s)\n",
-                MyName, strerror(errno));
-        exit(1);
-    }
 }
 
 
@@ -240,6 +318,6 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2|3]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-I ID] [-S SubID] [-c 9dof comm port] [-s speed] [-d debug file ] [-D 0|1|2|3] [ -l log file ]\n",
             MyName, MyName);
 }

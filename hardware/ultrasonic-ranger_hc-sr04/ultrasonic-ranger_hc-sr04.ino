@@ -13,6 +13,11 @@
 #define ID_BIT2_PIN       2
 
 #define OFFSET_BIT0_PIN   9
+#define OFFSET_BIT1_PIN   8
+#define OFFSET_BIT2_PIN   7
+#define OFFSET_BIT3_PIN   6
+#define OFFSET_BIT4_PIN   5
+
 
 #define TRIG_PIN          10
 #define ECHO_PIN          11
@@ -30,12 +35,17 @@ int activeState;
 
 
 void setup() {
-  //i id setting pins
+  // id setting pins
   pinMode(ID_BIT0_PIN, INPUT_PULLUP);
   pinMode(ID_BIT1_PIN, INPUT_PULLUP);
   pinMode(ID_BIT2_PIN, INPUT_PULLUP);
 
   // offset setting pins
+  pinMode(OFFSET_BIT0_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT1_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT2_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT3_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT4_PIN, INPUT_PULLUP);
   
   
   // ultrasonic sensor control pins
@@ -75,6 +85,29 @@ void loop() {
     id = id | 0b00000100;
   }
 
+  offset = 0;       //clear all bits
+
+  if (digitalRead(OFFSET_BIT0_PIN) == LOW) {
+    offset = offset | 0b00000001;
+  }
+
+  if (digitalRead(OFFSET_BIT1_PIN) == LOW) {
+    offset = offset | 0b00000010; 
+  }
+
+  if (digitalRead(OFFSET_BIT2_PIN) == LOW) {
+    offset = offset | 0b00000100; 
+  }
+
+  if (digitalRead(OFFSET_BIT3_PIN) == LOW) {
+    offset = offset | 0b00001000; 
+  }
+
+  if (digitalRead(OFFSET_BIT4_PIN) == LOW) {
+    offset = offset | 0b00010000; 
+  }
+
+
   // Clears the TRIG_PIN
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
@@ -110,8 +143,8 @@ void loop() {
   // We know the speed of sound (roughly), the time it took to cover some
   // distance, and then using the power of math, we can calculate how far
   // of a distance the sound wave covered
-
-  distanceCm = duration * SPEED_OF_SOUND_CM_PER_USEC / 2;
+  //
+  distanceCm = (duration * SPEED_OF_SOUND_CM_PER_USEC / 2 - offset);
 
   // output string should look like "R <id> x <distancecm (adjusted)>"
   Serial.print("R ");

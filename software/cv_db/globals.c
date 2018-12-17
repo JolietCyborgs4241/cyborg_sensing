@@ -53,6 +53,10 @@ int         DebugLevel = DEBUG_OFF;
 /// it's standard error unless it gets as part of the command line (-d option)
 FILE        *DebugFP;                               // set to stderr at startup
 
+/// Log file
+FILE        *LogFP = NULL;
+char        *LogID = "DB";
+
 
 // Global start time
 struct timeval StartTime;
