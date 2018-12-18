@@ -133,6 +133,40 @@ This module, cv_status, drives a series of human-visible LEDs on the robot that 
 
 This can provide visual feedback to an observer as to the status and operation of the visual-processing system.  All of the different components can send messages to cv_status to control their respective indicators.
 
+##### Visual Status Display Information
+
+To display different types of status indications, we have two+ basic tools at our disposal:
+
+* Whether an LED is on or off
+
+* What color it is if it is on
+
+* What brightness it is when it is on (I consider this the "+" part; it can be very hard to distinguish brightness levels via the human eye to a point where an observer could clearly differentiate brightness of an LED under a range of differnt or even varying lighting conditions so let's leave this one off the table and stick with on/off and color for now)
+
+In regards to types of status, there are two types of status that are most valuable to display
+
+* Is something running?
+
+* If it's running, what state is it in?
+
+In addition to the status, we want to be able to distinguish the status for sifferent system components in a clear way; using dedicated LED(s) for specific system components would help there.  Consider something like:
+
+* First LED on the left is the interface to the RoboRio
+
+* First LED on the right is the sensor database
+
+* The next two LEDs in from the right are the camera servers
+
+* and so on...
+
+If something important enough to warrant displaying on the status bar isn't running, we probably want to know, in a very clear way.  We want to know if something is expected to be running is actually running and even more importantly, we want to know if something that is expected to be running **ISN'T** running.
+
+So how do we do that?  How do we have something that *isn't* running *tell* us that it *isn't* running.  Well, we don't do that directly (because we can't).  What we can do is use a concept called a *timeout*.  A *timeout* is a counter that runs down and if the counter runs out, something happens.  Sometimes this running down is deliberate (like an alarm) but sometimes it's intended to b a fail safe part of the system design.  Some types of train locomotives have a periodic alarm that goes off which requires the locomotive engineer to hit a button to show they are still alert; together with the alarm is a timeout which if it expires without the engineer hitting the button, the train's brakes are automatically applied.  Hitting the button resets the timeout and prevents its ultimate action from occurring.
+
+We can do the same with the visual status display.  In this case, we'll light all of the LEDs red unless we get an explicit update from the corresponding part of the system to change it to another color.  This will start all the LEDs as red until something happens to change them (we'll discuss how things get changed below).  So what about the *timeout* above?  That is an important part of the entire status display because we'll use a timeout to set a LED back to red to indicate that we've not received a status update from some component within an allotted timeout interval since the last update - we can use a simple value like 1 second provided that we think every component in the system will communicate with the status display server at least that often.  I would estimate that the system would be procesing dozens of sensor readings each second and if each sensor reading updated a corresponding status LED, each system component would be talking to the status display server much more frequently than that.  In this case, if we haven't heard from some system component in 1 second, it's probably dead and no longer working.
+
+We can and will make this configurable so that we specify a reasonable value which doesn't cause too many false alarms.
+
 ### Hardware platform and Environment
 
 ### Other ideas and considerations
