@@ -101,7 +101,11 @@ recvSensorDataThread(void *sensor)
             gettimeofday(&now, NULL);
 
             fprintf(LogFP,
+#ifdef  __APPLE__
+                    "%s: LOG %ld.%06d %s %s \"%s\"\n",
+#else   // ! __APPLE__
                     "%s: LOG %ld.%06ld %s %s \"%s\"\n",
+#endif
                     MyName, now.tv_sec, now.tv_usec,
                     LogID, LOG_DIR_IN, inBuffer);
         }
@@ -124,4 +128,6 @@ recvSensorDataThread(void *sensor)
         fprintf(LogFP, "%s(): error: read failure from serial port \"%s\" (%s)\n",
                 __func__, thisSensor->serialPort, strerror(errno));
     }
+
+    return NULL;
 }
