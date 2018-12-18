@@ -8,6 +8,11 @@
 #define ID_BIT2_PIN       2
 
 #define OFFSET_BIT0_PIN   9
+#define OFFSET_BIT1_PIN   8
+#define OFFSET_BIT2_PIN   7
+#define OFFSET_BIT3_PIN   6
+#define OFFSET_BIT4_PIN   5
+
 
 #define ENABLE_PIN        10
 #define PW_PIN            11
@@ -34,6 +39,11 @@ void setup() {
   pinMode(ID_BIT2_PIN, INPUT_PULLUP);
 
   // offset setting pins
+  pinMode(OFFSET_BIT0_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT1_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT2_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT3_PIN, INPUT_PULLUP);
+  pinMode(OFFSET_BIT4_PIN, INPUT_PULLUP);
   
   
   // ultrasonic sensor control pins
@@ -82,6 +92,25 @@ void loop() {
   if (digitalRead(ID_BIT2_PIN) == LOW) {
     id = id | 0b00000100;
   }
+
+  offset = 0;
+  
+  if (digitalRead(OFFSET_BIT0_PIN) == LOW) {
+    offset = offset | 0b00000001;
+  }
+  if (digitalRead(OFFSET_BIT1_PIN) == LOW) {
+    offset = offset | 0b00000010;
+  }
+  if (digitalRead(OFFSET_BIT2_PIN) == LOW) {
+    offset = offset | 0b00000100;
+  }
+  if (digitalRead(OFFSET_BIT3_PIN) == LOW) {
+    offset = offset | 0b00001000;
+  }
+  if (digitalRead(OFFSET_BIT4_PIN) == LOW) {
+    offset = offset | 0b00010000;
+  }
+
   
   // Sets the Enable pin to HIGH state to start reading
   digitalWrite(ENABLE_PIN, HIGH);
@@ -101,7 +130,7 @@ void loop() {
   // this sensor does the divide by 2 for the distance to and from the
   // target automatically so we don't have to divide it by 2
 
-  distanceCm = duration * SPEED_OF_SOUND_CM_PER_USEC;
+  distanceCm = (duration * SPEED_OF_SOUND_CM_PER_USEC - offset);
 
   // output string should look like "R <id> x <distancecm (adjusted)>"
   Serial.print("R ");
