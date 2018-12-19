@@ -18,5 +18,11 @@ void    cvFree(void *);
 /// (speed is validated between 9600 and 230400 baud)
 int     openSerialPort(char *);
 
+
+
+/// assumes Host_INFO structure is populated as needed
+void    openOutgoingPort(HOST_INFO *);
+void    openIncomingPort(HOST_INFO *);
+
 #endif  /* cyborg_lib.h */
 

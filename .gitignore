@@ -37,3 +37,5 @@ software/lib/memory\.d
 software/lib/serial\.d
 
 software/servers/status/cyborg_stats
+
+software/lib/network\.d
