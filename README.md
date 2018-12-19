@@ -167,6 +167,55 @@ We can do the same with the visual status display.  In this case, we'll light al
 
 We can and will make this configurable so that we specify a reasonable value which doesn't cause too many false alarms.
 
+##### LED Hardware
+
+We can use a strip of [WS2811](https://randomnerdtutorials.com/guide-for-ws2812b-addressable-rgb-led-strip-with-arduino/) RGB LEDs.  These LEDs can display a full mix of RGB colors (Red-Green-Blue) at different intensities using only three wires: power (+5vdc), ground, and one signal wire.  There are a number of good libraries like [FastLED](https://github.com/FastLED) that will let us drive it from an Arduino.  We can drive an arbitrarily long strip of LEDs so long as we have enough power for each LED (about 50mA each at full brightness so a strip of 8 will draw about 400mA max).
+
+For now, let's consider 8 LEDs and see how well it maps to what we want to display.
+
+##### LED Status Encoding
+
+Here are some proposed LED status indications that will help us determine the number of LEDs we might want and what they might indicate
+
+* LED - Sensor Database up and running
+    * Green - running
+
+* LED - Sensor Database Status
+    * Yellow - sensor data being received
+    * Blue - sensor data being queried
+    * Green - mix of both statuses
+    
+* LED - RoboRio Interface up and running
+    * Green - running
+    
+* LED - RoboRio Interface to Sensor Database communications
+    * Yellow - sensor data being received
+    * Blue - sensor data being queried
+    * Green - mix of both statuses
+
+* LED - RoboRio Interface to RoboRio communications
+    * Yellow - commands being sent to RoboRio
+    * Blue - responses from RoboRio
+    * Green - mix of both statuses
+    
+* LED - Main Sensor Server Status
+    * Yellow - sensor data being received
+    * Blue - sensor data being sent to database
+    * Green - mix of both statuses
+
+* LED - Camera Sensor Server Status
+    * Yellow - camera data being received
+    * Blue - camera data being sent to database
+    * Green - mix of both statuses
+    
+* LED - Autonomous system active
+    * Green - autonomous system in control of robot
+    * Off - not lit when not in autonomous mode
+    
+This covers 8 LEDs.  We could stop at that or potentially include a larger number, like 10 LEDs into the robot status display for future expansion.
+
+Suggestions here are welcome.
+
 ### Hardware platform and Environment
 
 ### Other ideas and considerations
