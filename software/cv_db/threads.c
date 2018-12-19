@@ -128,9 +128,9 @@ processSensorData(int sock)
     struct  timeval now, timeDiff;
     float   floatTime;
 
-    gettimeofday(&now, NULL);
-
     if ((readRet = recvfrom(sock, buffer, MAX_SENSOR_READ, 0, (struct sockaddr *)NULL, 0)) > 0) {
+
+        gettimeofday(&now, NULL);
 
         buffer[readRet] = '\0';
 
