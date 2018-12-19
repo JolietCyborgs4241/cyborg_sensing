@@ -39,8 +39,14 @@ FILE        *DebugFP;
 
 /// Log file
 FILE        *LogFP = (FILE *)NULL;
-char        *LogID = "gen_sss";
+char        *LogID = "status";
 
 /// Serial port settings
 char        *SerialPort;        // port@speed
 int         SerialFd;
+
+
+int MsgRateReportingCadence = DEF_MSG_RATE_REPORTING_CADENCE;
+
+
+struct  timeval StartTime;

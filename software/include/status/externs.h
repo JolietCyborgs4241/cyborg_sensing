@@ -30,4 +30,8 @@ extern  char        *LogID;
 extern  char        *SerialPort;
 extern  int         SerialFd;
 
+extern  struct timeval StartTime;
+
+extern  int          MsgRateReportingCadence;
+
 #endif  /* status/externs.h */
