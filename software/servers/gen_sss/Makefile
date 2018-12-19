@@ -5,9 +5,10 @@ CV_INC_DIR	= ../../include
 INC		= -I$(CV_INC_DIR)
 CFLAGS	+= $(INC) -pthread -g $(DEBUG)
 
-LDFLAGS	+= -pthread
+CY_LIBS = -L ../../lib -lcyborgauto
+LDFLAGS	+= -pthread $(CY_LIBS)
 
-SRCS	= gen_sss.c init.c globals.c threads.c utility.c
+SRCS	= gen_sss.c init.c globals.c threads.c
 
 OBJS	= ${SRCS:.c=.o}
 
@@ -26,9 +27,6 @@ init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 			$(CV_INC_DIR)/gen_sss/externs.h
 
 threads.o:	threads.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
-			$(CV_INC_DIR)/gen_sss/externs.h
-
-utility.o:	utility.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 			$(CV_INC_DIR)/gen_sss/externs.h
 
 clean:
