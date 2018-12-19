@@ -33,3 +33,7 @@ software/servers/gen_sss/gen_sss
 *.so
 
 software/lib/memory\.d
+
+software/lib/serial\.d
+
+software/servers/status/cyborg_stats

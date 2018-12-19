@@ -7,7 +7,7 @@ LDFLAGS = -shared  # linking flags
 RM = rm -f  # rm command
 TARGET_LIB = libcyborgauto.so # target lib
 
-SRCS = memory.c
+SRCS = memory.c serial.c
 OBJS = $(SRCS:.c=.o)
 
 
