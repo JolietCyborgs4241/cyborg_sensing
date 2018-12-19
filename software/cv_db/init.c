@@ -24,8 +24,7 @@
 
 
 
-static  void        usage(), openIncomingPort(HOST_INFO *),
-                    dumpConfig();
+static  void        usage(), dumpConfig();
 
 
 /// \brief process command line and perform other initializations
@@ -199,36 +198,6 @@ dumpConfig()
     fprintf(DebugFP, "--------------------------------------\n\n");
 }
 
-
-
-/// \brief Open UDP port for receiving camera messages
-///
-/// Create socket
-///
-/// Bind to appropriate address
-///
-/// Socket is set in HOST_INFO structure
-static void
-openIncomingPort(HOST_INFO *host)
-{
-    if ((host->sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {      // UDP
-        fprintf(stderr, "%s: error: cannot open socket (%s)\n",
-                MyName, strerror(errno));
-        exit(1);
-    }
-
-    memset(&(host->hostIP), 0, sizeof(struct sockaddr_in));
-    inet_pton(AF_INET, host->hostIPString, &(host->hostIP.sin_addr.s_addr));
-    host->hostIP.sin_port   = htons(host->hostPort);
-    host->hostIP.sin_family = AF_INET; // Use IPv4
-
-    if (bind(host->sock, (struct sockaddr *)&(host->hostIP),
-             sizeof(struct sockaddr_in)) == -1) {
-        fprintf(stderr, "%s: error: cannot bind socket (%s)\n",
-                MyName, strerror(errno));
-        exit(1);
-    }
-}
 
 
 

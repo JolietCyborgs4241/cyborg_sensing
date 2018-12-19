@@ -20,15 +20,14 @@
 
 #include "cv.h"
 #include "cv_net.h"
+#include "cyborg_lib.h"
 #include "gen_sss/sensors.h"
 #include "gen_sss/externs.h"
 
 
 
 
-static  void        usage(), openOutgoingPort(HOST_INFO *),
-                    openSerialPort(SENSOR_CONN *),
-                    openSensorConns(), dumpConfig();
+static  void        usage(), openSensorConns(), dumpConfig();
 
 
 /// \brief process command line and perform other initializations
@@ -124,7 +123,6 @@ init(int argc, char **argv)
             }
 
             setbuf(DebugFP, (char *)NULL);      // no buffering
-
             break;
 
         case 'l':
@@ -134,7 +132,6 @@ init(int argc, char **argv)
             }
 
             setbuf(LogFP, (char *)NULL);      // no buffering
-
             break;
 
         case '?':
@@ -210,131 +207,11 @@ static void
 openSensorConns(SENSOR_CONN *ptr)
 {
     while (ptr) {
-        openSerialPort(ptr);
-        ptr = ptr->next;
+        ptr->fd = openSerialPort(ptr->portAtSpeed);
+        ptr     = ptr->next;
     }
 }
 
-
-
-
-/// \brief Open serial port for receiving generic sensor messages
-///
-/// sets to 8n1 @ specified speed
-///
-/// sets fd in passed sensor structure
-///
-/// does modify portAtSpeed string in SENSOR_CONN structure
-static void
-openSerialPort(SENSOR_CONN *sensor)
-{
-    char            *ptr;
-    int             speed, fd;
-    speed_t         speedVal;
-    struct termios  settings;
-
-    sensor->serialPort = sensor->portAtSpeed;
-
-    ptr = sensor->portAtSpeed;
-    while (*ptr && *ptr != '@') {
-        ptr++;
-    }
-
-    if ( ! ptr) {
-        fprintf(stderr, "%s: error: invalid 'port@speed' parameter\n",
-                MyName);
-        exit(1);
-    }
-
-    *ptr = '\0';     // terminate at the @
-    ptr++;          // point to speed
-
-    speed = atoi(ptr);
-
-    switch (speed) {
-
-    case 9600:
-        speedVal = B9600;
-        break;
-
-    case 19200:
-        speedVal = B19200;
-        break;
-
-    case 38400:
-        speedVal = B38400;
-        break;
-
-    case 57600:
-        speedVal = B57600;
-        break;
-
-    case 115200:
-        speedVal = B115200;
-        break;
-
-    case 230400:
-        speedVal = B230400;
-        break;
-
-    default:
-        fprintf(stderr, "%s: error: invalid serial port speed (%d) for port \"%s\"\n",
-                MyName, speed, sensor->serialPort);
-        exit(1);
-
-    }
-
-    if ((fd = open(sensor->serialPort, O_RDWR)) == -1) {
-        fprintf(stderr, "%s: error: cannot open gen_sss port \"%s\" (%s)\n",
-                MyName, sensor->serialPort, strerror(errno));
-        exit(1);
-    }
-
-    if (tcgetattr(fd, &settings) == -1) {
-        fprintf(stderr,
-                "%s: error: cannot get settings for gen_sss port \"%s\" (%s)\n",
-                MyName, sensor->serialPort, strerror(errno));
-        exit(1);
-    }
-
-    cfsetspeed(&settings, speedVal);
-
-    settings.c_cflag &= ~(CSIZE | PARENB);
-    settings.c_cflag  = CS8 | CLOCAL;
-
-    if (tcsetattr(fd, TCSANOW, &settings) == -1) {
-        fprintf(stderr,
-                "%s: error: cannot set settings for gen_sss port \"%s\" (%s)\n",
-                MyName, sensor->serialPort, strerror(errno));
-        exit(1);
-    }
-
-    sensor->fd = fd;
-}
-
-
-
-/// \brief Open UDP port for sending messages to database
-///
-/// Create socket
-///
-/// Socket is set in HOST_INFO structure
-///
-/// every sensor thread uses this socket
-static void
-openOutgoingPort(HOST_INFO *host)
-{
-    if ((host->sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {      // UDP
-        fprintf(stderr, "%s: error: cannot open socket (%s)\n",
-                MyName, strerror(errno));
-        exit(1);
-    }
-
-    memset(&(host->hostIP), 0, sizeof(struct sockaddr_in));
-    inet_pton(AF_INET, host->hostIPString, &(host->hostIP.sin_addr.s_addr));
-    host->hostIP.sin_port   = htons(host->hostPort);
-    host->hostIP.sin_family = AF_INET; // Use IPv4
-}
 
 
 
