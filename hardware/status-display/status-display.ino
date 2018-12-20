@@ -54,7 +54,21 @@ setup() {
 void
 updateLEDs() {
 
-  
+  int i;
+
+  for (i = 0 ; i < MAX_LEDS ; i++) {
+
+    Serial.print("LED[");
+    Serial.print(i);
+    Serial.print("] R:");
+    Serial.print(leds[i].red);
+    Serial.print(", G:");
+    Serial.print(leds[i].green);
+    Serial.print(", B:");
+    Serial.print(leds[i].blue);
+    Serial.print(" TS:");
+    Serial.println(leds[i].timestamp);
+  }
 }
 
 int
