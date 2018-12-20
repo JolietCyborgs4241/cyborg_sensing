@@ -40,6 +40,10 @@ typedef struct {
     int     sock;
 } HOST_INFO;
 
+void openOutgoingPort(HOST_INFO *host);
+
+void openIncomingPort(HOST_INFO *host);
+
 
 
 #endif  /* cv_net.h */
