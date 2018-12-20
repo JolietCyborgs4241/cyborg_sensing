@@ -104,7 +104,8 @@ processStatusUpdate(int sock, int serial)
         }
 
     } else {
-        fprintf(DebugFP, "%s(%d): read error \"%s\"\n", __func__, sock, strerror(errno));
+        fprintf(DebugFP, "%s(%d, %d): read error \"%s\"\n",
+                __func__, sock, serial, strerror(errno));
     }
 }
 
