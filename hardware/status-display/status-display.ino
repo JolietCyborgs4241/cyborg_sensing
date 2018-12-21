@@ -1,41 +1,87 @@
+#include <bitswap.h>
+#include <chipsets.h>
+#include <color.h>
+#include <colorpalettes.h>
+#include <colorutils.h>
+#include <controller.h>
+#include <cpp_compat.h>
+#include <dmx.h>
+#include <FastLED.h>
+#include <fastled_config.h>
+#include <fastled_delay.h>
+#include <fastled_progmem.h>
+#include <fastpin.h>
+#include <fastspi.h>
+#include <fastspi_bitbang.h>
+#include <fastspi_dma.h>
+#include <fastspi_nop.h>
+#include <fastspi_ref.h>
+#include <fastspi_types.h>
+#include <hsv2rgb.h>
+#include <led_sysdefs.h>
+#include <lib8tion.h>
+#include <noise.h>
+#include <pixelset.h>
+#include <pixeltypes.h>
+#include <platforms.h>
+#include <power_mgt.h>
+
 /*
  * Status display driver code
  *
  */
 
-#define OUTPUT_BAUD_RATE  115200
+#define SERIAL_BAUD_RATE  115200
 
 #define ACTIVE_PIN        13    // heartbeat display
 
-#define MAX_LEDS          10
+#define NUM_LEDS    10
+
+#define LED_PIN     5
+#define BRIGHTNESS  255
+#define LED_TYPE    WS2811
+#define COLOR_ORDER GRB
+
+CRGB leds[NUM_LEDS];
+
+#define UPDATES_PER_SECOND 10
+
 
 #define LED_TIMEOUT       3000  // msecs - goes red if no updates
 
-typedef struct {
-  char  red, green, blue;       // intensity values for each color
-  int   timestamp;              // milliseconds at last update
-} LED_STATE;
-
-LED_STATE leds[MAX_LEDS];
-
-
+long  timestamps[NUM_LEDS];       // array to track timestamps
+int   timeout = LED_TIMEOUT;      // timeout is changable with T command
 
 int activeState;
+
+
+CRGBPalette16 currentPalette;
+TBlendType    currentBlending;
+
+extern CRGBPalette16 myRedWhiteBluePalette;
+extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 
 
 void
 setup() {
 
-  int i;
+ int i;
+ 
+  delay(3000); // power-up safety delay
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.setBrightness(BRIGHTNESS);
+    
+  currentPalette = RainbowColors_p;
+  currentBlending = LINEARBLEND;
 
   // all LEDs start at full on red
   
-  for (i = 0 ; i < MAX_LEDS ; i++) {
-    leds[i].red = 255;
-    leds[i]. green = 0;
-    leds[i].blue = 0;
+  for (i = 0 ; i < NUM_LEDS ; i++) {
+    leds[i].r = 255;
+    leds[i].g = 0;
+    leds[i].b = 0;
 
-    leds[i].timestamp = 0;
+    timestamps[i] = 0;
   }
   
   // heartbeat LED pin
@@ -43,9 +89,7 @@ setup() {
 
   activeState = 0;
   
-  Serial.begin(OUTPUT_BAUD_RATE); // Starts the serial communication
-
-  updateLEDs();                    // display the initial state
+  Serial.begin(SERIAL_BAUD_RATE); // Starts the serial communication
 }
 
 
@@ -54,9 +98,10 @@ setup() {
 void
 updateLEDs() {
 
+#ifdef  DEBUG
   int i;
 
-  for (i = 0 ; i < MAX_LEDS ; i++) {
+  for (i = 0 ; i < NUM_LEDS ; i++) {
 
     Serial.print("LED[");
     Serial.print(i);
@@ -67,8 +112,11 @@ updateLEDs() {
     Serial.print(", B:");
     Serial.print(leds[i].blue);
     Serial.print(" TS:");
-    Serial.println(leds[i].timestamp);
+    Serial.println(timestamps[i]);
   }
+#endif
+
+  FastLED.show();
 }
 
 int
@@ -86,7 +134,7 @@ int retVal;
       retVal = 255;             // max on
       break;
 
-    default:                    // 16 brightness level
+    default:                    // 16 brightness levels
                                 // 'a' -> 'p'
       retVal = (code - 'a') * 16 + 1;
   }
@@ -99,46 +147,69 @@ int retVal;
 }
 
 
-
+#define RED_BYTE      0
+#define GREEN_BYTE    1
+#define BLUE_BYTE     2
 
 
 void
 loop() {
 
-  int   i, now, ledOffset;
-  char  red, green, blue;
+  int   i, ledOffset, inChar;
+  long  now;
+  char  colors[3];
 
   if (Serial.available() > 0) {     // there is data
+
+    inChar = Serial.read();
+
+    switch (inChar) {
+
+      case 'T':                                 // Timeout change
+        inChar = Serial.read();                 // get the parameter
+        
+        if (inChar >= '1' && inChar <= '9') {   // settable from 1-9 seconds
+          timeout = (inChar - '0') * 1000;      // convert to binary milliseconds
+        }
+        break;
+
+      case '0':                                 // LED command
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+
+        ledOffset = inChar - '0';               // get LED # (adjust from ASCII)
+
+        Serial.readBytes((char *)&leds[ledOffset].red, 3);    // get the color values
     
-    while (Serial.read() != '<') {  // find the start char - should
-                                    // be first unless we're out of sync!
-      // keep looking for it...
-    }
-
-    ledOffset = Serial.read() - '0';              // get LED # (adjust from ASCII)
+/*        colors[RED_BYTE]   = decodeLEDBrightness(colors[RED_BYTE]);   // get brightness
+        colors[GREEN_BYTE] = decodeLEDBrightness(colors[GREEN_BYTE]); // save in case packet
+        colors[BLUE_BYTE]  = decodeLEDBrightness(colors[BLUE_BYTE]);  // if bad, don't change color
     
-    red   = decodeLEDBrightness(Serial.read());   // get brightness for each color
-    green = decodeLEDBrightness(Serial.read());
-    blue  = decodeLEDBrightness(Serial.read());   // save in case this packet is malformed
-
-    if (Serial.read() == '>') {                   // check for the end char,
-                                                  // bail if not '>'
-      leds[ledOffset].red   = red;
-      leds[ledOffset].green = green;              // use the saved values
-      leds[ledOffset].blue  = blue;
-
-      leds[ledOffset].timestamp = millis();       // set time when last changed
+        if (Serial.read() == '>') {                   // check for the end char,
+                                                      // don't change if not '>'
+          leds[ledOffset].red   = colors[RED_BYTE];
+          leds[ledOffset].green = colors[GREEN_BYTE];
+          leds[ledOffset].blue  = colors[BLUE_BYTE];
+*/
+          timestamps[ledOffset] = millis();       // set time when last changed
+//        }
+        break;
     }
-
-    // seem to have received a valid status update
   }
 
   // check for timed out LEDs
 
-  now - millis();
+  now = millis();
   
-  for (i = 0 ; i < MAX_LEDS ; i++) {
-    if ((now - leds[i].timestamp) > LED_TIMEOUT) {
+  for (i = 0 ; i < NUM_LEDS ; i++) {
+    if ((now - timestamps[i]) > timeout) {
       leds[i].red   = 255;  // max red
       leds[i].green = 0;    // and only red
       leds[i].blue  = 0;
