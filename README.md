@@ -212,7 +212,7 @@ Here are some proposed LED status indications that will help us determine the nu
     * Green - autonomous system in control of robot
     * Off - not lit when not in autonomous mode
     
-This covers 8 LEDs.  We could stop at that or potentially include a larger number, like 10 LEDs into the robot status display for future expansion.
+This covers 8 LEDs.  We could stop at that or potentially include a larger number, like 10 LEDs into the robot status display for future expansion (**NEWS FLASH**:  the hardware is going to have 10 LEDs on it and the communications protocol between the Raspberry Pi and the LED driver module will accomodate 16 LEDs).
 
 Suggestions here are welcome.
 
