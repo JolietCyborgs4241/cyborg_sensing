@@ -41,3 +41,5 @@ software/servers/status/cyborg_stats
 software/lib/network\.d
 
 software/lib/status\.d
+
+\.DS_Store

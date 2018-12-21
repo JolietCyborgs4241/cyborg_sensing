@@ -121,64 +121,37 @@ updateLEDs() {
 
 
 
-#define RED_BYTE      0
-#define GREEN_BYTE    1
-#define BLUE_BYTE     2
+#define RED_BYTE        0
+#define GREEN_BYTE      1
+#define BLUE_BYTE       2
+
+typedef struct  {
+  unsigned char  colors[3];
+} CYBORG_PALETTE;
+
+
+CYBORG_PALETTE  statusPalette[] =  { {   0,   0,   0 },     // off
+                                     { 255,   0,   0 },     // red
+                                     {   0, 255,   0 },     // green
+                                     {   0,   0, 255 },     // blue
+                                     { 255, 255,   0 },     // yellow
+                                     { 255,   0, 255 },     // purple
+                                     { 255, 128,   0 },     // orange
+                                     { 255, 255, 255 } };   // white
+
+#define LED_CMD_MASK      0xf0
+#define COLOR_MASK        0x0f
+#define TIMEOUT_MASK      0x0f
+
+#define TIMEOUT_CMD       0xf0
 
 
 void
-decodeLEDColor(unsigned char code, unsigned char *colors) {
+decodeLEDColor(unsigned char cmd, unsigned char *colors) {
 
-  switch (code) {
-
-    case 'R':   // red
-      colors[RED_BYTE]   = 255;
-      colors[GREEN_BYTE] = 0;
-      colors[BLUE_BYTE]  = 0;
-      break;
-      
-    case 'G':   // green
-      colors[RED_BYTE]   = 0;
-      colors[GREEN_BYTE] = 255;
-      colors[BLUE_BYTE]  = 0;
-      break;
-      
-    case 'B':   // blue
-      colors[RED_BYTE]   = 0;
-      colors[GREEN_BYTE] = 0;
-      colors[BLUE_BYTE]  = 255;
-      break;
-      
-    case 'Y':   // yellow
-      colors[RED_BYTE]   = 255;
-      colors[GREEN_BYTE] = 255;
-      colors[BLUE_BYTE]  = 0;
-      break;
-      
-    case 'P':   // purple
-      colors[RED_BYTE]   = 255;
-      colors[GREEN_BYTE] = 0;
-      colors[BLUE_BYTE]  = 255;
-      break;
-
-    case 'W':   // white
-      colors[RED_BYTE]   = 255;
-      colors[GREEN_BYTE] = 255;
-      colors[BLUE_BYTE]  = 255;
-      break;
-
-    case 'O':   // orange
-      colors[RED_BYTE]   = 255;
-      colors[GREEN_BYTE] = 128;
-      colors[BLUE_BYTE]  = 0;
-      break;
-
-    case 'X':   // off
-      colors[RED_BYTE]   = 0;
-      colors[GREEN_BYTE] = 0;
-      colors[BLUE_BYTE]  = 0;
-      break;
-  }
+      colors[RED_BYTE]   = statusPalette[COLOR_MASK & cmd].colors[RED_BYTE];
+      colors[GREEN_BYTE] = statusPalette[COLOR_MASK & cmd].colors[GREEN_BYTE];
+      colors[BLUE_BYTE]  = statusPalette[COLOR_MASK & cmd].colors[BLUE_BYTE];
 }
 
 
@@ -187,68 +160,53 @@ decodeLEDColor(unsigned char code, unsigned char *colors) {
 void
 loop() {
 
-  int   i, ledOffset, inChar;
+  int   ledOffset, timeoutOffset, inChar;
   long  now;
-  char  colors[3];
 
-  if (Serial.available() > 0) {     // there is data
+  if (Serial.available() > 0) {          // there is data
 
     inChar = Serial.read();
 
-    switch (inChar) {
+    if ((inChar & LED_CMD_MASK) == TIMEOUT_CMD) {
 
-      case 'T':                                 // Timeout change
-        inChar = Serial.read();                 // get the parameter
-        
-        if (inChar >= '1' && inChar <= '9') {   // settable from 1-9 seconds
-          timeout = (inChar - '0') * 1000;      // convert to binary milliseconds
-        }
-        break;
+      timeout = (inChar & TIMEOUT_MASK) * 1000;
 
-      case '0':                                 // LED command
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
+    } else {
 
-        ledOffset = inChar - '0';               // get LED # (adjust from ASCII)
+      ledOffset = inChar & LED_CMD_MASK;
+      
+      decodeLEDColor(inChar, &leds[ledOffset].red);
 
-        inChar = Serial.read();
-        decodeLEDColor(inChar, &leds[ledOffset].red);
-        //Serial.readBytes((char *)&leds[ledOffset].red, 3);    // get the color code
-    
-/*        colors[RED_BYTE]   = decodeLEDBrightness(colors[RED_BYTE]);   // get brightness
-        colors[GREEN_BYTE] = decodeLEDBrightness(colors[GREEN_BYTE]); // save in case packet
-        colors[BLUE_BYTE]  = decodeLEDBrightness(colors[BLUE_BYTE]);  // if bad, don't change color
-    
-        if (Serial.read() == '>') {                   // check for the end char,
-                                                      // don't change if not '>'
-          leds[ledOffset].red   = colors[RED_BYTE];
-          leds[ledOffset].green = colors[GREEN_BYTE];
-          leds[ledOffset].blue  = colors[BLUE_BYTE];
-*/
-          timestamps[ledOffset] = millis();       // set time when last changed
-//        }
-        break;
+      timestamps[ledOffset] = millis();   // set time when last changed
+
     }
   }
 
   // check for timed out LEDs
+  //
+  // we get here frequentky enough that we don't need to check the
+  // entire list of LEDs every single time so we keep an offset and
+  // check a specific LED each time through the loop
+  //
+  // this is still sub-second responsive and prevents us from wasting a lot of time
+  // going over the whole list every time
+  //
+  // this gets us back to handling the serial data faster to minimize the chances
+  // of overrunning our 64 byte buffer for incoming serial data
 
+  if (timeoutOffset > NUM_LEDS) {
+    timeoutOffset = 0;
+  }
+  
   now = millis();
   
-  for (i = 0 ; i < NUM_LEDS ; i++) {
-    if ((now - timestamps[i]) > timeout) {
-      leds[i].red   = 255;  // max red
-      leds[i].green = 0;    // and only red
-      leds[i].blue  = 0;
-    }
+  if ((now - timestamps[timeoutOffset]) > timeout) {
+    leds[timeoutOffset].red   = 255;  // max red
+    leds[timeoutOffset].green = 0;    // and only red
+    leds[timeoutOffset].blue  = 0;
   }
+
+  timeoutOffset++;      // look at the next LED next time
 
   updateLEDs();
   
