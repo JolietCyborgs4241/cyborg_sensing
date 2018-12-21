@@ -16,7 +16,6 @@ There are several files in this directory:
         * Can get gerber files after placing an order
         * Only runs under Windows
 * PDF exports of both of the above
-* This is a 100% hardware device which will be driven off of a Raspberry Pi so any software to drive it will live there and not in this directory
 
 ## Hardware Overview
 ### What's it for?
