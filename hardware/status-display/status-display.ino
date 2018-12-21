@@ -119,37 +119,69 @@ updateLEDs() {
   FastLED.show();
 }
 
-int
-decodeLEDBrightness(char code) {
-
-int retVal;
-
-  switch (code) {
-
-    case 'X':
-      retVal = 0;               // off
-      break;
-
-    case 'M':
-      retVal = 255;             // max on
-      break;
-
-    default:                    // 16 brightness levels
-                                // 'a' -> 'p'
-      retVal = (code - 'a') * 16 + 1;
-  }
-
-  if (retVal > 255) {
-    retVal = 255;
-  }
-
-  return retVal;
-}
 
 
 #define RED_BYTE      0
 #define GREEN_BYTE    1
 #define BLUE_BYTE     2
+
+
+void
+decodeLEDColor(unsigned char code, unsigned char *colors) {
+
+  switch (code) {
+
+    case 'R':   // red
+      colors[RED_BYTE]   = 255;
+      colors[GREEN_BYTE] = 0;
+      colors[BLUE_BYTE]  = 0;
+      break;
+      
+    case 'G':   // green
+      colors[RED_BYTE]   = 0;
+      colors[GREEN_BYTE] = 255;
+      colors[BLUE_BYTE]  = 0;
+      break;
+      
+    case 'B':   // blue
+      colors[RED_BYTE]   = 0;
+      colors[GREEN_BYTE] = 0;
+      colors[BLUE_BYTE]  = 255;
+      break;
+      
+    case 'Y':   // yellow
+      colors[RED_BYTE]   = 255;
+      colors[GREEN_BYTE] = 255;
+      colors[BLUE_BYTE]  = 0;
+      break;
+      
+    case 'P':   // purple
+      colors[RED_BYTE]   = 255;
+      colors[GREEN_BYTE] = 0;
+      colors[BLUE_BYTE]  = 255;
+      break;
+
+    case 'W':   // white
+      colors[RED_BYTE]   = 255;
+      colors[GREEN_BYTE] = 255;
+      colors[BLUE_BYTE]  = 255;
+      break;
+
+    case 'O':   // orange
+      colors[RED_BYTE]   = 255;
+      colors[GREEN_BYTE] = 128;
+      colors[BLUE_BYTE]  = 0;
+      break;
+
+    case 'X':   // off
+      colors[RED_BYTE]   = 0;
+      colors[GREEN_BYTE] = 0;
+      colors[BLUE_BYTE]  = 0;
+      break;
+  }
+}
+
+
 
 
 void
@@ -186,7 +218,9 @@ loop() {
 
         ledOffset = inChar - '0';               // get LED # (adjust from ASCII)
 
-        Serial.readBytes((char *)&leds[ledOffset].red, 3);    // get the color values
+        inChar = Serial.read();
+        decodeLEDColor(inChar, &leds[ledOffset].red);
+        //Serial.readBytes((char *)&leds[ledOffset].red, 3);    // get the color code
     
 /*        colors[RED_BYTE]   = decodeLEDBrightness(colors[RED_BYTE]);   // get brightness
         colors[GREEN_BYTE] = decodeLEDBrightness(colors[GREEN_BYTE]); // save in case packet
