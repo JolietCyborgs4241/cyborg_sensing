@@ -56,6 +56,11 @@ main(int argc, char **argv)
 
     cmdToStatusBar = SET_LED_TIMEOUT | (char)LedTtl;
 
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s: sending timeout setting to status bar (0x%x)\n",
+                MyName, cmdToStatusBar);
+    }
+
     retVal = write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
 
     if (retVal == -1) {
@@ -72,6 +77,13 @@ main(int argc, char **argv)
 
         cmdToStatusBar = leds[randLed] | colors[randColor];
 
+        if (DebugLevel >= DEBUG_DETAIL) {
+            fprintf(DebugFP, "%s: randLed = %d, randColot = %d, randDelay = %d\n",
+                    MyName, randLed, randColor, randDelay);
+            fprintf(DebugFP, "%s: cmdToStatusBar 0x%02x\n",
+                    MyName, cmdToStatusBar);
+        }
+
         retVal = write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
 
         if (retVal == -1) {
@@ -80,7 +92,7 @@ main(int argc, char **argv)
             exit(1);
         }
 
-        usleep(randDelay );
+        usleep(randDelay * 1000);       // convert msecs into usecs
     }
 }
 
