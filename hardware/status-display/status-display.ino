@@ -52,7 +52,10 @@ CRGB leds[NUM_LEDS];
 long  timestamps[NUM_LEDS];       // array to track timestamps
 int   timeout = LED_TIMEOUT;      // timeout is changable with T command
 
-int activeState;
+
+#define ACTIVE_COUNT      250     // update the heartbeat LED this many cycles through while() in loop()
+
+int activeState, activeCount;
 
 
 CRGBPalette16 currentPalette;
@@ -165,10 +168,14 @@ loop() {
 
   timeoutOffset = 0;
 
-  while (1 ) {
+  activeCount = ACTIVE_COUNT;
+
+  while (1) {
       if (Serial.available() > 0) {          // there is data
 
       inChar = Serial.read();
+Serial.print("inChar: 0x");
+Serial.println(inChar, HEX);
 
       if ((inChar & LED_CMD_MASK) == TIMEOUT_CMD) {
 
@@ -176,7 +183,7 @@ loop() {
 
       } else {
 
-        ledOffset = inChar & LED_CMD_MASK;
+        ledOffset = (inChar & LED_CMD_MASK) >> 4;
       
         decodeLEDColor(inChar, &leds[ledOffset].red);
 
@@ -187,7 +194,7 @@ loop() {
 
   // check for timed out LEDs
   //
-  // we get here frequentky enough that we don't need to check the
+  // we get here frequently enough that we don't need to check the
   // entire list of LEDs every single time so we keep an offset and
   // check a specific LED each time through the loop
   //
@@ -197,12 +204,14 @@ loop() {
   // this gets us back to handling the serial data faster to minimize the chances
   // of overrunning our 64 byte buffer for incoming serial data
 
-    if (timeoutOffset > NUM_LEDS) {
+    if (timeoutOffset >= NUM_LEDS) {
       timeoutOffset = 0;
     }
   
     now = millis();
-  
+
+    // check the LED pointed to by timeoutOffset this time around
+    
     if ((now - timestamps[timeoutOffset]) > timeout) {
       leds[timeoutOffset].red   = 255;  // max red
       leds[timeoutOffset].green = 0;    // and only red
@@ -213,12 +222,21 @@ loop() {
 
     updateLEDs();
   
-    if (activeState) {
-      digitalWrite(ACTIVE_PIN, LOW);  // turn the light off
-      activeState = 0;
+    if (activeCount) {
+      
+      activeCount--;
+      
     } else {
-      digitalWrite(ACTIVE_PIN, HIGH); // turn light on
-      activeState = 1;
+      
+      if (activeState) {
+        digitalWrite(ACTIVE_PIN, LOW);  // turn the light off
+        activeState = 0;
+      } else {
+        digitalWrite(ACTIVE_PIN, HIGH); // turn light on
+        activeState = 1;
+      }
+
+      activeCount = ACTIVE_COUNT;
     }
   }
 }
