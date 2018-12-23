@@ -137,9 +137,9 @@ CYBORG_PALETTE  statusPalette[] =  { {   0,   0,   0 },     // off
                                      { 255,   0,   0 },     // red
                                      {   0, 255,   0 },     // green
                                      {   0,   0, 255 },     // blue
-                                     { 255, 255,   0 },     // yellow
-                                     { 255,   0, 255 },     // purple
-                                     { 255, 128,   0 },     // orange
+                                     { 160, 160,   0 },     // yellow
+                                     { 220,   0, 160 },     // purple
+                                     { 255, 110,   0 },     // orange
                                      { 255, 255, 255 } };   // white
 
 #define LED_CMD_MASK      0xf0
@@ -174,8 +174,6 @@ loop() {
       if (Serial.available() > 0) {          // there is data
 
       inChar = Serial.read();
-Serial.print("inChar: 0x");
-Serial.println(inChar, HEX);
 
       if ((inChar & LED_CMD_MASK) == TIMEOUT_CMD) {
 
@@ -184,11 +182,13 @@ Serial.println(inChar, HEX);
       } else {
 
         ledOffset = (inChar & LED_CMD_MASK) >> 4;
+
+        if (ledOffset < NUM_LEDS) {          // LED range is OK
       
-        decodeLEDColor(inChar, &leds[ledOffset].red);
+          decodeLEDColor(inChar, &leds[ledOffset].red);
 
-        timestamps[ledOffset] = millis();   // set time when last changed
-
+          timestamps[ledOffset] = millis();   // set time when last changed
+        }
       }
     }
 
