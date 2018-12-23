@@ -22,9 +22,16 @@
 #define STAT_LED_CAM_SENSOR_ACTIVE  0x70
 #define STAT_LED_EXTRA_1            0x80
 #define STAT_LED_EXTRA_2            0x90
+#define STAT_LED_EXTRA_3            0xa0
+#define STAT_LED_EXTRA_4            0xb0
+#define STAT_LED_EXTRA_5            0xc0
+#define STAT_LED_EXTRA_6            0xd0
+#define STAT_LED_EXTRA_7            0xe0
+
+#define SET_LED_TIMEOUT             0xf0
 
 
-/// color palate
+/// color palette
 ///
 /// last 4 bits of LED command
 ///
@@ -53,8 +60,21 @@
 ///
 /// LED, color
 ///
-/// returns 0 if error - otherwise returns number of bytes sent (should be 4)
+/// returns 0 if error - otherwise returns number of bytes sent
 int    sendStatusUpdate(char, char);
+
+#define DEFAULT_LED_TTL         3   // secs
+#define MAX_LED_TTL             15  // secs
+
+
+/// \brief set LED TTL on the status bar (applies to all LEDs)
+///
+/// time (secs)
+///
+/// must be > 0 and <= MAX_LED_TTL
+///
+/// returns 0 if error
+int    sendLedTtl(char);
 
 
 

@@ -55,15 +55,13 @@ openStatusConnection(HOST_INFO *host)
 /// led to set
 /// rgb value to
 int
-sendStatusUpdate(char led, char red, char green, char blue)
+sendStatusUpdate(char led, char color)
 {
     int sockRet;
     STATUS_MSG  status;
 
     status.led   = led;
-    status.red   = red;
-    status.green = green;
-    status.blue  = blue;
+    status.color = color;
 
     if ((sockRet = sendto(localHostInfoCopy.sock, &status, sizeof(status), 0,
                           (struct sockaddr *)&localHostInfoCopy.hostIP,
