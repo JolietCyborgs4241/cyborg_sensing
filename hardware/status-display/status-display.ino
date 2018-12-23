@@ -137,9 +137,9 @@ CYBORG_PALETTE  statusPalette[] =  { {   0,   0,   0 },     // off
                                      { 255,   0,   0 },     // red
                                      {   0, 255,   0 },     // green
                                      {   0,   0, 255 },     // blue
-                                     { 160, 160,   0 },     // yellow
+                                     {  65,  65,   0 },     // yellow
                                      { 220,   0, 160 },     // purple
-                                     { 255, 110,   0 },     // orange
+                                     { 255,  70,   0 },     // orange
                                      { 255, 255, 255 } };   // white
 
 #define LED_CMD_MASK      0xf0
