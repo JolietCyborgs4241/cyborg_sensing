@@ -49,6 +49,9 @@ int         LedTtl = DEFAULT_LED_TTL;
 
 int         MaxDelay = 1000;    // msecs
 
+int         RandomCount = 1000;
+
+
 int MsgRateReportingCadence = DEF_MSG_RATE_REPORTING_CADENCE;
 
 

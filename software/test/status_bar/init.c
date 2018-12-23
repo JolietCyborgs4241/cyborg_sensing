@@ -25,7 +25,7 @@
 
 
 
-extern  int     MaxDelay;
+extern  int     MaxDelay, RandomCount;
 
 static  void    usage(), dumpConfig();
 
@@ -35,6 +35,12 @@ static  void    usage(), dumpConfig();
 ///
 /// -s serial port @ speed to connect to status display hardwaee
 ///
+/// -t LED timeout (sec)
+///
+/// -M  max inter-LED random delay (msec)
+///
+/// -R random sequence count
+//
 /// -d Debug output file
 ///
 /// -D Debug level
@@ -47,7 +53,7 @@ init(int argc, char **argv)
 {
     int c, ttl;
 
-    while ((c = getopt(argc, argv, "s:D:d:l:t:M:")) != -1) {
+    while ((c = getopt(argc, argv, "s:D:d:l:t:R:M:")) != -1) {
 
         switch (c) {
 
@@ -68,6 +74,15 @@ init(int argc, char **argv)
             MaxDelay = atoi(optarg);
             if (MaxDelay < 1) {
                 fprintf(stderr, "%s: error: invalid max delay value \"%s\"\n",
+                        MyName, optarg);
+                exit(1);
+            }
+            break;
+
+        case 'R':
+            RandomCount = atoi(optarg);
+            if (RandomCount < 1) {
+                fprintf(stderr, "%s: error: invalid random count value \"%s\"\n",
                         MyName, optarg);
                 exit(1);
             }
@@ -173,7 +188,7 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-s serial_port@speed ] [ -t LED TTL ] [ -M max inter msg delay (msecs) ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-s serial_port@speed ] [ -t LED TTL ] [ -M max inter msg delay (msecs) ] [ -R random cycle count ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
             MyName, MyName);
 }
 
