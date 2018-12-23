@@ -43,3 +43,5 @@ software/lib/network\.d
 software/lib/status\.d
 
 \.DS_Store
+
+software/test/status_bar/status_test
