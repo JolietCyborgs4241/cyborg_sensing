@@ -5,8 +5,8 @@ CV_INC_DIR	= ../../include
 INC		= -I$(CV_INC_DIR)
 CFLAGS	+= $(INC) -pthread -g $(DEBUG)
 
-CY_LIBS = -L ../../lib -lcyborgauto
-LDFLAGS	+= -pthread $(CY_LIBS)
+LDLIBS = -lcyborgauto
+LDFLAGS	+= -L ../../lib -pthread $(CY_LIBS)
 
 SRCS	= cyborg_stats.c init.c globals.c
 
@@ -21,10 +21,13 @@ all:	$(TARGETS)
 cyborg_stats:	$(OBJS)
 
 cyborg_stats.o:	cyborg_stats.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
-			$(CV_INC_DIR)/gen_sss/externs.h
+			$(CV_INC_DIR)/status/externs.h $(CV_INC_DIR)/status/status.h
 
 init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
-			$(CV_INC_DIR)/gen_sss/externs.h
+			$(CV_INC_DIR)/status/externs.h $(CV_INC_DIR)/status/status.h
+
+globals.o:	globals.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
+			$(CV_INC_DIR)/status/externs.h $(CV_INC_DIR)/status/status.h
 
 clean:
 	rm -rf $(OBJS) $(TARGETS)

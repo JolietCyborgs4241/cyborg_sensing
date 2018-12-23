@@ -108,4 +108,3 @@ processStatusUpdate(int sock, int serial)
                 __func__, sock, serial, strerror(errno));
     }
 }
-

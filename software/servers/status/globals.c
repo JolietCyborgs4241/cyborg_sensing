@@ -9,6 +9,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
+#include "status/status.h"
 
 
 /// Program name
@@ -44,6 +45,8 @@ char        *LogID = "status";
 /// Serial port settings
 char        *SerialPort;        // port@speed
 int         SerialFd;
+
+int         LedTtl = DEFAULT_LED_TTL;
 
 
 int MsgRateReportingCadence = DEF_MSG_RATE_REPORTING_CADENCE;

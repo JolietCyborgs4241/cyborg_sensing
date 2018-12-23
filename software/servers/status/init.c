@@ -22,6 +22,7 @@
 #include "cv_net.h"
 #include "cyborg_lib.h"
 #include "status/externs.h"
+#include "status/status.h"
 
 
 
@@ -37,6 +38,8 @@ static  void        usage(), dumpConfig();
 /// -p Host port to listen at
 ///
 /// -s serial port @ speed to connect to status display hardwaee
+///
+/// -t LED TTL (seconds)
 ///
 /// -d Debug output file
 ///
@@ -79,6 +82,15 @@ init(int argc, char **argv)
 
         case 's':
             SerialPort = optarg;
+            break;
+
+        case 't':
+            LedTtl = atoi(optarg);
+            if (LedTtl < 1 || LedTtl > MAX_LED_TTL) {
+                fprintf(stderr, "%s: error: invalid LED TTL value \"%s\" - must be between 1 and %d seconds\n",
+                        MyName, optarg, MAX_LED_TTL);
+                exit(1);
+            }
             break;
 
         case 'D':
@@ -151,6 +163,8 @@ dumpConfig()
 
     fprintf(DebugFP, "Serial connection:\t\"%s\"\n", SerialPort);
 
+    fprintf(DebugFP, "LED TTL:\t\t%d\n", LedTtl);
+
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
     switch (DebugLevel) {
@@ -179,13 +193,13 @@ dumpConfig()
 
 /// \brief Usage message
 ///
-/// Shown is any invalid parameters specvified or '-?' on command line
+/// Shown is any invalid parameters specified or '-?' on command line
 static void
 usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-s serial_port@speed ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
+            "%s: usage: %s [-h IP] [-p Port] [-s serial_port@speed ] [-t LED TTL ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
             MyName, MyName);
 }
 
