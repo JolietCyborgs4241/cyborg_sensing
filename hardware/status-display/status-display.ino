@@ -92,7 +92,7 @@ setup() {
 
   activeState = 0;
   
-  Serial.begin(SERIAL_BAUD_RATE); // Starts the serial communication
+  Serial.begin(SERIAL_BAUD_RATE, SERIAL_8N1); // Starts the serial communication
 }
 
 
