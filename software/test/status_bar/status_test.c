@@ -26,7 +26,8 @@ char    colors[] = { COLOR_OFF, COLOR_RED, COLOR_GREEN, COLOR_BLUE,
 char    leds[]   = { STAT_LED_AUTO, STAT_LED_DB_UP, STAT_LED_DB_ACTIVE,
                      STAT_LED_ROBO_RIO_UP, STAT_LED_ROBO_RIO_FROM,
                      STAT_LED_ROBO_RIO_TO, STAT_LED_MAIN_SENSOR_ACTIVE,
-                     STAT_LED_CAM_SENSOR_ACTIVE };
+                     STAT_LED_CAM_SENSOR_ACTIVE,
+                     STAT_LED_EXTRA_1, STAT_LED_EXTRA_2 };
 
 #define OF     COLOR_OFF
 #define PU     COLOR_PURPLE
