@@ -10,6 +10,10 @@ HOST_PORT=12345
 
 
 all:	$(SCRIPTS) $(SENSOR_DATA) gettimeofday
+	make $(SCRIPTS)
+	make $(SENSOR_DATA)
+	make gettimeofday
+	cd status_bar ; make all
 
 prep_data:	prep_data.sh
 	cp prep_data.sh  prep_data
@@ -29,3 +33,4 @@ test:	all
 
 clean:
 	-rm -f gettimeofday $(SENSOR_DATA) $(SCRIPTS)
+	cd status_bar ; make clean
