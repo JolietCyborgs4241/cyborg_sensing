@@ -23,6 +23,7 @@
 #include "cyborg_lib.h"
 #include "gen_sss/sensors.h"
 #include "gen_sss/externs.h"
+#include "status/status.h"
 
 
 
@@ -32,11 +33,11 @@ static  void        usage(), openSensorConns(), dumpConfig();
 
 /// \brief process command line and perform other initializations
 ///
-/// -h Host IP of database
+/// -h Host IP:port of database
 ///
-/// -p Host port of database
+/// -S Host IP:port of status server
 ///
-/// -s serial port @ speed to read from
+/// -s serial port(s) @ speed to read from
 ///
 /// -d Debug output file
 ///
@@ -54,28 +55,21 @@ init(int argc, char **argv)
 
     // clear HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
-    HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
+    HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;
 
-    while ((c = getopt(argc, argv, "h:p:s:D:d:t:l:")) != -1) {
+    StatusServer.hostIPString = DEF_HOST_IP_STRING;
+    StatusServer.hostPort     = DEF_HOST_PORT_STATUS;
+
+    while ((c = getopt(argc, argv, "h:S:s:D:d:t:l:")) != -1) {
 
         switch (c) {
 
-        case 'h':
-            HostInfo.hostIPString = optarg;
-            if (inet_pton(AF_INET, HostInfo.hostIPString, &(HostInfo.hostIP.sin_addr.s_addr)) != 1) {
-                fprintf(stderr, "%s: error: invalid IP address value (\"%s\")\n",
-                        MyName, HostInfo.hostIPString);
-                exit(1);
-            }
+        case 'S':
+            setHostAndPort(optarg, &StatusServer);
             break;
 
-        case 'p':
-            HostInfo.hostPort = atoi(optarg);
-            if (HostInfo.hostPort < 1 || HostInfo.hostPort > (64*1024 - 1)) {
-                fprintf(stderr, "%s: error: invalid port value (%d)\n",
-                        MyName, HostInfo.hostPort);
-                exit(1);
-            }
+        case 'h':
+            setHostAndPort(optarg, &HostInfo);
             break;
 
         case 's':
@@ -152,6 +146,8 @@ init(int argc, char **argv)
 
     openOutgoingPort(&HostInfo);
 
+    openStatusConnection(&StatusServer);
+
     openSensorConns(Sensors);
 
     if (DebugLevel) {   // any debug level
@@ -168,9 +164,12 @@ dumpConfig()
     SENSOR_CONN *ptr = Sensors;
 
     fprintf(DebugFP, "DumpConfig():\n");
-    fprintf(DebugFP, "Network:\n\tSending to:\t%s:%d\n\tSock fd:\t%d\n",
+    fprintf(DebugFP, "Network:\n\tSending to DB @:\t%s:%d\n\tSock fd:\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
+    fprintf(DebugFP, "tn\tStatus Server @:\t%s:%d\n\tSock fd:\t%d\n",
+           StatusServer.hostIPString, StatusServer.hostPort,
+           StatusServer.sock);
 
     fprintf(DebugFP, "Sensors:\n");
     dumpSensors(Sensors);

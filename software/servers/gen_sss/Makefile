@@ -5,8 +5,8 @@ CV_INC_DIR	= ../../include
 INC		= -I$(CV_INC_DIR)
 CFLAGS	+= $(INC) -pthread -g $(DEBUG)
 
-CY_LIBS = -L ../../lib -lcyborgauto
-LDFLAGS	+= -pthread $(CY_LIBS)
+LDLIBS  = -lcyborgauto
+LDFLAGS	+= -L ../../lib -pthread
 
 SRCS	= gen_sss.c init.c globals.c threads.c
 

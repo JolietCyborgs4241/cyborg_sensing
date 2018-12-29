@@ -21,6 +21,7 @@
 #include "cv_net.h"
 #include "gen_sss/sensors.h"
 #include "gen_sss/externs.h"
+#include "status/status.h"
 
 
 
@@ -42,6 +43,11 @@ main(int argc, char **argv)
     KickOffSensorThreads(Sensors);
 
 	while (1) {
-        pause();                // don't do anything but don't burn CPU
+
+        sendStatusUpdate(STAT_LED_MAIN_SENSOR_ACTIVE, COLOR_GREEN);
+
+        sleep(1);                   // heartbeat to the status display to
+                                    // indicate the general sensor server
+                                    // is still up and running
     }
 }

@@ -27,8 +27,9 @@ char        *MyName;
 ///
 /// addresses, ports, socket, etc.
 ///
-/// all sensor instanes send to the same destination
+/// all sensor instances send to the same destination
 HOST_INFO   HostInfo;
+HOST_INFO   StatusServer;
 
 /// Global debug level
 ///
