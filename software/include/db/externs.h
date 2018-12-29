@@ -9,8 +9,11 @@
 /// program name (set directly from argv[0])
 extern  char        *MyName;
 
-/// network connection for incoming camera messages
+/// network connection for incoming sensor messages
 extern  HOST_INFO   HostInfo;
+
+/// network connection for status server
+extern  HOST_INFO   StatusServer;
 
 extern  int         Ttl;
 

@@ -16,7 +16,7 @@
 #include "db/lists.h"
 #include "db/threads.h"
 #include "db/externs.h"
-
+#include "status/status.h"
 
 
 
@@ -32,20 +32,25 @@ main(int argc, char **argv)
 {
 	MyName = argv[0];
 
-    DebugFP = stderr;                       // unless overridden on the command line
+    DebugFP = stderr;               // unless overridden on the command line
 
 	init(argc, argv);
 
-    startSensorDataThread(HostInfo.sock);   // start reading recs from the cams
+    startSensorDataThread(HostInfo.sock);   // start reading from sensors
 
-    startPruneThread();                     // get rid of records older than TTL
+    startPruneThread();             // get rid of records older than TTL
 
 	while (1) {
 
-		sleep(1000);            // eventually the query processing
-                                // will happen here in the main thread
-                                //
-                                // for now, we'll just sleep & sleep & sleep
+        sendStatusUpdate(STAT_LED_DB_UP, COLOR_GREEN);
+        
+		sleep(1);                   // heartbeat to the status display to
+                                    // indicate the database is still up
+                                    // and running
+
+                                    // heartbeat to the status display to
+                                    // indicate the general sensor server
+                                    // is still up and running
 	}
 
 }

@@ -40,9 +40,11 @@ typedef struct {
     int     sock;
 } HOST_INFO;
 
-void openOutgoingPort(HOST_INFO *host);
+void openOutgoingPort(HOST_INFO *);
 
-void openIncomingPort(HOST_INFO *host);
+void openIncomingPort(HOST_INFO *);
+
+void setHostAndPort(char *, HOST_INFO *);
 
 
 

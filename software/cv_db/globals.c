@@ -26,6 +26,7 @@ char        *MyName;
 ///
 /// addresses, ports, socket, etc.
 HOST_INFO   HostInfo;
+HOST_INFO   StatusServer;
 
 /// Time to Live
 ///

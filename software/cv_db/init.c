@@ -20,6 +20,7 @@
 #include "cv_net.h"
 #include "sensors.h"
 #include "db/externs.h"
+#include "status/status.h"
 
 
 
@@ -29,9 +30,7 @@ static  void        usage(), dumpConfig();
 
 /// \brief process command line and perform other initializations
 ///
-/// -h Host IP
-///
-/// -p Host port
+/// -S Host IP and port for status server
 ///
 /// -t TTL (seconds - 0 disables any purging)
 ///
@@ -39,7 +38,6 @@ static  void        usage(), dumpConfig();
 ///
 /// -D Debug level
 ///
-/// Also opens UDP socket for receiving camera messages
 void
 init(int argc, char **argv)
 
@@ -52,9 +50,17 @@ init(int argc, char **argv)
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
     HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
 
-    while ((c = getopt(argc, argv, "h:p:D:d:t:l:")) != -1) {
+    StatusServer.hostIPString = DEF_HOST_IP_STRING;
+    StatusServer.hostPort     = DEF_HOST_PORT_STATUS;
+
+
+    while ((c = getopt(argc, argv, "S:D:d:t:l:")) != -1) {
 
         switch (c) {
+
+        case 'S':
+            setHostAndPort(optarg, &StatusServer);
+            break;
 
         case 'h':
             HostInfo.hostIPString = optarg;
@@ -149,6 +155,8 @@ init(int argc, char **argv)
 
     openIncomingPort(&HostInfo);
 
+    openStatusConnection(&StatusServer);
+
     if (DebugLevel) {   // any debug level
         dumpConfig();
     }
@@ -164,6 +172,10 @@ dumpConfig()
     fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
+
+    fprintf(DebugFP, "Network:\n\tStatus Server @:\t%s:%d\n\tSock fd:\t\t%d\n",
+           StatusServer.hostIPString, StatusServer.hostPort,
+           StatusServer.sock);
 
     fprintf(DebugFP, "\nTTLs:\n");
 

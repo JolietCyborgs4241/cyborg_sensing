@@ -15,6 +15,7 @@
 #include "cv_net.h"
 #include "db/lists.h"
 #include "db/externs.h"
+#include "status/status.h"
 #include "sensors.h"
 
 
@@ -113,6 +114,7 @@ recvSensorDataThread(void *sock)
 
     while (1) {
         processSensorData(*(int *)sock);      // each call processes one record
+        sendStatusUpdate(STAT_LED_DB_ACTIVE, COLOR_GREEN);
     }
 
 }
