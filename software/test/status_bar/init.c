@@ -25,7 +25,8 @@
 
 
 
-extern  int     MaxDelay, RandomCount;
+extern  int         MaxDelay, RandomCount;
+extern  HOST_INFO   StatusServer;
 
 static  void    usage(), dumpConfig();
 
@@ -53,12 +54,28 @@ init(int argc, char **argv)
 {
     int c, ttl;
 
-    while ((c = getopt(argc, argv, "s:D:d:l:t:R:M:")) != -1) {
+    StatusServer.hostIPString = NULL;
+
+    while ((c = getopt(argc, argv, "s:S:D:d:l:t:R:M:")) != -1) {
 
         switch (c) {
 
         case 's':
+            if (StatusServer.hostIPString) {  // can only set one at a time
+                fprintf(stderr, "%s: error: cannot use serial port, network address already set\n",
+                        MyName);
+                exit(1);
+            }
             SerialPort = optarg;
+            break;
+
+        case 'S':
+            if (SerialPort) {       // can only set one at a time
+                fprintf(stderr, "%s: error: cannot use network address, serial port already set\n",
+                        MyName);
+                exit(1);
+            }
+            setHostAndPort(optarg, &StatusServer);
             break;
 
         case 't':
@@ -137,7 +154,17 @@ init(int argc, char **argv)
         }
     }
 
-    SerialFd = openSerialPort(SerialPort);
+    if ( ! SerialPort && ! StatusServer.hostIPString[0]) {
+        fprintf(stderr, "%s: error: either serial port (-s) or Status Server address (-S) must be set\n",
+                MyName);
+        exit(1);
+    }
+
+    if (SerialPort) {
+        SerialFd = openSerialPort(SerialPort);
+    } else {
+        openStatusConnection(&StatusServer);
+    }
 
     if (DebugLevel) {   // any debug level
         dumpConfig();
@@ -150,9 +177,14 @@ init(int argc, char **argv)
 static void
 dumpConfig()
 {
-    fprintf(DebugFP, "Serial connection:\t\"%s\"\n", SerialPort);
+    if (SerialPort) {
+        fprintf(DebugFP, "Serial connection:\t\"%s\"\n", SerialPort);
+    } else {
+        fprintf(DebugFP, "Status Server address:\t\"%s:%d\"\n",
+                StatusServer.hostIPString, StatusServer.hostPort);
+    }
 
-    fprintf(DebugFP, "\n LED TTL:\t\t%d ", LedTtl);
+    fprintf(DebugFP, "\nLED TTL:\t\t%d ", LedTtl);
 
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 

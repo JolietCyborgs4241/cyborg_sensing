@@ -1,4 +1,4 @@
-#	status server Makefile
+#	status server test Makefile
 
 
 CV_INC_DIR	= ../../include
@@ -34,5 +34,5 @@ clean:
 
 
 valgrind:	cv_db
-	valgrind --leak-check=full --show-leak-kinds=all --read-var-info=yes -v ./gen_sss -c $(PORT) -s 115200 -D 2 -d DEBUG 2>stderr
+	valgrind --leak-check=full --show-leak-kinds=all --read-var-info=yes -v ./status_serial -c $(PORT) -s 115200 -D 2 -d DEBUG 2>stderr
 

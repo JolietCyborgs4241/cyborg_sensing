@@ -19,15 +19,15 @@
 #include "status/status.h"
 
 
-char    colors[] = { COLOR_OFF, COLOR_RED, COLOR_GREEN, COLOR_BLUE,
-                     COLOR_YELLOW, COLOR_PURPLE, COLOR_ORANGE,
-                     COLOR_WHITE };
+unsigned char    colors[] = { COLOR_OFF, COLOR_RED, COLOR_GREEN, COLOR_BLUE,
+                              COLOR_YELLOW, COLOR_PURPLE, COLOR_ORANGE,
+                              COLOR_WHITE };
 
-char    leds[]   = { STAT_LED_AUTO, STAT_LED_DB_UP, STAT_LED_DB_ACTIVE,
-                     STAT_LED_ROBO_RIO_UP, STAT_LED_ROBO_RIO_FROM,
-                     STAT_LED_ROBO_RIO_TO, STAT_LED_MAIN_SENSOR_ACTIVE,
-                     STAT_LED_CAM_SENSOR_ACTIVE,
-                     STAT_LED_EXTRA_1, STAT_LED_EXTRA_2 };
+unsigned char    leds[]   = { STAT_LED_AUTO, STAT_LED_DB_UP, STAT_LED_DB_ACTIVE,
+                              STAT_LED_ROBO_RIO_UP, STAT_LED_ROBO_RIO_FROM,
+                              STAT_LED_ROBO_RIO_TO, STAT_LED_MAIN_SENSOR_ACTIVE,
+                              STAT_LED_CAM_SENSOR_ACTIVE,
+                              STAT_LED_EXTRA_1, STAT_LED_EXTRA_2 };
 
 #define OF     COLOR_OFF
 #define PU     COLOR_PURPLE
@@ -74,7 +74,7 @@ unsigned char    sequence[SEQ_COUNT][SEQ_LEN] = {
 
 
 
-void    init(int, char **);
+void    init(int, char **), sendIt(unsigned char, unsigned char);
 
 extern  int MaxDelay, RandomCount;
 
@@ -85,7 +85,6 @@ main(int argc, char **argv)
 {
     int randLed, randColor, randDelay, randTimeoutLed;
     int retVal, i, ii, loops;
-    unsigned char    cmdToStatusBar;
 
     MyName = argv[0];
 
@@ -95,20 +94,12 @@ main(int argc, char **argv)
 
     gettimeofday(&StartTime, NULL);
 
-    cmdToStatusBar = SET_LED_TIMEOUT | (char)LedTtl;
-
     if (DebugLevel >= DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s: sending timeout setting to status bar (0x%x)\n",
-                MyName, cmdToStatusBar);
+        fprintf(DebugFP, "%s: sending timeout setting to status bar\n",
+                MyName);
     }
 
-    retVal = write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
-
-    if (retVal == -1) {
-        fprintf(stderr, "%s: error: write error to \"%s\" - returned %d (%s)\n",
-                MyName, SerialPort, retVal, strerror(errno));
-        exit(1);
-    }
+    sendIt(SET_LED_TIMEOUT, (unsigned char)LedTtl);
 
     if (DebugLevel >= DEBUG_DETAIL) {
         fprintf(DebugFP, "%s: Starting random sequence for %d writes\n",
@@ -121,22 +112,12 @@ main(int argc, char **argv)
             randColor = random() % (sizeof(colors) / sizeof(colors[0]));
             randDelay = random() % MaxDelay;    // msecs
 
-            cmdToStatusBar = leds[randLed] | colors[randColor];
-
             if (DebugLevel >= DEBUG_DETAIL) {
                 fprintf(DebugFP, "%s: randLed = %d, randColor = %d, randDelay = %d\n",
                         MyName, randLed, randColor, randDelay);
-                fprintf(DebugFP, "%s: cmdToStatusBar 0x%02x\n",
-                        MyName, cmdToStatusBar);
             }
 
-            retVal = write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
-
-            if (retVal == -1) {
-                fprintf(stderr, "%s: error: write error to \"%s\" - returned %d (%s)\n",
-                        MyName, SerialPort, retVal, strerror(errno));
-                exit(1);
-            }
+            sendIt(leds[randLed], colors[randColor]);
 
             usleep(randDelay * 1000);       // convert msecs into usecs
         }
@@ -150,31 +131,20 @@ main(int argc, char **argv)
             for (i = 0 ; i < SEQ_COUNT ; i++) {
                 for (ii = 0 ; ii < SEQ_LEN ; ii++) {
 
-                    cmdToStatusBar = (ii << 4) | sequence[i][ii];
-
                     if (DebugLevel >= DEBUG_DETAIL) {
                         fprintf(DebugFP,
-                                "%s: sequence [%d][%d] = 0x%02x - cmd = 0x%02x\n",
-                                MyName, i, ii, sequence[i][ii], cmdToStatusBar);
+                                "%s: sequence [%d][%d] = 0x%02x\n",
+                                MyName, i, ii, sequence[i][ii]);
                     }
 
-                    retVal = write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
-
-                    if (retVal == -1) {
-                        fprintf(stderr,
-                                "%s: error: write error to \"%s\" - returned %d (%s)\n",
-                                MyName, SerialPort, retVal, strerror(errno));
-                        exit(1);
-                    }
-
+                    sendIt(ii << 4, sequence[i][ii]);
                 }
                 usleep(50000);
             }
         }
 
         for (i = 0 ; i < 15 ; i++) {                // turn all off
-            cmdToStatusBar = (i << 4);
-            write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
+            sendIt(i, 0);
         }
 
         // strobe one color down the whole strip
@@ -189,13 +159,11 @@ main(int argc, char **argv)
                             MyName, i);
                 }
 
-                cmdToStatusBar = (ii << 4) | i;
-                write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
+                sendIt(ii << 4, i);
 
                 usleep(40000);
 
-                cmdToStatusBar = (ii << 4);
-                write(SerialFd, &cmdToStatusBar, sizeof(cmdToStatusBar));
+                sendIt(ii << 4, 0);;
 
                 usleep(10000);
             }
@@ -204,3 +172,23 @@ main(int argc, char **argv)
 }
 
 
+
+
+void
+sendIt(unsigned char led, unsigned char color)
+{
+    unsigned char   serialCmd;
+
+    serialCmd = led | color;
+
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(0x%02x, 0x%02x): serialCmd = 0x%02x\n",
+                __func__, led, color, serialCmd);
+    }
+
+    if (SerialPort) {
+        write(SerialFd, &serialCmd, 1);
+    } else {
+        sendStatusUpdate(led, color);
+    }
+}

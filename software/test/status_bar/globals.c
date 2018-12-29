@@ -1,6 +1,6 @@
 //  globals.c
 //
-//  global variable definitions for status server
+//  global variable definitions for status server test
 //
 
 #include <unistd.h>
@@ -24,8 +24,8 @@ char        *MyName;
 ///
 /// addresses, ports, socket, etc.
 ///
-/// all sensor instanes send to the same destination
-HOST_INFO   HostInfo;
+/// all sensor instances send to the same destination
+HOST_INFO   StatusServer;
 
 /// Global debug level
 ///
