@@ -61,7 +61,7 @@
 /// LED, color
 ///
 /// returns 0 if error - otherwise returns number of bytes sent
-int    sendStatusUpdate(char, char);
+int    sendStatusUpdate(unsigned char, unsigned char);
 
 #define DEFAULT_LED_TTL         3   // secs
 #define MAX_LED_TTL             15  // secs

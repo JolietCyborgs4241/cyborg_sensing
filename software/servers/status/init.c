@@ -33,11 +33,9 @@ static  void        usage(), dumpConfig();
 
 /// \brief process command line and perform other initializations
 ///
-/// -h Host IP to listen at
+/// -S IP:port to listen at
 ///
-/// -p Host port to listen at
-///
-/// -s serial port @ speed to connect to status display hardwaee
+/// -s serial port @ speed to connect to status display hardware
 ///
 /// -t LED TTL (seconds)
 ///
@@ -54,30 +52,16 @@ init(int argc, char **argv)
 {
     int c, ttl;
 
-    // clear HostInfo structure
+    // set HostInfo structure
     HostInfo.hostIPString = DEF_HOST_IP_STRING;
     HostInfo.hostPort     = DEF_HOST_PORT_STATUS;  // port to listen at
 
-    while ((c = getopt(argc, argv, "h:p:s:D:d:t:l:")) != -1) {
+    while ((c = getopt(argc, argv, "S:s:D:d:t:l:")) != -1) {
 
         switch (c) {
 
-        case 'h':
-            HostInfo.hostIPString = optarg;
-            if (inet_pton(AF_INET, HostInfo.hostIPString, &(HostInfo.hostIP.sin_addr.s_addr)) != 1) {
-                fprintf(stderr, "%s: error: invalid IP address value (\"%s\")\n",
-                        MyName, HostInfo.hostIPString);
-                exit(1);
-            }
-            break;
-
-        case 'p':
-            HostInfo.hostPort = atoi(optarg);
-            if (HostInfo.hostPort < 1 || HostInfo.hostPort > (64*1024 - 1)) {
-                fprintf(stderr, "%s: error: invalid port value (%d)\n",
-                        MyName, HostInfo.hostPort);
-                exit(1);
-            }
+        case 'S':
+            setHostAndPort(optarg, &HostInfo);
             break;
 
         case 's':
@@ -157,7 +141,7 @@ init(int argc, char **argv)
 static void
 dumpConfig()
 {
-    fprintf(DebugFP, "Network:\n\tSending to:\t%s:%d\n\tSock fd:\t%d\n",
+    fprintf(DebugFP, "Network:\n\tListening at:\t%s:%d\n\tSock fd:\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
 
@@ -199,7 +183,7 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-s serial_port@speed ] [-t LED TTL ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
+            "%s: usage: %s [-S host:port] [-s serial_port@speed ] [-t LED TTL ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
             MyName, MyName);
 }
 

@@ -55,7 +55,7 @@ openStatusConnection(HOST_INFO *host)
 /// led to set
 /// rgb value to
 int
-sendStatusUpdate(char led, char color)
+sendStatusUpdate(unsigned char led, unsigned char color)
 {
     int sockRet;
     STATUS_MSG  status;

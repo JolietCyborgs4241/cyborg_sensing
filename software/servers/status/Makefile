@@ -6,21 +6,21 @@ INC		= -I$(CV_INC_DIR)
 CFLAGS	+= $(INC) -pthread -g $(DEBUG)
 
 LDLIBS = -lcyborgauto
-LDFLAGS	+= -L ../../lib -pthread $(CY_LIBS)
+LDFLAGS	+= -L ../../lib -pthread
 
-SRCS	= cyborg_stats.c init.c globals.c
+SRCS	= cyborg_status.c init.c globals.c
 
 OBJS	= ${SRCS:.c=.o}
 
-TARGETS	= cyborg_stats
+TARGETS	= cyborg_status
 
 
 all:	$(TARGETS)
 
 
-cyborg_stats:	$(OBJS)
+cyborg_status:	$(OBJS)
 
-cyborg_stats.o:	cyborg_stats.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
+cyborg_status.o:	cyborg_status.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \
 			$(CV_INC_DIR)/status/externs.h $(CV_INC_DIR)/status/status.h
 
 init.o:		init.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/cv_net.h \

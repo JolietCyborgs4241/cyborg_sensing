@@ -53,7 +53,7 @@ int MsgNum = 0;
 static void
 processStatusUpdate(int sock, int serial)
 {
-    char    buffer[MAX_STATUS_LEN];
+    char    cmd, buffer[MAX_STATUS_LEN];
     int     readRet, writeRet, msgRate;
     struct  timeval now, timeDiff;
     float   floatTime;
@@ -70,17 +70,18 @@ processStatusUpdate(int sock, int serial)
 
         if (LogFP) {
 #ifdef  __APPLE__
-            fprintf(LogFP, "%s LOG %ld.%06d %s %s \"%s\"\n",
+            fprintf(LogFP, "%s LOG %ld.%06d %s %s (0x%02x%02x) (len = %d)\n",
 #else   // ! __APPLE__
-            fprintf(LogFP, "%s LOG %ld.%06ld %s %s \"%s\"\n",
+            fprintf(LogFP, "%s LOG %ld.%06ld %s %s (0x%02x%02x) (len = %d)\n",
 #endif
                     MyName, now.tv_sec, now.tv_usec,
-                    LogID, LOG_DIR_IN, buffer);
+                    LogID, LOG_DIR_IN, (unsigned char)*buffer, (unsigned char)*(buffer+1),
+                    readRet);
         }
 
         if (DebugLevel >= DEBUG_INFO) {
-            fprintf(DebugFP, "Message[%d]:\t\"%s\" (len %ld)\n",
-                    MsgNum,  buffer, strlen(buffer));
+            fprintf(DebugFP, "Message[%d]:\t(0x%02x%02x)\n",
+                    MsgNum,  (unsigned char)*buffer, (unsigned char) *(buffer+1));
             if ( MsgNum && (MsgNum % MsgRateReportingCadence) == 0) {
 
                 timersub(&now, &StartTime, &timeDiff);
@@ -96,8 +97,14 @@ processStatusUpdate(int sock, int serial)
 
         MsgNum++;
 
+        cmd = *buffer | *(buffer + 1);
+
+        if (DebugLevel >= DEBUG_INFO) {
+            fprintf(DebugFP, "%s(): sending to serial port (0x%02x)\n", __func__, cmd);
+        }
+
         // off to the status display hardware with the record
-        if ((writeRet = write(serial, buffer, readRet)) != readRet) {
+        if ((writeRet = write(serial, &cmd, sizeof(cmd))) != sizeof(cmd)) {
             fprintf(DebugFP, "%s(%d, %d): write error - returned %d bytes - \"%s\"\n",
                     __func__, sock, serial, writeRet, strerror(errno));
             return;
