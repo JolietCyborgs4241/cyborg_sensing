@@ -45,3 +45,9 @@ software/lib/status\.d
 \.DS_Store
 
 software/test/status_bar/status_test
+
+software/servers/status/cyborg_status
+
+software/test/status_bar/DEBUG
+
+software/test/status_bar/LOG
