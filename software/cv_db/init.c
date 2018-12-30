@@ -46,15 +46,17 @@ init(int argc, char **argv)
 
     gettimeofday(&StartTime, NULL);
 
-    // clear HostInfo structure
-    HostInfo.hostIPString = DEF_HOST_IP_STRING;
-    HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
+    HostInfoPost.hostIPString  = DEF_HOST_IP_STRING;
+    HostInfoPost.hostPort      = DEF_HOST_PORT_DB_POST;
 
-    StatusServer.hostIPString = DEF_HOST_IP_STRING;
-    StatusServer.hostPort     = DEF_HOST_PORT_STATUS;
+    HostInfoQuery.hostIPString = DEF_HOST_IP_STRING;
+    HostInfoQuery.hostPort     = DEF_HOST_PORT_DB_QUERY;
+
+    StatusServer.hostIPString  = DEF_HOST_IP_STRING;
+    StatusServer.hostPort      = DEF_HOST_PORT_STATUS;
 
 
-    while ((c = getopt(argc, argv, "S:D:d:t:l:")) != -1) {
+    while ((c = getopt(argc, argv, "S:P:Q:D:d:t:l:")) != -1) {
 
         switch (c) {
 
@@ -62,22 +64,12 @@ init(int argc, char **argv)
             setHostAndPort(optarg, &StatusServer);
             break;
 
-        case 'h':
-            HostInfo.hostIPString = optarg;
-            if (inet_pton(AF_INET, HostInfo.hostIPString, &(HostInfo.hostIP.sin_addr.s_addr)) != 1) {
-                fprintf(stderr, "%s: error: invalid IP address value (\"%s\")\n",
-                        MyName, HostInfo.hostIPString);
-                exit(1);
-            }
+        case 'P':
+            setHostAndPort(optarg, &HostInfoPost);
             break;
 
-        case 'p':
-            HostInfo.hostPort = atoi(optarg);
-            if (HostInfo.hostPort < 1 || HostInfo.hostPort > (64*1024 - 1)) {
-                fprintf(stderr, "%s: error: invalid port value (%d)\n",
-                        MyName, HostInfo.hostPort);
-                exit(1);
-            }
+        case 'Q':
+            setHostAndPort(optarg, &HostInfoQuery);
             break;
 
         case 't':
@@ -95,7 +87,6 @@ init(int argc, char **argv)
                 ttlPtr->ttlSecs  = ttl;
                 ttlPtr->ttlUsecs = 0;
 #warning Need to add floating point value TTL support
-#warning Need to add per SENSOR TTL setting configuration support
                 ttlPtr++;
             }
             break;
@@ -153,7 +144,9 @@ init(int argc, char **argv)
 
     initDb();
 
-    openIncomingPort(&HostInfo);
+    openIncomingPort(&HostInfoPost);
+
+    openIncomingPort(&HostInfoQuery);
 
     openStatusConnection(&StatusServer);
 
@@ -169,10 +162,12 @@ static void
 dumpConfig()
 {
     fprintf(DebugFP, "DumpConfig():\n");
-    fprintf(DebugFP, "Network:\n\tListening @:\t%s:%d\n\tSock fd:\t\t%d\n",
-           HostInfo.hostIPString, HostInfo.hostPort,
-           HostInfo.sock);
-
+    fprintf(DebugFP, "Network:\n\tPost @:\t\t\t%s:%d\n\tSock fd:\t\t%d\n",
+           HostInfoPost.hostIPString, HostInfoPost.hostPort,
+           HostInfoPost.sock);
+    fprintf(DebugFP, "Network:\n\tQuery @:\t\t%s:%d\n\tSock fd:\t\t%d\n",
+           HostInfoQuery.hostIPString, HostInfoQuery.hostPort,
+           HostInfoQuery.sock);
     fprintf(DebugFP, "Network:\n\tStatus Server @:\t%s:%d\n\tSock fd:\t\t%d\n",
            StatusServer.hostIPString, StatusServer.hostPort,
            StatusServer.sock);
@@ -215,12 +210,12 @@ dumpConfig()
 
 /// \brief Usage message
 ///
-/// Shown is any invalid parameters specvified or '-?' on command line
+/// Shown is any invalid parameters specified or '-?' on command line
 static void
 usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-t ttl] [-d debug file ] [-D 0|1|2|3]\n",
+            "%s: usage: %s [-P IP:port] [-Q IP:port] [-S IP:port] [-t ttl] [-d debug file] [-D 0|1|2|3] [-l log file]\n",
             MyName, MyName);
 }

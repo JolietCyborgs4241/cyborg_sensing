@@ -25,7 +25,8 @@ char        *MyName;
 /// Network connectivity information
 ///
 /// addresses, ports, socket, etc.
-HOST_INFO   HostInfo;
+HOST_INFO   HostInfoPost;
+HOST_INFO   HostInfoQuery;
 HOST_INFO   StatusServer;
 
 /// Time to Live

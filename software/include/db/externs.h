@@ -10,7 +10,10 @@
 extern  char        *MyName;
 
 /// network connection for incoming sensor messages
-extern  HOST_INFO   HostInfo;
+extern  HOST_INFO   HostInfoPost;
+
+/// network connection for sensor queries
+extern  HOST_INFO   HostInfoQuery;
 
 /// network connection for status server
 extern  HOST_INFO   StatusServer;
