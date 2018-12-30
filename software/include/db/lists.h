@@ -179,9 +179,4 @@ void zeroSensorDataRecord(SENSOR_TYPE, SENSOR_RECORD *);
 /// walks and dumps entire object
 void dumpLists(), dumpListStats();
 
-
-#define LOCK_MAX_ATTEMPTS   20
-
-#define LOCK_USLEEP_TIME    100
-
 #endif  /* lists.h */
