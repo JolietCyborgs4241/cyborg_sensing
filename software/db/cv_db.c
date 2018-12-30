@@ -36,9 +36,9 @@ main(int argc, char **argv)
 
 	init(argc, argv);
 
-    startSensorDataThread(HostInfoPost.sock);   // start reading from sensors
+    startSensorPostThread(HostInfoPost.sock);   // start reading from sensors
 
-    startQueryThread(HostInfoQuery.sock);       // start processing queries
+    startSensorQueryThread(HostInfoQuery.sock); // start processing queries
 
     startPruneThread();             // get rid of records older than TTL
 

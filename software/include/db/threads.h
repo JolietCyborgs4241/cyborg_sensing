@@ -7,14 +7,17 @@
 
 
 /// Start the purging thread
-///
-/// ttl
 void    startPruneThread();
 
-/// start the receiving thread
+/// start the receiving thread for posting sensor data
 ///
 /// socket fd
-void    startSensorDataThread(int);
+void    startSensorPostThread(int);
+
+/// start the receiving thread for querying sensor data
+///
+/// socket fd
+void    startSensorQueryThread(int);
 
 
 #endif  /* db/threads.h */

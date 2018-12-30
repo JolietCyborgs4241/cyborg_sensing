@@ -8,7 +8,7 @@ CFLAGS	+= $(INC) -pthread -g $(DEBUG)
 LDLIBS  = -lcyborgauto
 LDFLAGS	+= -L ../lib -pthread
 
-SRCS	= cv_db.c init.c globals.c lists.c threads.c sensors.c
+SRCS	= cv_db.c init.c globals.c lists.c threads.c sensors.c post.c query.c
 
 OBJS	= ${SRCS:.c=.o}
 
@@ -39,6 +39,13 @@ utility.o:	utility.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h
 threads.o:	threads.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
 			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/db/threads.h \
 			$(CV_INC_DIR)/db/lists.h
+
+post.o:		post.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
+			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/db/lists.h
+
+query.o:	query.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
+			$(CV_INC_DIR)/sensors.h $(CV_INC_DIR)/db/lists.h \
+			$(CV_INC_DIR)/db/query.h
 
 sensors.o:	sensors.c $(CV_INC_DIR)/cv.h $(CV_INC_DIR)/db/externs.h \
 			$(CV_INC_DIR)/sensors.h \

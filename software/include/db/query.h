@@ -8,7 +8,12 @@
 
 #define MAX_QUERY_REQ_ID_LEN     40
 
+typedef unsigned char   QUERY_TYPE;
+
 typedef struct queryRequest {
+    /// Query type
+    QUERY_TYPE      query;
+
     /// Sensor type
     SENSOR_TYPE     type;
 
@@ -31,8 +36,10 @@ typedef struct sensorVals {
 
 
 typedef struct queryResponse {
+    /// Query type
+    QUERY_TYPE      query;
+
     /// Sensor type
-    /// to the union of sensor records
     SENSOR_TYPE     type;
 
     /// Number of sensor records returned
@@ -42,7 +49,5 @@ typedef struct queryResponse {
     /// Actual returned sensor data (up to UDP MTU)
     SENSOR_VALS     sensorVals[1];
 } QUERY_RESPONSE;
-
-
 
 #endif  /* query.h */

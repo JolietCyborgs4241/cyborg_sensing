@@ -51,3 +51,5 @@ software/servers/status/cyborg_status
 software/test/status_bar/DEBUG
 
 software/test/status_bar/LOG
+
+software/db/DEBUG
