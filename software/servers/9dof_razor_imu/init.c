@@ -25,21 +25,22 @@
 
 
 
-static  void        usage(), openOutgoingPort(HOST_INFO *),
-                    dumpConfig();
+static  void        usage(), dumpConfig();
 
-static  int         openSerialPort(char *, int);
+
 
 
 /// \brief process command line and perform other initializations
 ///
-/// -h Host IP of database
+/// -h Host IP:port of database
 ///
-/// -p Host port of database
+/// -S Host IP: of status server
 ///
-/// -c serial port to read from
+/// -s serial port@speed to read from
 ///
-/// -s serial port speed
+/// -I Sensor ID
+///
+/// -i Sensort SubID
 ///
 /// -d Debug output file
 ///
@@ -47,58 +48,41 @@ static  int         openSerialPort(char *, int);
 ///
 /// -l Log output file
 ///
-/// Also opens UDP socket for sending messages to database
+/// Also opens UDP socket for sending messages to database and status server
 void
 init(int argc, char **argv)
 
 {
     int c, ttl;
 
-    // clear HostInfo structure
-    HostInfo.hostIPString = DEF_HOST_IP_STRING;
-    HostInfo.hostPort     = DEF_HOST_PORT_DB_POST;  // port to send to add data
+    HostInfo.hostIPString     = DEF_HOST_IP_STRING;
+    HostInfo.hostPort         = DEF_HOST_PORT_DB_POST;
 
-    while ((c = getopt(argc, argv, "h:p:c:s:D:d:t:l:I:S:")) != -1) {
+    StatusServer.hostIPString = DEF_HOST_IP_STRING;
+    StatusServer.hostPort     = DEF_HOST_PORT_STATUS;
+
+    while ((c = getopt(argc, argv, "h:S:s:D:d:l:I:i:")) != -1) {
 
         switch (c) {
 
         case 'h':
-            HostInfo.hostIPString = optarg;
-            if (inet_pton(AF_INET, HostInfo.hostIPString, &(HostInfo.hostIP.sin_addr.s_addr)) != 1) {
-                fprintf(stderr, "%s: error: invalid IP address value (\"%s\")\n",
-                        MyName, HostInfo.hostIPString);
-                exit(1);
-            }
+            setHostAndPort(optarg, &HostInfo);
             break;
 
-        case 'p':
-            HostInfo.hostPort = atoi(optarg);
-            if (HostInfo.hostPort < 1 || HostInfo.hostPort > (64*1024 - 1)) {
-                fprintf(stderr, "%s: error: invalid port value (%d)\n",
-                        MyName, HostInfo.hostPort);
-                exit(1);
-            }
+        case 'S':
+            setHostAndPort(optarg, &StatusServer);
             break;
 
         case 'I':
             SensorId = optarg;
             break;
 
-        case 'S':
+        case 'i':
             SensorSubId = optarg;
             break;
 
-        case 'c':
-            SerialPort = optarg;
-            break;
-
         case 's':
-            SerialSpeed = atoi(optarg);
-            if (SerialSpeed < 0) {  // other checks happen later
-                fprintf(stderr, "%s: error: serial port speed value must be >= 0\n",
-                        MyName);
-                exit(1);
-            }
+            SerialPort = optarg;
             break;
 
         case 'D':
@@ -151,25 +135,19 @@ init(int argc, char **argv)
     }
 
     if (SerialPort == NULL) {
-        fprintf(stderr, "%s: error: serial port (-c) must be specified\n",
-                MyName);
-        exit(1);
-    }
-
-    if (SerialSpeed == 0) {
-        fprintf(stderr, "%s: error: serial speed (-s) must be specified\n",
+        fprintf(stderr, "%s: error: serial port (-s) must be specified\n",
                 MyName);
         exit(1);
     }
 
     if (strlen(SensorId) == 0) {
-        fprintf(stderr, "%s: error: SensorID must be specified\n",
+        fprintf(stderr, "%s: error: SensorID (-I) must be specified\n",
                 MyName);
         exit(1);
     }
     openOutgoingPort(&HostInfo);
 
-    SerialFd = openSerialPort(SerialPort, SerialSpeed);
+    SerialFd = openSerialPort(SerialPort);
 
     if (DebugLevel) {   // any debug level
         dumpConfig();
@@ -183,11 +161,14 @@ static void
 dumpConfig()
 {
     fprintf(DebugFP, "DumpConfig():\n");
-    fprintf(DebugFP, "Network:\n\tSending to:\t%s:%d\n\tSock fd:\t%d\n",
+    fprintf(DebugFP, "Network:\n\tDatabase @:\t\t%s:%d\n\tSock fd:\t%d\n",
            HostInfo.hostIPString, HostInfo.hostPort,
            HostInfo.sock);
+    fprintf(DebugFP, "\t\tStatus Server @:\t%s:%d\n\tSock fd:\t%d\n",
+           StatusServer.hostIPString, StatusServer.hostPort,
+           StatusServer.sock);
 
-    fprintf(DebugFP, "Serial:\t\"%s\" @ %d baud\n", SerialPort, SerialSpeed);
+    fprintf(DebugFP, "Serial:\t\"%s\"\n", SerialPort);
 
     fprintf(DebugFP, "\nDebug:\t%d ", DebugLevel);
 
@@ -214,102 +195,6 @@ dumpConfig()
 
 
 
-/// \brief Open UDP port for receiving 9dof sensor messages
-///
-/// sets to 8n1 @ specified speed
-//
-/// returns fd
-static int
-openSerialPort(char *port, int speed)
-{
-    int             fd;
-    speed_t         speedVal;
-    struct termios  settings;
-
-    if ((fd = open(port, O_RDWR)) == -1) {
-        fprintf(stderr, "%s: error: cannot open 9dof port \"%s\" (%s)\n",
-                MyName, port, strerror(errno));
-        exit(1);
-    }
-
-    if (tcgetattr(fd, &settings) == -1) {
-        fprintf(stderr,
-                "%s: error: cannot get settings for 9dof port \"%s\"(%s)\n",
-                MyName, port, strerror(errno));
-        exit(1);
-    }
-
-    switch (speed) {
-
-    case 9600:
-        speedVal = B9600;
-        break;
-
-    case 19200:
-        speedVal = B19200;
-        break;
-
-    case 38400:
-        speedVal = B38400;
-        break;
-
-    case 57600:
-        speedVal = B57600;
-        break;
-
-    case 115200:
-        speedVal = B115200;
-        break;
-
-    case 230400:
-        speedVal = B230400;
-        break;
-
-    default:
-        fprintf(stderr, "%s: error: invalid serial port speed (%d)\n",
-                MyName, speed);
-        exit(1);
-    }
-
-    cfsetspeed(&settings, speedVal);
-
-    settings.c_cflag &= ~(CSIZE | PARENB);
-    settings.c_cflag  = CS8 | CLOCAL;
-
-    if (tcsetattr(fd, TCSANOW, &settings) == -1) {
-        fprintf(stderr,
-                "%s: error: cannot set settings for 9dof port \"%s\"(%s)\n",
-                MyName, port, strerror(errno));
-        exit(1);
-    }
-
-    return fd;
-}
-
-
-
-/// \brief Open UDP port for sending messages to database
-///
-/// Create socket
-///
-/// Socket is set in HOST_INFO structure
-static void
-openOutgoingPort(HOST_INFO *host)
-{
-    if ((host->sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {      // UDP
-        fprintf(stderr, "%s: error: cannot open socket (%s)\n",
-                MyName, strerror(errno));
-        exit(1);
-    }
-
-    memset(&(host->hostIP), 0, sizeof(struct sockaddr_in));
-    inet_pton(AF_INET, host->hostIPString, &(host->hostIP.sin_addr.s_addr));
-    host->hostIP.sin_port   = htons(host->hostPort);
-    host->hostIP.sin_family = AF_INET; // Use IPv4
-}
-
-
-
 /// \brief Usage message
 ///
 /// Shown is any invalid parameters specvified or '-?' on command line
@@ -318,6 +203,6 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-I ID] [-S SubID] [-c 9dof comm port] [-s speed] [-d debug file ] [-D 0|1|2|3] [ -l log file ]\n",
+            "%s: usage: %s [-h IP:port] [-S IP:Port] [-I ID] [-i SubID] [-s 9dof comm port@speed] [-d debug file] [-D 0|1|2|3] [ -l log file ]\n",
             MyName, MyName);
 }

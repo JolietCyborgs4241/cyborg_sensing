@@ -26,6 +26,7 @@ char        *MyName;
 ///
 /// addresses, ports, socket, etc.
 HOST_INFO   HostInfo;
+HOST_INFO   StatusServer;
 
 /// Global debug level
 ///
@@ -43,7 +44,6 @@ char        *LogID = "9dof";
 
 /// Serial port & speed
 char    *SerialPort = NULL;;
-int     SerialSpeed = 0;;
 
 /// fd for serial port
 int SerialFd = 0;
