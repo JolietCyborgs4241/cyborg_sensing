@@ -2,7 +2,7 @@
 
 DATA_FILES  = cam_ball.data cam_square.data cam_stuff.data \
 			  cam_thing.data magnetic.data gforce.data ranger.data
-SCRIPTS     = prep_data run_tests
+SCRIPTS     = prep_data run_posts
 SENSOR_DATA = sensor_records.out
 
 HOST_IP=127.0.0.1
@@ -19,9 +19,9 @@ prep_data:	prep_data.sh
 	cp prep_data.sh  prep_data
 	chmod +x prep_data
 
-run_tests:	run_tests.sh
-	cp run_tests.sh run_tests
-	chmod +x run_tests
+run_posts:	run_posts.sh
+	cp run_posts.sh run_posts
+	chmod +x run_posts
 
 $(SENSOR_DATA): $(DATA_FILES)
 	./prep_data
