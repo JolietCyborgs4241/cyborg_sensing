@@ -20,11 +20,68 @@
 #include "sensors.h"
 
 
+static  int QueryNum = 1;
 
+static  char    retBuffer[MAX_QUERY_RESP];
 
 void
 processSensorQuery(int sock)
 {
+    char    buffer[MAX_QUERY_SIZE],
+            queryTag[MAX_QUERY_SIZE], querySensorId[MAX_QUERY_SIZE],
+            querySensorSubId[MAX_QUERY_SIZE],
+            queryType, querySensor;
+    int     readRet, sendRet, sscanfRet, retSize;
+    struct  timeval now;
+    struct sockaddr srcAddr;
+    socklen_t addrLen;
 
+    if ((readRet = recvfrom(sock, buffer, MAX_QUERY_SIZE, 0, &srcAddr, &addrLen)) > 0) {
 
+        gettimeofday(&now, NULL);
+
+        buffer[readRet] = '\0';
+
+        if (LogFP) {
+#ifdef  __APPLE__
+            fprintf(LogFP, "%s LOG %ld.%06d %s %s \"%s\"\n",
+#else   // ! __APPLE__
+            fprintf(LogFP, "%s LOG %ld.%06ld %s %s \"%s\"\n",
+#endif
+                    MyName, now.tv_sec, now.tv_usec,
+                    LogID, LOG_DIR_IN, buffer);
+        }
+
+        if (DebugLevel >= DEBUG_INFO) {
+            fprintf(DebugFP, "Query[%d]:\t\"%s\" (len %ld)\n",
+                    QueryNum,  buffer, strlen(buffer));
+        }
+
+        // breakdown the query
+
+        if ((sscanfRet = sscanf(buffer, "%s %c %c %s %s",
+                                queryTag, &queryType, &querySensor,
+                                querySensorId, querySensorSubId)) != 5) {
+
+            if (DebugLevel >= DEBUG_INFO) {
+                fprintf(DebugFP, "%s(): sscanf error - returned %d\n",
+                        __func__,  sscanfRet);
+            }
+
+            return;
+        }
+
+        processQuery(queryTag, queryType, querySensor,
+                     querySensorId, querySensorSubId,
+                     retBuffer, sizeof(retBuffer));
+
+        retSize = strlen(retBuffer);
+
+        if((sendRet = sendto(sock, retBuffer, retSize, 0, &srcAddr, addrLen)) != retSize) {
+            if (DebugLevel >= DEBUG_INFO) {
+                fprintf(DebugFP, "%s(): sendto() error - returned %d - expected %d (%s)\n",
+                        __func__, sendRet, retSize, strerror(errno));
+            }
+        }
+    }
 }

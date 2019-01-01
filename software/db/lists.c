@@ -18,6 +18,7 @@
 #include "sensors.h"
 #include "db/externs.h"
 #include "db/lists.h"
+#include "db/query.h"
 
 
 
@@ -109,6 +110,7 @@ initDb()
                                    SENSOR_ACCELL,
                                    SENSOR_ROLL,
                                    SENSOR_MAGNETIC,
+                                   SENSOR_OBSTACLE,
                                    0 };
     SENSOR_TYPE      *sensorPtr = sensors;
     SENSOR_LIST      *ptr, *prevPtr, *firstPtr;
@@ -156,7 +158,7 @@ initDb()
 /// doesn't lock the sensorlist - at worst it will miss the first entry
 /// which could be added while we are traversing
 ///
-/// no elements ever get removed from the SENSOFR_LIST headers
+/// no elements ever get removed from the SENSOR_LIST headers
 SENSOR_LIST *
 sensorGetListBySensor(SENSOR_TYPE sensor)
 {
@@ -185,7 +187,7 @@ sensorGetListBySensor(SENSOR_TYPE sensor)
 ///
 /// type, id
 ///
-/// doesn't lock the camlist - at worst it will miss the first entry
+/// doesn't lock the sensor list - at worst it will miss the first entry
 /// which could be added while we are traversing
 ///
 /// no elements ever get removed from the SENSOR_ID_LIST headers
@@ -221,7 +223,7 @@ sensorGetIdListById(SENSOR_TYPE sensor, char *id)
 ///
 /// type, id
 ///
-/// doesn't lock the camlist
+/// doesn't lock the sensor list
 SENSOR_SUBID_LIST *
 sensorSubIdListBySubid(SENSOR_TYPE sensor, char *id, char *subId)
 {
@@ -548,6 +550,171 @@ sensorRecPruneAll()
 #endif  // __APPLE__
     }
 
+}
+
+// *****************************************************************
+//
+// query routines
+//
+// *****************************************************************
+
+
+#define DUMP_LIST_CONTENTS      0
+
+//  query return data placeholders
+
+static int  RetCount;
+static int  *RetValPtrs[MAX_QUERY_RET_VALS][MAX_SENSOR_VALUES];
+static char *RetIdPtrs[MAX_QUERY_RET_VALS];
+static char *RetSubIdPtrs[MAX_QUERY_RET_VALS];
+static int  RetSums[MAX_SENSOR_VALUES];
+
+
+/// \brief  process a query and return the results
+///
+/// use sensor type, id, subid to find sensor records
+///
+/// returns a record count as part of the response with the record contents
+void
+processQuery(char *tag, char query, char sensor, char *id, char *subId,
+             char *retBuff, int retBuffSize)
+{
+    int i, ii;
+    SENSOR_LIST         *sensorListPtr;
+    SENSOR_ID_LIST      *sensorIdListPtr;
+    SENSOR_SUBID_LIST   *sensorSubIdListPtr;
+    SENSOR_RECORD       *sensorPtr, *prevSensorPtr;
+
+    RetCount = 0;
+
+    LOCK_SENSOR_LIST;
+
+    // find that sensor
+    sensorListPtr = sensorGetListBySensor(sensor);
+
+    if ( ! sensorListPtr) {     // sensor not found
+        if (DebugLevel >= DEBUG_INFO) {
+            fprintf(DebugFP, "%s(): sensor \'%c\' not found!\n",
+                    __func__, sensor);
+            sprintf(retBuff, "%s %c %c 0\n", tag, query, sensor);
+
+            UNLOCK_SENSOR_LIST;
+
+            return;
+        }
+    }
+
+    // find that id
+    sensorIdListPtr = sensorListPtr->sensors;
+    while (sensorIdListPtr) {
+        if (strcmp(id, sensorIdListPtr->id) == 0 || *id == '*') {
+            // find that subid
+            sensorSubIdListPtr = sensorIdListPtr->subIds;
+            while (sensorSubIdListPtr) {
+                if (strcmp(subId, sensorSubIdListPtr->subId) == 0 || *subId == '*') {
+                    if ( ! (sensorPtr = sensorSubIdListPtr->data)) {
+                        continue;   // no actual sensor data record for now
+                    }
+
+                    switch (query) {
+
+                    case QUERY_TYPE_LATEST: // pickup the 1st record (latest)
+
+                        RetIdPtrs[0]    = sensorIdListPtr->id;
+                        RetSubIdPtrs[0] = sensorSubIdListPtr->subId;
+
+                        for (i = 0 ; i < MAX_SENSOR_VALUES ; i++) {
+                            RetValPtrs[0][i] = &sensorPtr->rawData[i];
+                        }
+                        break;
+
+                    case QUERY_TYPE_EARLIEST: // pickup last record (earliest)
+
+                        while (sensorPtr->next) {
+                            sensorPtr = sensorPtr->next;
+                        }
+
+                        RetIdPtrs[0]    = sensorIdListPtr->id;
+                        RetSubIdPtrs[0] = sensorSubIdListPtr->subId;
+
+                        for (i = 0 ; i < MAX_SENSOR_VALUES ; i++) {
+                            RetValPtrs[0][i] = &sensorPtr->rawData[i];
+                        }
+                        break;
+
+                    case QUERY_TYPE_ALL:
+                    case QUERY_TYPE_AVG: // need to get all for all or average
+
+                        while (sensorPtr) {
+
+                            RetIdPtrs[RetCount]    = sensorIdListPtr->id;
+                            RetSubIdPtrs[RetCount] = sensorSubIdListPtr->subId;
+
+                            for (i = 0 ; i < MAX_SENSOR_VALUES ; i++) {
+                                RetValPtrs[RetCount][i] = &sensorPtr->rawData[i];
+                            }
+
+                            RetCount++;
+
+                            sensorPtr = sensorPtr->next;
+                        }
+                        break;
+                    }
+                }
+
+                sensorSubIdListPtr = sensorSubIdListPtr->next;
+            }
+
+            sensorIdListPtr = sensorIdListPtr->next;
+        }
+    }
+
+    // format and return the output
+ 
+    // first line of output - leave counts and records for later
+    sprintf(retBuff, "%s %c %c ", tag, query, sensor);
+
+    // formatting depends on query type
+    switch (query) {
+
+    case QUERY_TYPE_AVG:
+        // only one record returned by average
+        sprintf(retBuff + strlen(retBuff), "1\n%s %s",
+                RetIdPtrs[0], RetSubIdPtrs[0]);
+        for (i = 0; i < MAX_SENSOR_VALUES ; i++) {
+            sprintf(retBuff + strlen(retBuff), " %d",
+                    RetSums[i] / RetCount);
+        }
+        strcat(retBuff, "\n");
+        break;
+
+    case QUERY_TYPE_LATEST:
+    case QUERY_TYPE_EARLIEST:
+        // only one record returned by latest or earliest
+        sprintf(retBuff + strlen(retBuff), "1\n%s %s",
+                RetIdPtrs[0], RetSubIdPtrs[0]);
+        for (i = 0; i < MAX_SENSOR_VALUES ; i++) {
+            sprintf(retBuff + strlen(retBuff), " %d", *RetValPtrs[0][i]);
+        }
+        strcat(retBuff, "\n");
+        break;
+
+    case QUERY_TYPE_ALL:
+#warning        make sure dont exceed return buffer
+        // could be many records...
+        sprintf(retBuff + strlen(retBuff), "%d\ns", RetCount);
+        for (i = 0 ; i < RetCount ; i++) {
+            for (ii = 0; ii < MAX_SENSOR_VALUES ; ii++) {
+                sprintf(retBuff + strlen(retBuff), "%s %s",
+                        RetIdPtrs[i], RetSubIdPtrs[i]);
+                sprintf(retBuff + strlen(retBuff), " %d", *RetValPtrs[i][ii]);
+                strcat(retBuff, "\n");
+            }
+        }
+        break;
+    }
+
+    UNLOCK_SENSOR_LIST;
 }
 
 

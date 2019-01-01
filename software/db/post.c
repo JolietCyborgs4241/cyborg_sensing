@@ -22,7 +22,7 @@
 int MsgNum = 0;
 
 void processCamData(char *);    // all in sensors.c
-void processRangerData(char *);
+void processOneValSensor(char *);
 void process9DData(char *);     // all G, roll, and mag look the same
 
 
@@ -74,7 +74,8 @@ processSensorData(int sock)
             break;
 
         case SENSOR_RANGE:
-            processRangerData(buffer);
+        case SENSOR_OBSTACLE:
+            processOneValSensor(buffer);
             break;
 
         case SENSOR_ACCELL:

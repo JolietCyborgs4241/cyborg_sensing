@@ -6,48 +6,54 @@
 #ifndef _CYBORG_DB_QUERY_H_
 #define _CYBORG_DB_QUERY_H_ 1
 
-#define MAX_QUERY_REQ_ID_LEN     40
+#define MAX_QUERY_SIZE      100
 
-typedef unsigned char   QUERY_TYPE;
+/// MAX_QUERY_RESP
+///
+/// stay under network MTU in case we are not using localhost
+/// (local host MTU is 64K while 802.11 is 1500)
+#define MAX_QUERY_RESP      1450
 
-typedef struct queryRequest {
-    /// Query type
-    QUERY_TYPE      query;
-
-    /// Sensor type
-    SENSOR_TYPE     type;
-
-    /// Sensor identifying information
-    ///
-    /// id/subid  "ball/front"  "*/front"  "ball/*"
-    char            identifier[MAX_QUERY_REQ_ID_LEN];
-} QUERY_REQUEST;
+#define MAX_QUERY_RET_VALS  20
 
 
-typedef struct sensorVals {
-    /// id/sub (repeated for each record)
-    char            identifier[MAX_QUERY_REQ_ID_LEN];
+/// query:
+///
+/// query_tag query_type sensor id subid
+///
+///   query_tag - tag from requester (used to match responses)
+///
+///   query_type - L (latest), E (earliest), A (all), V (average of all active)
+///
+///   sensor (sensor type)
+///
+///   id
+///
+///   subId
 
-    /// Sensor values
-    ///
-    /// depends on sensor type
-    int             i1, i2, i3, i4;
-} SENSOR_VALS;
+#define QUERY_TYPE_LATEST       'L'
+#define QUERY_TYPE_EARLIEST     'E'
+#define QUERY_TYPE_ALL          'A'
+#define QUERY_TYPE_AVG          'V'
 
 
-typedef struct queryResponse {
-    /// Query type
-    QUERY_TYPE      query;
-
-    /// Sensor type
-    SENSOR_TYPE     type;
-
-    /// Number of sensor records returned
-    /// (could be 0 if none found)
-    int             retCount;
-
-    /// Actual returned sensor data (up to UDP MTU)
-    SENSOR_VALS     sensorVals[1];
-} QUERY_RESPONSE;
+/// query response:
+///
+/// query_tag query_type sensor count <newline>
+///   id subId i1 i2 i3 i4 <newline>
+///   ...
+///
+///   query_tag - tag from requester
+///
+///   query_type -  see request
+///
+///   sensor
+///
+///   count (could be 0)
+///
+///   per sensor response:
+///
+///     id subid i1 i2 i3 i4 (unused values returned as 0)
+//
 
 #endif  /* query.h */

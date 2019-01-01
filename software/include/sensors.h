@@ -54,6 +54,12 @@ typedef struct ttl_info {
 //
 #define SENSOR_MAGNETIC     'M'
 
+/// obstacle
+///
+/// B id subid (likely just a fixed dummy value) f ('0' or '1' - '1' detected)
+//
+#define SENSOR_OBSTACLE     'B'
+
 #endif  /* sensors.h */
 
 

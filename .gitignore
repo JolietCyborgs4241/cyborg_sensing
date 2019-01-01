@@ -53,3 +53,5 @@ software/test/status_bar/DEBUG
 software/test/status_bar/LOG
 
 software/db/DEBUG
+
+software/db/LOG

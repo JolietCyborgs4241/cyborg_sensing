@@ -87,16 +87,19 @@ processCamData(char *buffer)
 
 
 void
-processRangerData(char *buffer)
+processOneValSensor(char *buffer)
 {
-    char    id[MAX_SENSOR_READ], *ptr;;
-    int     range;
+    char    id[MAX_SENSOR_READ], *ptr, sensor;
+    int     value;
 
-    if (*buffer != SENSOR_RANGE || *(buffer + 1) != ' ') {
+    if ((*buffer != SENSOR_RANGE || *buffer != SENSOR_OBSTACLE)
+        || *(buffer + 1) != ' ') {
         fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
                 MyName, __func__, buffer);
         return;
     }
+
+    sensor = *buffer;
 
     buffer += 2;            // starts with "R " so continue
 
@@ -128,10 +131,10 @@ processRangerData(char *buffer)
 
     buffer++;               // now point to the real data value
 
-    range = atoi(buffer);
+    value = atoi(buffer);
 
-    if (range <= 0) {        // scanning error
-        fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, range);
+    if (value <= 0) {        // scanning error
+        fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, value);
         return;
     }
 
@@ -139,7 +142,7 @@ processRangerData(char *buffer)
         fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
-    sensorRecAdd(SENSOR_RANGE, id, "", range, 0, 0, 0);  // unused params are 0
+    sensorRecAdd(sensor, id, "", value, 0, 0, 0);  // unused params are 0
 }
 
 
