@@ -1,0 +1,8 @@
+unknown_sensor L X * *
+LATEST_G_STUFF L G * *
+latest_cam_all L C * *
+ALL_M A M * *
+earliest_cam_ball E C ball *
+EARLY_M E M * *
+range_all_for_all A R * *
+range_avg_1 V R 1 *
