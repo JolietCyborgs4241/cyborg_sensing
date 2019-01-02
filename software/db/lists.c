@@ -637,7 +637,7 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
                                 sensorSubIdListPtr->subId);
                     }
 
-                    if ( ! (sensorPtr = sensorSubIdListPtr->data)) {
+                    if ( ! (sensorPtr = sensorSubIdListPtr->data)) {    // is there data?
                         if (DebugLevel >= DEBUG_DETAIL) {
                             fprintf(DebugFP,
                                     "%s(): sensor \'%c\' id \"%s\" subId \"%s\" has no sensor records!\n",
@@ -711,8 +711,9 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
                 sensorSubIdListPtr = sensorSubIdListPtr->next;
             }
 
-            sensorIdListPtr = sensorIdListPtr->next;
         }
+
+        sensorIdListPtr = sensorIdListPtr->next;
     }
 
     // format and return the output
