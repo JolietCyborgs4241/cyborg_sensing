@@ -34,7 +34,7 @@ processSensorQuery(int sock)
     int     readRet, sendRet, sscanfRet, retSize;
     struct  timeval now;
     struct sockaddr srcAddr;
-    socklen_t addrLen;
+    socklen_t addrLen = sizeof(srcAddr);
 
     if ((readRet = recvfrom(sock, buffer, MAX_QUERY_SIZE, 0, &srcAddr, &addrLen)) > 0) {
 
@@ -96,6 +96,12 @@ processSensorQuery(int sock)
 #endif
                     MyName, now.tv_sec, now.tv_usec,
                     LogID, LOG_DIR_RESP, retBuffer);
+        }
+
+        if (DebugLevel >= DEBUG_DETAIL) {
+            fprintf(DebugFP, "%s(): sending to %s %d\n",
+                    __func__, inet_ntoa(((struct sockaddr_in *)&srcAddr)->sin_addr),
+                    ((struct sockaddr_in *)&srcAddr)->sin_port);
         }
 
         if((sendRet = sendto(sock, retBuffer, retSize, 0, &srcAddr, addrLen)) != retSize) {
