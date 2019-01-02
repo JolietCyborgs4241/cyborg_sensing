@@ -33,5 +33,7 @@ void    cvFree(void *);
 
 #define LOG_DIR_IN              "i"
 #define LOG_DIR_OUT             "o"
+#define LOG_DIR_QUERY           "q"
+#define LOG_DIR_RESP            "r"
 
 #endif  /* cv.h */

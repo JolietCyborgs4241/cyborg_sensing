@@ -17,6 +17,9 @@
 #define MAX_QUERY_RET_VALS  20
 
 
+void processQuery(char *, char, char, char *, char *, char *, int);
+
+
 /// query:
 ///
 /// query_tag query_type sensor id subid

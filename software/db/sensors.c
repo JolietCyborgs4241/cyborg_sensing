@@ -92,7 +92,7 @@ processOneValSensor(char *buffer)
     char    id[MAX_SENSOR_READ], *ptr, sensor;
     int     value;
 
-    if ((*buffer != SENSOR_RANGE || *buffer != SENSOR_OBSTACLE)
+    if ((*buffer != SENSOR_RANGE && *buffer != SENSOR_OBSTACLE)
         || *(buffer + 1) != ' ') {
         fprintf(DebugFP, "%s: error: %s() sensor header error (\"%s\")\n",
                 MyName, __func__, buffer);
@@ -101,7 +101,7 @@ processOneValSensor(char *buffer)
 
     sensor = *buffer;
 
-    buffer += 2;            // starts with "R " so continue
+    buffer += 2;            // starts appropriately so continue
 
     // copy the id and null terminate it
     //

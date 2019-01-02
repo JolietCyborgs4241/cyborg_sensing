@@ -43,6 +43,7 @@ TTLS SensorTtls[] = { { SENSOR_CAMERA, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { SENSOR_ACCELL, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { SENSOR_ROLL, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { SENSOR_MAGNETIC, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
+                      { SENSOR_OBSTACLE, TTL_SECS_DEFAULT, TTL_USECS_DEFAULT },
                       { 0, 0} };
 
 /// Global debug level

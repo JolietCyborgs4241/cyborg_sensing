@@ -153,6 +153,10 @@ recvSensorQueryThread(void *sock)
     }
 
     while (1) {
+    if (DebugLevel >= DEBUG_DETAIL) {
+        fprintf(DebugFP, "%s(%d): Calling processSensorQuery()...\n", __func__, *(int *)sock);
+    }
+
         processSensorQuery(*(int *)sock);      // each call processes one query
         sendStatusUpdate(STAT_LED_DB_ACTIVE, COLOR_BLUE);
         sleep(1);                // for now just spin

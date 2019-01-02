@@ -55,6 +55,7 @@ init(int argc, char **argv)
     StatusServer.hostIPString  = DEF_HOST_IP_STRING;
     StatusServer.hostPort      = DEF_HOST_PORT_STATUS;
 
+    initDb();
 
     while ((c = getopt(argc, argv, "S:P:Q:D:d:t:l:")) != -1) {
 
@@ -74,8 +75,8 @@ init(int argc, char **argv)
 
         case 't':
             ttl = atoi(optarg);
-            if (ttl < 0) {
-                fprintf(stderr, "%s: error: TTL value must be >= 0\n",
+            if (ttl <= 0) {
+                fprintf(stderr, "%s: error: TTL value must be > 0\n",
                         MyName);
                 exit(1);
             }
@@ -142,7 +143,6 @@ init(int argc, char **argv)
 
     initMutexes();
 
-    initDb();
 
     openIncomingPort(&HostInfoPost);
 

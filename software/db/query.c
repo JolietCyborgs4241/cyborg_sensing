@@ -20,7 +20,7 @@
 #include "sensors.h"
 
 
-static  int QueryNum = 1;
+static  int QueryNum = 0;
 
 static  char    retBuffer[MAX_QUERY_RESP];
 
@@ -38,9 +38,15 @@ processSensorQuery(int sock)
 
     if ((readRet = recvfrom(sock, buffer, MAX_QUERY_SIZE, 0, &srcAddr, &addrLen)) > 0) {
 
+        if (DebugLevel >= DEBUG_DETAIL) {
+            fprintf(DebugFP, "%s(%d): read %d bytes\n", __func__, sock, readRet);
+        }
+    
         gettimeofday(&now, NULL);
 
         buffer[readRet] = '\0';
+
+        QueryNum++;
 
         if (LogFP) {
 #ifdef  __APPLE__
@@ -49,7 +55,7 @@ processSensorQuery(int sock)
             fprintf(LogFP, "%s LOG %ld.%06ld %s %s \"%s\"\n",
 #endif
                     MyName, now.tv_sec, now.tv_usec,
-                    LogID, LOG_DIR_IN, buffer);
+                    LogID, LOG_DIR_QUERY, buffer);
         }
 
         if (DebugLevel >= DEBUG_INFO) {
@@ -76,6 +82,21 @@ processSensorQuery(int sock)
                      retBuffer, sizeof(retBuffer));
 
         retSize = strlen(retBuffer);
+
+        if (DebugLevel >= DEBUG_DETAIL) {
+            fprintf(DebugFP, "%s():\n\"%s\"\n",
+                    __func__, retBuffer);
+        }
+
+        if (LogFP) {
+#ifdef  __APPLE__
+            fprintf(LogFP, "%s LOG %ld.%06d %s %s \"%s\"\n",
+#else   // ! __APPLE__
+            fprintf(LogFP, "%s LOG %ld.%06ld %s %s \"%s\"\n",
+#endif
+                    MyName, now.tv_sec, now.tv_usec,
+                    LogID, LOG_DIR_RESP, retBuffer);
+        }
 
         if((sendRet = sendto(sock, retBuffer, retSize, 0, &srcAddr, addrLen)) != retSize) {
             if (DebugLevel >= DEBUG_INFO) {
