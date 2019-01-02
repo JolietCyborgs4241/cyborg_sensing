@@ -2,6 +2,7 @@ unknown_sensor L X * *
 LATEST_G_STUFF L G * *
 latest_cam_all L C * *
 ALL_M A M * *
+latest_cam_ball L C ball *
 earliest_cam_ball E C ball *
 EARLY_M E M * *
 range_all_for_all A R * *
