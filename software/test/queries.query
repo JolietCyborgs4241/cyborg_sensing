@@ -6,4 +6,5 @@ latest_cam_ball L C ball *
 earliest_cam_ball E C ball *
 EARLY_M E M * *
 range_all_for_all A R * *
+range_avg_9 V R 9 *
 range_avg_1 V R 1 *
