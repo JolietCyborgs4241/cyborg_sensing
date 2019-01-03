@@ -84,7 +84,7 @@ processSensorQuery(int sock)
         retSize = strlen(retBuffer);
 
         if (DebugLevel >= DEBUG_DETAIL) {
-            fprintf(DebugFP, "%s():\n\"%s\"\n",
+            fprintf(DebugFP, "%s() returning:\n\"%s\"\n",
                     __func__, retBuffer);
         }
 

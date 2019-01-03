@@ -74,11 +74,6 @@ processCamData(char *buffer)
         return;
     }
 
-    if (DebugLevel >= DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s():calling sensorRecAdd(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
-                __func__, SENSOR_CAMERA, id, camera, x, y, w, h);
-    }
-    
     sensorRecAdd(SENSOR_CAMERA, id, camera, x, y, w, h);
 }
 
@@ -136,10 +131,6 @@ processOneValSensor(char *buffer)
     if (value <= 0) {        // scanning error
         fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, value);
         return;
-    }
-
-    if (DebugLevel >= DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
     sensorRecAdd(sensor, id, "", value, 0, 0, 0);  // unused params are 0
@@ -202,10 +193,6 @@ process9DData(char *buffer)
     if (scanRet != 3) {         // scanning error
         fprintf(DebugFP, "%s(): scanf(\"%s\") error: ret %d\n", __func__, buffer, scanRet);
         return;
-    }
-
-    if (DebugLevel >= DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(): validated - adding msg\n", __func__);
     }
 
     sensorRecAdd(type, id, "", x, y, z, 0);  // unused params are 0

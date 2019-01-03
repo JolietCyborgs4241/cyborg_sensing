@@ -371,7 +371,7 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
     SENSOR_LIST         *sensorPtr;
     int                 subIdLen;
     
-    if (DebugLevel >= DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_SUPER) {
         fprintf(DebugFP, "%s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d)\n",
                 __func__, (int)sensor, id, subId, i1, i2, i3, i4);
     }
@@ -436,11 +436,6 @@ sensorRecAdd(SENSOR_TYPE sensor, char *id, char *subId, int i1, int i2, int i3, 
 sensorAdded:
 
     UNLOCK_SENSOR_LIST;
-
-    if (DebugLevel >= DEBUG_DETAIL) {
-        fprintf(DebugFP, "%s(\'%c\', \"%s\", \"%s\", %d, %d, %d, %d) completed\n",
-                __func__, (int)sensor, id, subId, i1, i2, i3, i4);
-    }
 
     return;
 }
@@ -540,16 +535,6 @@ sensorRecPruneAll()
     }
 
     UNLOCK_SENSOR_LIST;
-    
-    if (DebugLevel >= DEBUG_DETAIL) {
-        gettimeofday(&now, NULL);
-#ifdef  __APPLE__
-        fprintf(DebugFP, "%s() exit @ %ld.%06d\n", __func__, now.tv_sec, now.tv_usec);
-#else   // ! __APPLE__
-        fprintf(DebugFP, "%s() exit @ %ld.%06ld\n", __func__, now.tv_sec, now.tv_usec);
-#endif  // __APPLE__
-    }
-
 }
 
 // *****************************************************************
@@ -588,7 +573,7 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
 
     RetCount = 0;
 
-    if (DebugLevel >= DEBUG_DETAIL) {
+    if (DebugLevel >= DEBUG_SUPER) {
         fprintf(DebugFP, "%s(\"%s\", \'%c\', \'%c\', \"%s\", \"%s\", 0x%lx, %d)\n",
                 __func__, tag, query, sensor, id, subId, (long)retBuff, retBuffSize);
     }
@@ -599,10 +584,12 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
     sensorListPtr = sensorGetListBySensor(sensor);
 
     if ( ! sensorListPtr) {     // sensor not found
+#ifdef NEVER
         if (DebugLevel >= DEBUG_INFO) {
             fprintf(DebugFP, "%s(): sensor \'%c\' not found!\n",
                     __func__, sensor);
         }
+#endif
 
         sprintf(retBuff, "%s %c %c 0\n", tag, query, sensor);
 
@@ -611,40 +598,48 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
         return;
     }
 
+#ifdef NEVER
     if (DebugLevel >= DEBUG_INFO) {
         fprintf(DebugFP, "%s(): sensor \'%c\' found - searching for id \"%s\"\n",
                 __func__, sensor, id);
     }
+#endif
 
     // find that id
     sensorIdListPtr = sensorListPtr->sensors;
 
     while (sensorIdListPtr) {
         if (*id == '*' || strcmp(id, sensorIdListPtr->id) == 0) {
+#ifdef NEVER
             if (DebugLevel >= DEBUG_DETAIL) {
                 fprintf(DebugFP, "%s(): sensor \'%c\' id \"%s\" found - searching for subId \"%s\"\n",
                         __func__, sensor, sensorIdListPtr->id, subId);
             }
+#endif
 
             // find that subid
             sensorSubIdListPtr = sensorIdListPtr->subIds;
 
             while (sensorSubIdListPtr) {
                 if (*subId == '*' || strcmp(subId, sensorSubIdListPtr->subId) == 0) {
+#ifdef NEVER
                     if (DebugLevel >= DEBUG_DETAIL) {
                         fprintf(DebugFP,
                                 "%s(): sensor \'%c\' id \"%s\" subId \"%s\" found!\n",
                                 __func__, sensor, sensorIdListPtr->id,
                                 sensorSubIdListPtr->subId);
                     }
+#endif
 
                     if ( ! (sensorPtr = sensorSubIdListPtr->data)) {    // is there data?
+#ifdef NEVER
                         if (DebugLevel >= DEBUG_DETAIL) {
                             fprintf(DebugFP,
                                     "%s(): sensor \'%c\' id \"%s\" subId \"%s\" has no sensor records!\n",
                                     __func__, sensor, sensorIdListPtr->id,
                                     sensorSubIdListPtr->subId);
                         }
+#endif
 
                         sensorSubIdListPtr = sensorSubIdListPtr->next;
 
@@ -746,7 +741,7 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
         sensorIdListPtr = sensorIdListPtr->next;
     }
 
-#warning  remove strlen()s form each sprintf() call and use return value to run the offset through retBuff
+#warning  remove strlen()s from each sprintf() call and use return value to run the offset through retBuff
 
     // format and return the output
  
