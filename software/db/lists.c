@@ -751,7 +751,7 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
     // format and return the output
  
     // first line of output same for all - leave counts and records for later
-    sprintf(retBuff, "%s %c %c ", tag, query, sensor);
+    sprintf(retBuff, "\"%s\" %c %c ", tag, query, sensor);
 
     // formatting depends on query type
     switch (query) {
@@ -770,8 +770,8 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
         // sensor found on it's own line (for each potential value)
 
         for (i = 0; i < RetCount; i++) {
-            sprintf(retBuff + strlen(retBuff), "%s %s",
-                    RetIdPtrs[i], strlen(RetSubIdPtrs[i]) ? RetSubIdPtrs[i] : "*");
+            sprintf(retBuff + strlen(retBuff), "\"%s\" \"%s\"",
+                    RetIdPtrs[i], RetSubIdPtrs[i]);
 
             for (ii = 0; ii < MAX_SENSOR_VALUES ; ii++) {
                 sprintf(retBuff + strlen(retBuff), " %d",
@@ -794,9 +794,8 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
         sprintf(retBuff + strlen(retBuff), "%d\n", RetCount);
         
         for (i = 0 ; i < RetCount ; i++) {
-            sprintf(retBuff + strlen(retBuff), "%s %s",
-                    strlen(RetIdPtrs[i]) ? RetIdPtrs[i] : "*",
-                    strlen(RetSubIdPtrs[i]) ? RetSubIdPtrs[i] : "*");
+            sprintf(retBuff + strlen(retBuff), "\"%s\" \"%s\"",
+                    RetIdPtrs[i], RetSubIdPtrs[i]);
 
             for (ii = 0; ii < MAX_SENSOR_VALUES ; ii++) {
                 sprintf(retBuff + strlen(retBuff), " %d", *RetValPtrs[i][ii]);
