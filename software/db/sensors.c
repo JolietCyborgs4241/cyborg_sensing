@@ -128,7 +128,7 @@ processOneValSensor(char *buffer)
 
     value = atoi(buffer);
 
-    if (value <= 0) {        // scanning error
+    if (value == 0 && *buffer != '0') {        // scanning error but 0 is a valid value
         fprintf(DebugFP, "%s(): atoi(\"%s\") error: ret %d\n", __func__, buffer, value);
         return;
     }
