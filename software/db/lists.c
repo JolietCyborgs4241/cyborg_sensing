@@ -564,7 +564,8 @@ static int  RetCount;
 static int  *RetValPtrs[MAX_QUERY_RET_VALS][MAX_SENSOR_VALUES];
 static char *RetIdPtrs[MAX_QUERY_RET_VALS];
 static char *RetSubIdPtrs[MAX_QUERY_RET_VALS];
-static int  RetSums[MAX_SENSOR_VALUES];
+static int  RetAvgSums[MAX_QUERY_RET_VALS][MAX_SENSOR_VALUES];
+static int  RetAvgCounts[MAX_QUERY_RET_VALS];
 
 
 /// \brief  process a query and return the results
@@ -650,16 +651,11 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
                         continue;   // no actual sensor data record for now
                     }
 
-                    if (DebugLevel >= DEBUG_DETAIL) {
-                        fprintf(DebugFP,
-                                "%s(): query %c RetCount %d\n",
-                                __func__, query, RetCount);
-                    }
-
                     switch (query) {
 
-                    case QUERY_TYPE_LATEST: // pickup the 1st record (latest)
-
+                    case QUERY_TYPE_LATEST:
+                        
+                        // pickup the 1st record (latest)
                         RetIdPtrs[RetCount]    = sensorIdListPtr->id;
                         RetSubIdPtrs[RetCount] = sensorSubIdListPtr->subId;
 
@@ -671,8 +667,9 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
 
                         break;
 
-                    case QUERY_TYPE_EARLIEST: // pickup last record (earliest)
-
+                    case QUERY_TYPE_EARLIEST:
+                       
+                        // pickup last record (earliest)
                         while (sensorPtr->next) {
                             sensorPtr = sensorPtr->next;
                         }
@@ -689,8 +686,9 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
                         break;
 
                     case QUERY_TYPE_ALL:
-                    case QUERY_TYPE_AVG: // need to get all for all or average
 
+                        // save them all with each sensor reading being added
+                        // to the RetCount
                         while (sensorPtr) {
 
                             RetIdPtrs[RetCount]    = sensorIdListPtr->id;
@@ -705,6 +703,38 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
                             sensorPtr = sensorPtr->next;
                         }
                         break;
+
+                    case QUERY_TYPE_AVG:
+
+                        // save them all with each sensor reading being added
+                        // to the RetAvgSum for averaging
+                        //
+                        // we keep track of the number of sensor readings for
+                        // each sensor in RetAvgCounts while RetCount is the
+                        // number of individual sensors that we're returning
+                        // an average for (we could get averages for several
+                        // sensors depending on what we ask for
+                        RetIdPtrs[RetCount]    = sensorIdListPtr->id;
+                        RetSubIdPtrs[RetCount] = sensorSubIdListPtr->subId;
+
+                        for (i = 0 ; i < MAX_SENSOR_VALUES ; i++) {
+                            RetAvgSums[RetCount][i] = 0;    // clear this sensor
+                        }
+                        RetAvgCounts[RetCount] = 0;
+
+                        while (sensorPtr) {
+                            for (i = 0 ; i < MAX_SENSOR_VALUES ; i++) {
+                                RetAvgSums[RetCount][i] += sensorPtr->rawData[i];
+                            }
+
+                            RetAvgCounts[RetCount]++;
+
+                            sensorPtr = sensorPtr->next;
+                        }
+
+                        RetCount++;
+
+                        break;
                     }
                 }
 
@@ -716,28 +746,41 @@ processQuery(char *tag, char query, char sensor, char *id, char *subId,
         sensorIdListPtr = sensorIdListPtr->next;
     }
 
+#warning  remove strlen()s form each sprintf() call and use return value to run the offset through retBuff
+
     // format and return the output
  
-    // first line of output - leave counts and records for later
+    // first line of output same for all - leave counts and records for later
     sprintf(retBuff, "%s %c %c ", tag, query, sensor);
 
     // formatting depends on query type
     switch (query) {
 
     case QUERY_TYPE_AVG:
-        // only one record returned by average - check that we actually
-        // have something to average
-        sprintf(retBuff + strlen(retBuff), "%d %s %s",
-                RetCount,
-                RetCount ? RetIdPtrs[0] : id,
-                RetCount ? RetSubIdPtrs[0] : subId);
 
-        for (i = 0; i < MAX_SENSOR_VALUES ; i++) {
-            sprintf(retBuff + strlen(retBuff), " %d",
-                    RetCount ? RetSums[i] / RetCount : 0);
+        // average response is complicated - RetCount is the number
+        // of sensors that we're returning averages for so handle that first
+        //
+        sprintf(retBuff + strlen(retBuff), "%d\n", RetCount);
+        if (RetCount == 0) {    // returned the 0 so we're done
+            break;
         }
 
-        strcat(retBuff, "\n");
+        // since there is something to return, return the averages for each
+        // sensor found on it's own line (for each potential value)
+
+        for (i = 0; i < RetCount; i++) {
+            sprintf(retBuff + strlen(retBuff), "%s %s",
+                    RetIdPtrs[i], strlen(RetSubIdPtrs[i]) ? RetSubIdPtrs[i] : "*");
+
+            for (ii = 0; ii < MAX_SENSOR_VALUES ; ii++) {
+                sprintf(retBuff + strlen(retBuff), " %d",
+                        RetAvgCounts[i] ? RetAvgSums[i][ii] / RetAvgCounts[i] : 0);
+            }
+
+            strcat(retBuff, "\n");
+        }
+
         break;
 
     case QUERY_TYPE_LATEST:
