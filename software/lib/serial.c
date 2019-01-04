@@ -96,7 +96,7 @@ openSerialPort(char *portAtSpeed)
     cfsetspeed(&settings, speedVal);
 
     settings.c_cflag &= ~(CSIZE | PARENB);
-    settings.c_cflag  = CS8 | CLOCAL;
+    settings.c_cflag |= CS8 | CLOCAL;
 
     if (tcsetattr(fd, TCSANOW, &settings) == -1) {
         fprintf(stderr,
