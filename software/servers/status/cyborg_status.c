@@ -107,7 +107,7 @@ processStatusUpdate(int sock, int serial)
         if ((writeRet = write(serial, &cmd, sizeof(cmd))) != sizeof(cmd)) {
             fprintf(DebugFP, "%s(%d, %d): write error - returned %d bytes - \"%s\"\n",
                     __func__, sock, serial, writeRet, strerror(errno));
-            return;
+            exit(1);    // once an error happens, it's usually fatal
         }
 
     } else {
