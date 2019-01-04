@@ -19,6 +19,7 @@
 
 #include "cv.h"
 #include "cv_net.h"
+#include "cyborg_lib.h"
 #include "sensors.h"
 #include "9dof/externs.h"
 
