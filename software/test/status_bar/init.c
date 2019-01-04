@@ -34,6 +34,8 @@ static  void    usage(), dumpConfig();
 
 /// \brief process command line and perform other initializations
 ///
+/// -S status server host:port
+///
 /// -s serial port @ speed to connect to status display hardwaee
 ///
 /// -t LED timeout (sec)
@@ -220,7 +222,7 @@ usage()
 
 {
     fprintf(stderr,
-            "%s: usage: %s [-h IP] [-p Port] [-s serial_port@speed ] [ -t LED TTL ] [ -M max inter msg delay (msecs) ] [ -R random cycle count ] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
+            "%s: usage: %s [-S IP:port] [-s serial_port@speed ] [-t LED TTL] [-M max inter msg delay (msecs) ] [-R random cycle count] [-d debug file ] [-D 0|1|2|3] [-l log file]\n",
             MyName, MyName);
 }
 
