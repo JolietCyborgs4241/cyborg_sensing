@@ -1,4 +1,4 @@
-# Autonomous-related code for FRC #4241 autonomous operation efforts
+# Research for FRC #4241 sensing and autonomous operation efforts
 
 ## Introduction
 
