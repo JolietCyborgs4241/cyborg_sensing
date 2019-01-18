@@ -12,7 +12,7 @@
     <grip:Step name="Filter Lines">
       <grip:Input step="1" socket="0"/>
       <grip:Input step="1" socket="1">
-        <value>40.0</value>
+        <value>100.0</value>
       </grip:Input>
       <grip:Input step="1" socket="2">
         <value>
@@ -22,8 +22,36 @@
       </grip:Input>
       <grip:Output step="1" socket="0" previewed="true"/>
     </grip:Step>
+    <grip:Step name="HTTP Publish LinesReport">
+      <grip:Input step="2" socket="0"/>
+      <grip:Input step="2" socket="1">
+        <value>myLinesReport</value>
+      </grip:Input>
+      <grip:Input step="2" socket="2">
+        <value>true</value>
+      </grip:Input>
+      <grip:Input step="2" socket="3">
+        <value>true</value>
+      </grip:Input>
+      <grip:Input step="2" socket="4">
+        <value>true</value>
+      </grip:Input>
+      <grip:Input step="2" socket="5">
+        <value>true</value>
+      </grip:Input>
+      <grip:Input step="2" socket="6">
+        <value>true</value>
+      </grip:Input>
+      <grip:Input step="2" socket="7">
+        <value>true</value>
+      </grip:Input>
+    </grip:Step>
   </steps>
   <connections>
+    <grip:Connection>
+      <grip:Output step="1" socket="0" previewed="true"/>
+      <grip:Input step="2" socket="0"/>
+    </grip:Connection>
     <grip:Connection>
       <grip:Output source="0" socket="0" previewed="true"/>
       <grip:Input step="0" socket="0"/>
@@ -34,12 +62,12 @@
     </grip:Connection>
   </connections>
   <settings>
-    <teamNumber>0</teamNumber>
-    <publishAddress>roboRIO-0-FRC.local</publishAddress>
-    <deployAddress>roboRIO-0-FRC.local</deployAddress>
-    <deployDir>/home/lvuser</deployDir>
-    <deployUser>lvuser</deployUser>
-    <deployJavaHome>/usr/local/frc/JRE/</deployJavaHome>
+    <teamNumber>4241</teamNumber>
+    <publishAddress>roboRIO-4241-FRC.local</publishAddress>
+    <deployAddress>roboRIO-4241-FRC.local</deployAddress>
+    <deployDir>/home/zog/cyborgs</deployDir>
+    <deployUser>zog</deployUser>
+    <deployJavaHome>/home/zog/cyborgs</deployJavaHome>
     <deployJvmOptions>-Xmx50m -XX:-OmitStackTraceInFastThrow -XX:+HeapDumpOnOutOfMemoryError -XX:MaxNewSize=16m</deployJvmOptions>
   </settings>
   <codeGenerationSettings>
