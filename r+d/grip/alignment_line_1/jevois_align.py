@@ -26,31 +26,63 @@ class ZogTest:
 
 
 
-
     def process(self, inframe, outframe):
-      #Mat grey
       
       img = inframe.getCvBGR()
 
+
+      # make a greyscalew copy of the image to simplify and speed up line detection
+
       (self.desaturate_output) = self.__desaturate(img)
+
 
       # blur the image to help the line finder to find longer lines
       # and not try to build longer lines through a bunch of short segments
-      (self.blur_output) = self.__blur(self.desaturate_output, self.__blur_type, self.__blur_radius)
 
+      (self.blur_output) = self.__blur(self.desaturate_output, self.__blur_type, self.__blur_radius)
       
+
       # take the blurred image and find lines
+
       (self.find_lines_output) = self.__find_lines(self.blur_output)
 
+
       # process the lines to leave only those that meet our length and angle criteria
+      #
+      # right now the minimum line length is fixed at initialization time and is specified
+      # in terms of pixels.
+      #
+      # The original values in this file used a line length of 50 which was proven reasonable
+      # based on a trial and error testing with an image resolution of 320X240 pixels.  This means
+      # we are using a minimum line length of about 21% of the vertical image resolution.
+      #
+      # It would be nice to make this resolution-independent; we would do this by calculating a
+      # minimum line length based on vertical resolution (say using a figure of 20%). We should
+      # be able to get the vertical resolution from the image object which is a numpy array;
+      # getting the .ndim and .shape attributes should give us this information.
+      #
+      # We should be able to get the vertical resolution from the .shape attribute and
+      # be able to calculate value passed to the __filter_lines() method.
+
       (self.filter_lines_output) = self.__filter_lines(self.find_lines_output, self.__filter_lines_min_length, self.__filter_lines_angle)
 
-      # highlight the lines in the camera image (original image - not blurred image)
+
+      # highlight the lines that met the filtering criteria in the camera captured image
+      # (original image - not any of the processed copies)
+      #
+      # white (255,255,255)
+      # 1 pixel width (we should make the line width resolution independent as well; 1 pixel
+      #                is fine for a horizontal resolution of 320 but at 640, we really need
+      #                a width of 2-3 pixels so calculated line width of about 0.05 of the
+      #                horizontal resolution would be reasonable)
+
       for line in self.filter_lines_output:
           cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 255, 255), 1, 8, 0)
           jevois.sendSerial(str(int(line.length())) + " @ " + str(int(line.angle())))
 
-      # send the image with the lines highlighted to the USB output
+
+      # send the original, ful color, unblurred image with the lines highlighted to the USB output
+
       outframe.sendCv(img)
 
 
@@ -74,6 +106,8 @@ class ZogTest:
         else:
             raise Exception("Input to desaturate must have 1, 3 or 4 channels")
 
+
+
     @staticmethod
     def __blur(src, type, radius):
         """Softens an image using one of several filters.
@@ -96,6 +130,8 @@ class ZogTest:
         else:
             return cv2.bilateralFilter(src, -1, round(radius), round(radius))
 
+
+
     class Line:
 
         def __init__(self, x1, y1, x2, y2):
@@ -109,6 +145,8 @@ class ZogTest:
 
         def angle(self):
             return math.degrees(math.atan2(self.y2 - self.y1, self.x2 - self.x1))
+
+
 
     @staticmethod
     def __find_lines(input):
@@ -134,6 +172,8 @@ class ZogTest:
                 output.append(tmp)
         return output
 
+
+
     @staticmethod
     def __filter_lines(inputs, min_length, angle):
         """Filters out lines that do not meet certain criteria.
@@ -151,6 +191,8 @@ class ZogTest:
                         (line.angle() + 180.0 >= angle[0] and line.angle() + 180.0 <= angle[1])):
                     outputs.append(line)
         return outputs
+
+
 
 
 BlurType = Enum('BlurType', 'Box_Blur Gaussian_Blur Median_Filter Bilateral_Filter')
