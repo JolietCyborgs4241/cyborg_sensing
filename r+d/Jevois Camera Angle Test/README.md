@@ -2,6 +2,26 @@
 
 Below are some photos of the overall testing configuration:
 
+![Camera targets](https://github.com/JolietCyborgs4241/cyborg_sensing/blob/master/r%2Bd/Jevois%20Camera%20Angle%20Test/camera_targets.jpg)
+
+This shows the overall view of the testing configuration showing the red cargo hatch assembly,
+the alignment lines for each cargo hatch, and test location markers (labels A, B, C, D, E, and F)
+and the marks used for angular orientation of the test trolley.
+
+Here is a closeup of the test locations and angular orientation marks.
+
+![Test locations and angular orientation marks](https://github.com/JolietCyborgs4241/cyborg_sensing/blob/master/r%2Bd/Jevois%20Camera%20Angle%20Test/camera_angles.jpg)
+
+## Camera Mounting
+
+To provide a stable and repeatable platform for maintain the camera angle and to allow it to be accurately and repeatedly
+located over the test locations at different angles, a trolley was built using ball casters to support the camera at
+a height and orientation that we felt was likely to be indicative of how it would be mounted to the final
+robot (both in terms of height and location on the robot chassis)
+
+Here is a closeup of the camera trolley with one of the Jevois smart cameras mounted on it:
+
+![Camera trolley](https://github.com/JolietCyborgs4241/cyborg_sensing/blob/master/r%2Bd/Jevois%20Camera%20Angle%20Test/camera_trolley.jpg)
 
 ## Dimensions
 
