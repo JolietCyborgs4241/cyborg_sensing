@@ -57,3 +57,5 @@ software/db/DEBUG
 software/db/LOG
 
 software/db/cv_db
+
+*.ods#
