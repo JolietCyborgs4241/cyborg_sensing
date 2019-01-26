@@ -23,12 +23,20 @@ class ZogTest:
       self.__filter_lines_angle = [45.0, 135.0]
 
       self.filter_lines_output = None
+      
+      self.width = 0
+      self.height = 0
+      self.channels = 0
 
 
 
     def process(self, inframe, outframe):
       
       img = inframe.getCvBGR()
+
+
+      # get image attributes
+      (self.height, self.width, self.ndims) = img.shape
 
 
       # make a greyscalew copy of the image to simplify and speed up line detection
@@ -39,7 +47,8 @@ class ZogTest:
       # blur the image to help the line finder to find longer lines
       # and not try to build longer lines through a bunch of short segments
 
-      (self.blur_output) = self.__blur(self.desaturate_output, self.__blur_type, self.__blur_radius)
+      (self.blur_output) = self.__blur(self.desaturate_output, self.__blur_type,
+                                       self.__blur_radius)
       
 
       # take the blurred image and find lines
@@ -47,41 +56,69 @@ class ZogTest:
       (self.find_lines_output) = self.__find_lines(self.blur_output)
 
 
-      # process the lines to leave only those that meet our length and angle criteria
+      # process the lines to leave only those that meet our length and
+      # angle criteria
       #
-      # right now the minimum line length is fixed at initialization time and is specified
-      # in terms of pixels.
+      # right now the minimum line length is fixed at initialization time
+      # and is specified in terms of pixels.
       #
-      # The original values in this file used a line length of 50 which was proven reasonable
-      # based on a trial and error testing with an image resolution of 320X240 pixels.  This means
-      # we are using a minimum line length of about 21% of the vertical image resolution.
+      # The original values in this file used a line length of 50 which
+      # was proven reasonable based on a trial and error testing with an
+      # image resolution of 320X240 pixels.  This means we are using a
+      # minimum line length of about 20% of the vertical image resolution.
       #
-      # It would be nice to make this resolution-independent; we would do this by calculating a
-      # minimum line length based on vertical resolution (say using a figure of 20%). We should
-      # be able to get the vertical resolution from the image object which is a numpy array;
-      # getting the .ndim and .shape attributes should give us this information.
-      #
-      # We should be able to get the vertical resolution from the .shape attribute and
-      # be able to calculate value passed to the __filter_lines() method.
+      # We set the line length for the lien filtering operation accordingly.
 
-      (self.filter_lines_output) = self.__filter_lines(self.find_lines_output, self.__filter_lines_min_length, self.__filter_lines_angle)
+      self.__filter_lines_min_length = round(height * 0.20)
+      
+      (self.filter_lines_output) = self.__filter_lines(self.find_lines_output,
+                                                       self.__filter_lines_min_length,
+                                                       self.__filter_lines_angle)
 
 
-      # highlight the lines that met the filtering criteria in the camera captured image
-      # (original image - not any of the processed copies)
+      # highlight the lines that met the filtering criteria in the camera captured
+      # image (original image - not any of the processed copies)
       #
       # white (255,255,255)
-      # 1 pixel width (we should make the line width resolution independent as well; 1 pixel
-      #                is fine for a horizontal resolution of 320 but at 640, we really need
-      #                a width of 2-3 pixels so calculated line width of about 0.05 of the
-      #                horizontal resolution would be reasonable)
+      # pixel width of the line - set to .5% of the horizontal resolution which
+      # gives us a 3 pixel wide line @ 640 and a singe @ 320
+      #
+      # In addition to highlighting the lines in the original image, we output
+      # a formatted string to the console for further processing
+      #
+      # Format:
+      #
+      # "Xres X Yres: x1, y1 -> x2, y2 - length @ angle"
+      #
+      # Example:
+      #
+      # "320 X 240: 105, 66 -> 112, 114 - 48 @ 80"
+      #
+      # Depending on how the lines are found, the start and of the lines and
+      # the corresponding angles are not consistent
+      #
+      # The angles are accurate but parallel lines could be reported as either
+      # 94 or -86 degrees; to keep things consistent, we check the angle and
+      # if it's negative, we normalize it by adding 180 degrees and swap
+      # x1, y1 and x2, y2 in the output
 
       for line in self.filter_lines_output:
-          cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 255, 255), 1, 8, 0)
-          jevois.sendSerial(str(int(line.length())) + " @ " + str(int(line.angle())))
+          cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 255, 255),
+                   int(float(width) * 0.005), 8, 0)
+                   
+          if (int(line.angle()) >= 0):
+              jevois.sendSerial(str(width) + " X " + str(height) + ": " +
+                                str(int(line.x1)) + ", " + str(int(line.y1)) + " -> " +
+                                str(int(line.x2)) + ", " + str(int(line.y2)) + " - " +
+                                str(int(line.length())) + " @ " + str(int(line.angle())))
+          else:
+              jevois.sendSerial(str(width) + " X " + str(height) + ": " +
+                                str(int(line.x2)) + ", " + str(int(line.y2)) + " -> " +
+                                str(int(line.x1)) + ", " + str(int(line.y1)) + " - " +
+                                str(int(line.length())) + " @ " + str(int(line.angle()) + 180))
 
-
-      # send the original, ful color, unblurred image with the lines highlighted to the USB output
+      # send the original, ful color, unblurred image with the lines highlighted
+      # to the USB output
 
       outframe.sendCv(img)
 
