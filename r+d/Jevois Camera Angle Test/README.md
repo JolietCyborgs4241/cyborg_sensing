@@ -14,8 +14,13 @@ Here is a closeup of the test locations and angular orientation marks.
 
 ## Camera Mounting
 
-To provide a stable and repeatable platform for maintain the camera angle and to allow it to be accurately and repeatedly
-located over the test locations at different angles, a trolley was built using ball casters to support the camera at
+To provide a stable and repeatable platform for maintaining the camera angle and to allow it to be accurately and repeatedly
+located over the test locations at different angles, a trolley was built using ball casters.
+The use of ball casters simulates the robot movement options available using the "swerve" drive employed for this
+years chassis and allowed us to smoothly move the robot in any direction for actual robot motion / video processing 
+interaction testing.
+
+This would support the camera at
 a height and orientation that we felt was likely to be indicative of how it would be mounted to the final
 robot (both in terms of height and location on the robot chassis)
 
