@@ -5,9 +5,9 @@ import math
 from enum import Enum
 
 REFLECTOR_ANG       = 14.5
-LEFT_REFLECTOR_ANG  = (90 - REFLECTOR_ANG)
-RIGHT_REFLECTOR_ANG = (90 + REFLECTOR_ANG)
-REFLECTOR_TOLERANCE = 3.0
+LEFT_REFLECTOR_ANG  = (- REFLECTOR_ANG)
+RIGHT_REFLECTOR_ANG = (REFLECTOR_ANG)
+REFLECTOR_TOLERANCE = 4.0
 
 
 class Reflectors:
@@ -15,14 +15,14 @@ class Reflectors:
     def __init__(self):
 
         self.__blur_type = BlurType.Box_Blur
-        self.__blur_radius = 5.0
+        self.__blur_radius = 1.0
 
         self.blur_output = None
 
 
-        self.__hsv_threshold_hue = [50.0, 70.0]
+        self.__hsv_threshold_hue = [50.0, 75.0]
         self.__hsv_threshold_sat = [100.0, 255.0]
-        self.__hsv_threshold_val = [140.0, 255.0]
+        self.__hsv_threshold_val = [150.0, 255.0]
 
         self.hsv_threshold_output = None
 
@@ -74,23 +74,27 @@ class Reflectors:
                                                     self.__hsv_threshold_hue,
                                                     self.__hsv_threshold_sat,
                                                     self.__hsv_threshold_val)
-      jevois.sendSerial("HSV done")
-      outframe.sendCv(self.hsv_threshold_output)
+      (self.blur_output) = self.__blur(self.hsv_threshold_output, self.__blur_type,
+                                         self.__blur_radius)
+                                         
+      outframe.sendCv(self.blur_output)
 
 
       # Find the reflector edges so we can orient on them
-      self.__find_lines_input = self.hsv_threshold_output
-      (self.find_lines_output) = self.__find_lines(self.hsv_threshold_output)
-      jevois.sendSerial("Lines found")
-      jevois.sendSerial(str(int(len(self.find_lines_output))))
-
+      (self.find_lines_output) = self.__find_lines(self.blur_output)
+      jevois.sendSerial("----------------------\n" + str(int(len(self.find_lines_output))) + " lines found:")
+      
+      for line in self.find_lines_output:
+          jevois.sendSerial(str(line))
+      jevois.sendSerial("----------------------")
+      jevois.sendSerial(str(self.find_lines_output[0]))
+      
       # Filter any extraneous lines
       self.__filter_lines_lines = self.find_lines_output
       (self.filter_lines_output) = self.__filter_lines(self.find_lines_output,
                                                 width * self.__filter_lines_min_length_percentage,
                                                 self.__filter_lines_angles)
-      jevois.sendSerial("Lines filtered")
-      jevois.sendSerial(str(int(len(self.filter_lines_output))))
+      jevois.sendSerial(str(int(len(self.filter_lines_output))) + " lines filtered")
 
 
       # CALCULATE THE MID POINT OF THE TWO MARKS
@@ -152,9 +156,9 @@ class Reflectors:
       # reflectors, we give precedence to the left-most set of marks since
       # that's where we're starting our search from
 
-      if (len(self.filter_lines_output)):
+      if (len(self.filter_lines_output) > 1):
           hatchCoorY = int((self.filter_lines_output[0].y2 - self.filter_lines_output[0].y1) * 2.253 +
-                            self.filter_lines_output.y2)
+                            self.filter_lines_output[0].y2)
 
           hatchCoorX = int((self.filter_lines_output[0].x1 + self.filter_lines_output[1].x1) / 2)
 
@@ -176,22 +180,23 @@ class Reflectors:
       #
       # "320 X 240: 105, 66 -> 112, 114 - 48 @ 80"
 
+          jevois.sendSerial("----------------------\n" + str(int(len(self.filter_lines_output))) + " lines filtered:")
+
           for line in self.filter_lines_output:
               cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 255, 255),
                        int(float(width) * 0.005), 8, 0)
 
-              jevois.sendSerial(str(width)+" X "+str(height)+": "+
-                                str(int(line.x1))+", "+str(int(line.y1))+" -> "+
-                                str(int(line.x2))+", "+str(int(line.y2))+" - "+
-                                str(int(line.length()))+" @ "+str(int(line.angle())))
-      
+              jevois.sendSerial(str(width) + " X " + str(height) + ": " + str(line))
+
+          jevois.sendSerial("----------------------")
+
           crosshairSize = int(float(width) * 0.10)
 
           cv2.line(img, hatchCoorX - crosshairSize, hatchCoorY, hatchCoorX + crosshairSize, hatchCoorY, (255, 50, 50), int(float(width) * 0.010), 8, 0)
 
           cv2.line(img, hatchCoorX, hatchCoorY - crosshairSize, hatchCoorX, hatchCoorY + crosshairSize, (255, 50, 50), int(float(width) * 0.010), 8, 0)
       else:
-          jevois.sendSerial("No lines found!");
+          jevois.sendSerial("Fewer than 2 lines after filtering!");
           
       # send the original, full color, unblurred image with the lines highlighted
       # to the USB output
@@ -250,7 +255,10 @@ class Reflectors:
             return math.degrees(math.atan2(self.y2 - self.y1, self.x2 - self.x1))
 
         def __repr__(self):
-            return '{},{} -> {},{}'.format(self.x1, self.y1, self.x2, self.y2)
+            return '{},{} -> {},{}: {} pixels @ {} degrees'.format(int(self.x1), int(self.y1),
+                                                                   int(self.x2), int(self.y2),
+                                                                   int(self.length()),
+                                                                   int(self.angle()))
 
         # our compare function sorts on the x1 member
         def __cmp__(self, other):
@@ -274,7 +282,7 @@ class Reflectors:
             lines = detector.detect(tmp)
         output = []
         if len(lines) != 0:
-            for i in range(1, len(lines[0])):
+            for i in range(0, len(lines[0])):
                 tmp = Reflectors.Line(lines[0][i, 0][0], lines[0][i, 0][1],
                                 lines[0][i, 0][2], lines[0][i, 0][3])
                 output.append(tmp)
