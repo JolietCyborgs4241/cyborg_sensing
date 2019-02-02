@@ -4,9 +4,13 @@ import numpy
 import math
 from enum import Enum
 
-REFLECTOR_ANG       = 14.5
-LEFT_REFLECTOR_ANG  = (- REFLECTOR_ANG)
-RIGHT_REFLECTOR_ANG = (REFLECTOR_ANG)
+REFLECTOR_ANG       = 14.5           # +/- from vertical or 90 degrees
+
+VERTICAL_ANG        = 90
+
+LEFT_REFLECTOR_ANG  = (VERTICAL_ANG - REFLECTOR_ANG)
+RIGHT_REFLECTOR_ANG = (VERTICAL_ANG + REFLECTOR_ANG)
+
 REFLECTOR_TOLERANCE = 4.0
 
 
@@ -17,43 +21,36 @@ class Reflectors:
         self.__blur_type = BlurType.Box_Blur
         self.__blur_radius = 1.0
 
-        self.blur_output = None
-
 
         self.__hsv_threshold_hue = [50.0, 75.0]
         self.__hsv_threshold_sat = [100.0, 255.0]
         self.__hsv_threshold_val = [150.0, 255.0]
 
-        self.hsv_threshold_output = None
-
-
-        self.find_lines_output = None
-
-
-        self.__filter_lines_lines = self.find_lines_output
 
         # we treat the minimum line length as a percentage of our horizontal
         # resolution as opposed to an absolute pixel length.  This keeps
         # us independent of the resolution.
-        #
-        # In this case, we use 10% of the horizontal resolution which at
-        # 320 pixels gives us 32 pixels
-        self.__filter_lines_min_length_percentage = 0.10
+        
+        self.__filter_lines_min_length_percentage = 0.05
 
         # we filter the lines a little differently than the normally
         # generated code using a "custom" line filtering algorithm.
         # The 2019 FRC challenge uses reflective markers at a 14.5 degree
         # angle (+/-1 degree); we interpret the angles here as the angles
         # we will accept a line off of true vertical (or 90 / 270 degrees)
-        # with a little tolerance of our own (we accept up to +/-3.0 degrees)
-        # from the FRC spec because, you know, it's the only way to be sure
+        # with a little tolerance of our own (we actually accept up to
+        # +/-REFLECTOR_TOLERANCE degrees) from the FRC spec because,
+        # you know, it's the only way to be sure
         #
-        # it is important to note that  vertical line is either 90 or 270
+        # we look for lines that are within the specified angle range either
+        # side of vertical so our filtering routines handles right or left
+        # side reflectors
+        #
+        # it is important to note that a vertical line is either 90 or 270
+        # (but could also be -90 or -270)
         # degrees so our limits calculations take that into account
         self.__filter_lines_angles = [(REFLECTOR_ANG - REFLECTOR_TOLERANCE),
                                       (REFLECTOR_ANG + REFLECTOR_TOLERANCE)]
-
-        self.filter_lines_output = None
 
 
     def process(self, inframe, outframe):
@@ -66,35 +63,37 @@ class Reflectors:
 
 
       # blur the image to reduce the noise
-      (self.blur_output) = self.__blur(img, self.__blur_type,
+      blur_output = self.__blur(img, self.__blur_type,
                                          self.__blur_radius)
 
       # find the green hue of the illuminated reflectors
-      (self.hsv_threshold_output) = self.__hsv_threshold(self.blur_output,
+      hsv_threshold_output = self.__hsv_threshold(blur_output,
                                                     self.__hsv_threshold_hue,
                                                     self.__hsv_threshold_sat,
                                                     self.__hsv_threshold_val)
-      (self.blur_output) = self.__blur(self.hsv_threshold_output, self.__blur_type,
+      blur_output = self.__blur(hsv_threshold_output, self.__blur_type,
                                          self.__blur_radius)
                                          
-      outframe.sendCv(self.blur_output)
+      outframe.sendCv(blur_output)
 
 
       # Find the reflector edges so we can orient on them
-      (self.find_lines_output) = self.__find_lines(self.blur_output)
-      jevois.sendSerial("----------------------\n" + str(int(len(self.find_lines_output))) + " lines found:")
+      find_lines_output = self.__find_lines(blur_output)
+      jevois.sendSerial("vvvvvvvvvv find vvvvvvvvvv\n" + str(int(len(find_lines_output))) + " lines found:")
       
-      for line in self.find_lines_output:
+      for line in find_lines_output:
           jevois.sendSerial(str(line))
-      jevois.sendSerial("----------------------")
-      jevois.sendSerial(str(self.find_lines_output[0]))
+
+      jevois.sendSerial("^^^^^^^^^^ find ^^^^^^^^^^")
+
+      # normalize all lines to have positive angles for easier evaluation
+      normalize_lines_output = self.__normalize_lines(find_lines_output)
       
       # Filter any extraneous lines
-      self.__filter_lines_lines = self.find_lines_output
-      (self.filter_lines_output) = self.__filter_lines(self.find_lines_output,
-                                                width * self.__filter_lines_min_length_percentage,
+      filter_lines_output = self.__filter_lines(normalize_lines_output,
+                                                int(width * self.__filter_lines_min_length_percentage),
                                                 self.__filter_lines_angles)
-      jevois.sendSerial(str(int(len(self.filter_lines_output))) + " lines filtered")
+      jevois.sendSerial(str(int(len(filter_lines_output))) + " lines returned from filter")
 
 
       # CALCULATE THE MID POINT OF THE TWO MARKS
@@ -156,11 +155,11 @@ class Reflectors:
       # reflectors, we give precedence to the left-most set of marks since
       # that's where we're starting our search from
 
-      if (len(self.filter_lines_output) > 1):
-          hatchCoorY = int((self.filter_lines_output[0].y2 - self.filter_lines_output[0].y1) * 2.253 +
-                            self.filter_lines_output[0].y2)
+      if (len(filter_lines_output) > 1):
+          hatchCoorY = int((filter_lines_output[0].y2 - filter_lines_output[0].y1) * 2.253 +
+                            filter_lines_output[0].y2)
 
-          hatchCoorX = int((self.filter_lines_output[0].x1 + self.filter_lines_output[1].x1) / 2)
+          hatchCoorX = int((filter_lines_output[0].x1 + filter_lines_output[1].x1) / 2)
 
       # highlight the lines that met filtering criteria in the camera captured
       # image (original image - not any of the processed copies)
@@ -180,11 +179,12 @@ class Reflectors:
       #
       # "320 X 240: 105, 66 -> 112, 114 - 48 @ 80"
 
-          jevois.sendSerial("----------------------\n" + str(int(len(self.filter_lines_output))) + " lines filtered:")
+          jevois.sendSerial("----------------------\n" + str(len(filter_lines_output)) + " lines filtered:")
 
-          for line in self.filter_lines_output:
-              cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 255, 255),
-                       int(float(width) * 0.005), 8, 0)
+          for line in filter_lines_output:
+              cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 75, 75),
+                       int(float(width) * 0.010), 8, 0)
+              cv2.circle(img, (line.x1, line.y1), 5, (255, 75, 75), 3)
 
               jevois.sendSerial(str(width) + " X " + str(height) + ": " + str(line))
 
@@ -192,9 +192,9 @@ class Reflectors:
 
           crosshairSize = int(float(width) * 0.10)
 
-          cv2.line(img, hatchCoorX - crosshairSize, hatchCoorY, hatchCoorX + crosshairSize, hatchCoorY, (255, 50, 50), int(float(width) * 0.010), 8, 0)
+          cv2.line(img, (hatchCoorX - crosshairSize, hatchCoorY), (hatchCoorX + crosshairSize, hatchCoorY), (255, 75, 75), int(float(width) * 0.010), 8, 0)
 
-          cv2.line(img, hatchCoorX, hatchCoorY - crosshairSize, hatchCoorX, hatchCoorY + crosshairSize, (255, 50, 50), int(float(width) * 0.010), 8, 0)
+          cv2.line(img, (hatchCoorX, hatchCoorY - crosshairSize), (hatchCoorX, hatchCoorY + crosshairSize), (255, 75, 75), int(float(width) * 0.010), 8, 0)
       else:
           jevois.sendSerial("Fewer than 2 lines after filtering!");
           
@@ -260,10 +260,27 @@ class Reflectors:
                                                                    int(self.length()),
                                                                    int(self.angle()))
 
-        # our compare function sorts on the x1 member
-        def __cmp__(self, other):
-            if hasattr(other, 'x1'):
-                return self.x1.__cmp__(other.x1)
+        # comparison routines:
+        #
+        # a line is "less" than another line based on the value of the x1 coordinate
+
+        def __eq__(self, other):
+            return (self.x1 == other.x1)
+            
+        def __ne__(self, other):
+            return (self.x1 != other.x1)
+            
+        def __lt__(self, other):
+            return (self.x1 < other.x1)
+            
+        def __le__(self, other):
+            return (self.x1 <= other.x1)
+            
+        def __gt__(self, other):
+            return (self.x1 > other.x1)
+            
+        def __ge__(self, other):
+            return (self.x1 >= other.x1)
 
 
     @staticmethod
@@ -288,9 +305,11 @@ class Reflectors:
                 output.append(tmp)
         return output
 
+
     @staticmethod
-    def __filter_lines(inputs, min_length, angle):
-        """Filters out lines that do not meet certain criteria.
+    def __normalize_lines(input):
+        """Make all line angles positive by re-arranging the start and
+           end coordinates if needed.
         Args:
             inputs: A list of Lines.
             min_Length: The minimum length (in pixels) that will be kept.
@@ -307,51 +326,80 @@ class Reflectors:
             check the angle and if it's negative, we normalize it by
             adding 180 degrees and swap x1, y1 and x2, y2 in the output
 
-            We first build the list of all lines that meet our length and
-            angle criteria - after that, we run through the line and try to
+        Returns:
+            A mormalized list of Lines with all positive angles
+        """
+
+        output = []
+        
+        for line in input:
+            if (int(line.angle()) < 0):
+
+                temp    = line.x1
+                line.x1 = line.x2
+                line.x2 = temp
+
+                temp    = line.y1
+                line.y1 = line.y2
+                line.y2 = temp
+
+            output.append(line)
+        return output
+
+
+    @staticmethod
+    def __filter_lines(inputs, min_length, angle):
+        """Filters out lines that do not meet length and angle criteria.
+        Args:
+            inputs: A list of Lines.
+            min_Length: The minimum length (in pixels) that will be kept.
+            angle: The minimum and maximum angles in degrees as a list
+                   of two numbers; these number represent a range of +/-
+                   from 90 degrees either CCW or CW
+
+        Processing:
+            We build the list of all lines that meet our length and
+            angle criteria - after that, we run through the lines and try to
             find the most edges closest to the center of the bay.  We'll do
             that by sorting the list by x1 coordinates (which X coordinate
             we use probably doesn't matter so long as we are consistent).
-            Once they are sorted, we can scan from "right" to "left" and
+            Once they are sorted, scan from "left" to "right" and
             keep only the closest to the center edges of the alignment marks.
             That would be the be the right side of the right-leaning marks
             and the left side of the left-leaning marks
 
         Returns:
-            A filtered list of Lines.
+            A filtered list of Lines representing the "inside" edges of the
+            reflectors relative to the cargo hatches.  We try to only include
+            matched sets - the R/L for a hatch rather than an unpaired
+            straggler from an adjacent hatch
         """
 
         tempOutputs = []
         outputs     = []
 
+        jevois.sendSerial("__filter_lines:\nMin length: " + str(min_length) + " Angles[] = " + str(angle[0]) + ", " + str(angle[1]) + "\n")
+        
         for line in inputs:
             if (line.length() > min_length):
 
-                lineAngle = line.angle()    # no need to keep reinvoking method
-
-                if (int(lineAngle) < 0):
-                    temp    = line.x1
-                    line.x1 = line.x2
-                    line.x2 = temp
-
-                    temp    = line.y1
-                    line.y1 = line.y2
-                    line.y2 = temp
-
-                    lineAngle = line.angle()  # recalc the angle
-
-                if (lineAngle >= (90 - angle[0]) and lineAngle <= (90 - angle[1]) or
-                     lineAngle >= (90 + angle[0]) and lineAngle <= (90 + angle[1])):
+                lineAngle = line.angle()    # no need to keep reinvoking method below
+                
+                if (lineAngle <= (VERTICAL_ANG - angle[0]) and lineAngle >= (VERTICAL_ANG - angle[1]) or
+                     lineAngle >= (VERTICAL_ANG + angle[0]) and lineAngle <= (VERTICAL_ANG + angle[1])):
 
                      tempOutputs.append(line)
+                     jevois.sendSerial("Passed: " + str(line))
+                else:
+                     jevois.sendSerial("Rejected: " + str(line))
 
-        print("Presort: ", tempOutputs)
+        jevois.sendSerial("Presort: " + str(tempOutputs))
 
-        # sort the list - we do it by x1 (which should be the bottom X coor)
+        # sort the list - we do it by x1 (which should be the top X coor)
 
         tempOutputs = sorted(tempOutputs)
 
-        print("Postsort: ", tempOutputs)
+        jevois.sendSerial("Postsort: " + str(tempOutputs))
 
         # now let's look through the lines and find the two adjoining r/l edges
         # of the alignment marks; we'll delete the "outside" marks
