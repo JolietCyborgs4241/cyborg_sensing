@@ -49,6 +49,7 @@ class Reflectors:
         # it is important to note that a vertical line is either 90 or 270
         # (but could also be -90 or -270)
         # degrees so our limits calculations take that into account
+
         self.__filter_lines_angles = [(REFLECTOR_ANG - REFLECTOR_TOLERANCE),
                                       (REFLECTOR_ANG + REFLECTOR_TOLERANCE)]
 
@@ -59,52 +60,70 @@ class Reflectors:
       img = inframe.getCvBGR()
 
       # get image attributes
+
       (height, width, ndims) = img.shape
 
 
       # blur the image to reduce the noise
-      blur_output = self.__blur(img, self.__blur_type,
-                                         self.__blur_radius)
+
+      blur_output = self.__blur(img, self.__blur_type, self.__blur_radius)
+
 
       # find the green hue of the illuminated reflectors
+
       hsv_threshold_output = self.__hsv_threshold(blur_output,
-                                                    self.__hsv_threshold_hue,
-                                                    self.__hsv_threshold_sat,
-                                                    self.__hsv_threshold_val)
+                                                  self.__hsv_threshold_hue,
+                                                  self.__hsv_threshold_sat,
+                                                  self.__hsv_threshold_val)
+                                                    
+
+      # we further do a blur on the resulting HSV filtering
+      #
+      # this is intended to make the job of the line finder easier and
+      # to produce better results.  The blurring tends to produce longer
+      # singular lines and reduces the tendency to create longer lines
+      # out of a lot of little segments.  Longer lines are easy to filter
+      # and process because you get a single line along the entire of edge
+      # of something like a reflector rather than 10 little segments
+      # which are a lot harder to deal with
+
       blur_output = self.__blur(hsv_threshold_output, self.__blur_type,
-                                         self.__blur_radius)
+                                self.__blur_radius)
                                          
-      outframe.sendCv(blur_output)
+      # outframe.sendCv(blur_output)
 
 
       # Find the reflector edges so we can orient on them
-      find_lines_output = self.__find_lines(blur_output)
-      jevois.sendSerial("vvvvvvvvvv find vvvvvvvvvv\n" + str(int(len(find_lines_output))) + " lines found:")
-      
-      for line in find_lines_output:
-          jevois.sendSerial(str(line))
 
-      jevois.sendSerial("^^^^^^^^^^ find ^^^^^^^^^^")
+      find_lines_output = self.__find_lines(blur_output)
+
+
+      # uncomment the code below if you want to see the full output from
+      # the __find_lines module
+      #
+      # jevois.sendSerial("vvvvvvvvvv find vvvvvvvvvv\n" + str(int(len(find_lines_output))) + " lines found:")
+      #
+      # for line in find_lines_output:
+      #     jevois.sendSerial(str(line))
+      #
+      # jevois.sendSerial("^^^^^^^^^^ find ^^^^^^^^^^")
+
 
       # normalize all lines to have positive angles for easier evaluation
+
       normalize_lines_output = self.__normalize_lines(find_lines_output)
       
+
       # Filter any extraneous lines
+
       filter_lines_output = self.__filter_lines(normalize_lines_output,
                                                 int(width * self.__filter_lines_min_length_percentage),
                                                 self.__filter_lines_angles)
-      jevois.sendSerial(str(int(len(filter_lines_output))) + " lines returned from filter")
 
+      # debug code below
+      #
+      # jevois.sendSerial(str(len(filter_lines_output)) + " lines returned from filter")
 
-      # CALCULATE THE MID POINT OF THE TWO MARKS
-      #
-      # FIND THE LEFT MOST MARK AND THEN TRY TO FIND THE FIRST RIGHTMOST MARK
-      #
-      # SPLIT THE DIFFERENCE AND THEN FIGURE OUT THE HORIZONTAL HASH MARK
-      # LOCATION
-      #
-      # DRAW THEM ON THE IMAGE IN BLUE TWICE THE WIDTH OF THE HIGHLIGHT
-      # LINES
 
       # the lines are now filtered and sorted into pairs of the
       # "inside"-most lines of each reflector with their order from
@@ -154,19 +173,25 @@ class Reflectors:
       # because we could end up seeing more than one set of alignment
       # reflectors, we give precedence to the left-most set of marks since
       # that's where we're starting our search from
+      #
+      # we don't need to worry about mis-matched sets - especially seeing a
+      # right-side reflector as the first thing because the line filtering
+      # makes sure that our first entry is a left-side reflector (and the
+      # second entry is the corresponing right-side reflector)
 
       if (len(filter_lines_output) > 1):
           hatchCoorY = int((filter_lines_output[0].y2 - filter_lines_output[0].y1) * 2.253 +
-                            filter_lines_output[0].y2)
+                            filter_lines_output[0].y1)
 
           hatchCoorX = int((filter_lines_output[0].x1 + filter_lines_output[1].x1) / 2)
 
+      # there is debugging code below that can be enabled to
       # highlight the lines that met filtering criteria in the camera captured
       # image (original image - not any of the processed copies)
       #
-      # white (255,255,255)
-      # pixel width of the line - set to .5% of the horizontal resolution which
-      # gives us a 3 pixel wide line @ 640 and a singe @ 320
+      # blue-purple (255, 75, 75)
+      # pixel width of the line - set to 1% of the horizontal resolution which
+      # gives us a 6 pixel wide line @ 640 and 2 pixles @ 320
       #
       # In addition to highlighting the lines in the original image, we output
       # a formatted string to the console for further processing
@@ -179,27 +204,38 @@ class Reflectors:
       #
       # "320 X 240: 105, 66 -> 112, 114 - 48 @ 80"
 
-          jevois.sendSerial("----------------------\n" + str(len(filter_lines_output)) + " lines filtered:")
+          # jevois.sendSerial("----------------------\n" + str(len(filter_lines_output)) + " lines filtered:")
 
           for line in filter_lines_output:
-              cv2.line(img, (line.x1, line.y1), (line.x2, line.y2), (255, 75, 75),
-                       int(float(width) * 0.010), 8, 0)
-              cv2.circle(img, (line.x1, line.y1), 5, (255, 75, 75), 3)
+              # debug code below to highlight lines in output image
+              #
+              # cv2.line(img, (line.x1, line.y1), (line.x2, line.y2),
+              #          (255, 75, 75), int(float(width) * 0.010), 8, 0)
 
               jevois.sendSerial(str(width) + " X " + str(height) + ": " + str(line))
 
-          jevois.sendSerial("----------------------")
+          # jevois.sendSerial("----------------------")
+
+
+          # draw the target crosshair
 
           crosshairSize = int(float(width) * 0.10)
 
-          cv2.line(img, (hatchCoorX - crosshairSize, hatchCoorY), (hatchCoorX + crosshairSize, hatchCoorY), (255, 75, 75), int(float(width) * 0.010), 8, 0)
+          cv2.line(img, (hatchCoorX - crosshairSize, hatchCoorY),
+                        (hatchCoorX + crosshairSize, hatchCoorY),
+                        (255, 75, 75), int(float(width) * 0.010), 8, 0)
 
-          cv2.line(img, (hatchCoorX, hatchCoorY - crosshairSize), (hatchCoorX, hatchCoorY + crosshairSize), (255, 75, 75), int(float(width) * 0.010), 8, 0)
-      else:
-          jevois.sendSerial("Fewer than 2 lines after filtering!");
-          
-      # send the original, full color, unblurred image with the lines highlighted
-      # to the USB output
+          cv2.line(img, (hatchCoorX, hatchCoorY - crosshairSize),
+                        (hatchCoorX, hatchCoorY + crosshairSize),
+                        (255, 75, 75), int(float(width) * 0.010), 8, 0)
+
+      # more debug - give a warning we couldn't even find a pair of reflectors
+      # else:
+      #     jevois.sendSerial("Fewer than 2 lines after filtering!");
+
+
+      # send the original, full color, unblurred image with the lines
+      # highlighted to the USB output
 
       outframe.sendCv(img)
 
@@ -226,6 +262,7 @@ class Reflectors:
         else:
             return cv2.bilateralFilter(src, -1, round(radius), round(radius))
 
+
     @staticmethod
     def __hsv_threshold(input, hue, sat, val):
         """Segment an image based on hue, saturation, and value ranges.
@@ -239,6 +276,7 @@ class Reflectors:
         """
         out = cv2.cvtColor(input, cv2.COLOR_BGR2HSV)
         return cv2.inRange(out, (hue[0], sat[0], val[0]),  (hue[1], sat[1], val[1]))
+
 
     class Line:
 
@@ -262,7 +300,13 @@ class Reflectors:
 
         # comparison routines:
         #
-        # a line is "less" than another line based on the value of the x1 coordinate
+        # a line is "less" than another line based on the value of the x1
+        # line coordinate which due to the normalization we applied earlier
+        # will be the x coordiante of the "top" of the line
+        #
+        # this gives us a nice list that we can run through from left to right
+        # and helps us to key into the left-most reflector set as our priority
+        # target
 
         def __eq__(self, other):
             return (self.x1 == other.x1)
@@ -297,12 +341,15 @@ class Reflectors:
         else:
             tmp = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
             lines = detector.detect(tmp)
+
         output = []
+
         if len(lines) != 0:
             for i in range(0, len(lines[0])):
                 tmp = Reflectors.Line(lines[0][i, 0][0], lines[0][i, 0][1],
                                 lines[0][i, 0][2], lines[0][i, 0][3])
                 output.append(tmp)
+
         return output
 
 
@@ -335,6 +382,16 @@ class Reflectors:
         for line in input:
             if (int(line.angle()) < 0):
 
+                # swap the two endpoints; this won't change the line
+                # because it still has the same endpoints but it will
+                # change the angle to all be positive which greatly
+                # simplifies the comparisons later because we don't have
+                # to account for equivalent but complementary angled lines
+                #
+                # swapping the endpoints has the the effect of adding 180
+                # degrees to the line (if it's negative) making it a
+                # complimentary, and now positive, angle
+
                 temp    = line.x1
                 line.x1 = line.x2
                 line.x2 = temp
@@ -344,6 +401,7 @@ class Reflectors:
                 line.y2 = temp
 
             output.append(line)
+
         return output
 
 
@@ -378,28 +436,24 @@ class Reflectors:
         tempOutputs = []
         outputs     = []
 
-        jevois.sendSerial("__filter_lines:\nMin length: " + str(min_length) + " Angles[] = " + str(angle[0]) + ", " + str(angle[1]) + "\n")
+        # jevois.sendSerial("__filter_lines:\nMin length: " + str(min_length) + " Angles[] = " + str(angle[0]) + ", " + str(angle[1]) + "\n")
         
         for line in inputs:
             if (line.length() > min_length):
 
                 lineAngle = line.angle()    # no need to keep reinvoking method below
                 
-                if (lineAngle <= (VERTICAL_ANG - angle[0]) and lineAngle >= (VERTICAL_ANG - angle[1]) or
-                     lineAngle >= (VERTICAL_ANG + angle[0]) and lineAngle <= (VERTICAL_ANG + angle[1])):
+                if (lineAngle <= (VERTICAL_ANG - angle[0]) and
+                    lineAngle >= (VERTICAL_ANG - angle[1])
+                    or
+                    lineAngle >= (VERTICAL_ANG + angle[0]) and
+                    lineAngle <= (VERTICAL_ANG + angle[1])):
 
                      tempOutputs.append(line)
-                     jevois.sendSerial("Passed: " + str(line))
-                else:
-                     jevois.sendSerial("Rejected: " + str(line))
-
-        jevois.sendSerial("Presort: " + str(tempOutputs))
 
         # sort the list - we do it by x1 (which should be the top X coor)
 
         tempOutputs = sorted(tempOutputs)
-
-        jevois.sendSerial("Postsort: " + str(tempOutputs))
 
         # now let's look through the lines and find the two adjoining r/l edges
         # of the alignment marks; we'll delete the "outside" marks
@@ -409,31 +463,47 @@ class Reflectors:
 
         prevLine = None
 
+        foundFirstLeft = False
+        
         for line in tempOutputs:
 
-            # we already filtered the lines to meet the angular criteria
-            # of the reflectors so we can totally key on whether the tilt
-            # right or left as our discriminating factor
+            # we already filtered and sorted the lines to meet the angular
+            # and length criteria corresponding to the reflectors so
+            # can totally key on whether they tilt right or left as
+            # our discriminating factor from here on out
 
-            if (line.angle() > 90):           # left side - tilts right
+            if (line.angle() > 90):               # left side - tilts right
 
-                if (sawLeftSide):             # no current left side
+                foundFirstLeft = True
+                
+                if (sawLeftSide != True):         # no current left side
                     sawRightSide = False
-                    sawLeftSide  = True       # keep track of the first left side
+                    sawLeftSide  = True           # keep track of the first
+                                                  # edge of a left side
+                                                  # reflector
                 else:
-                    outputs.append(line)      # it's the right most side so save it
+                    outputs.append(line)          # it's the right-most
+                                                  # (inside edge) of a
+                                                  # left reflector so save it
                     sawLeftSide = False
-            else:                             # right side - tilts left
-                if (sawRightSide != True):    # no current right side
-                    if (sawLeftSide):         # unmatched left so save it
-                        outputs.append(prevLine)
-                        sawLeftSide = False
-                    sawRightSide = True
-                    outputs.append(line)      # append this first right side
 
-                # otherwise we just skip any rights after the first one...
+            else:                                 # right side - tilts left
+                if (foundFirstLeft == True):
+                    if (sawRightSide != True):    # no current right side
+                        if (sawLeftSide):         # unmatched left so save it
+                            outputs.append(prevLine)
+                            sawLeftSide = False
+                        sawRightSide = True
+                        outputs.append(line)      # append this first right side
+                    else:
+                        sawRightSide = False      # it's the outside of a
+                                                  # right side reflector so
+                                                  # skip it and don't add it
+                                                  # to the list
 
-            # save the most recent line we processed
+            # save the most recent line we processed so we can get to it if
+            # we need to
+
             prevLine = line
 
         return outputs
