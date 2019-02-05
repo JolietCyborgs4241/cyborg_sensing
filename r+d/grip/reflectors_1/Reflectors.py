@@ -344,10 +344,10 @@ class Reflectors:
 
         output = []
 
-        if len(lines) != 0:
+        if (lines[0] is not None):
             for i in range(0, len(lines[0])):
                 tmp = Reflectors.Line(lines[0][i, 0][0], lines[0][i, 0][1],
-                                lines[0][i, 0][2], lines[0][i, 0][3])
+                                      lines[0][i, 0][2], lines[0][i, 0][3])
                 output.append(tmp)
 
         return output
