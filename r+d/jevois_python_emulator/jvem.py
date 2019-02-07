@@ -6,33 +6,35 @@ import Reflectors as rf
 
 
 
-# to run:
-#
-#       python3 jvem.py image_file_to_process
 
 
-
-
-# there need to be 2 command line parameters (the program name counts as one)
+# there need to be at least 2 command line parameters (the program name counts as one)
 #
 # the parameter is the name of the static image file used for the image processing
 
-if len(sys.argv) < 2:
-    print("Usage: " + sys.argv[0] + ": image")
+if (len(sys.argv)) < 2 or (sys.argv[1] == "-v" and len(sys.argv) < 3):
+    print("Usage: " + sys.argv[0] + ": [image] | -v [video capture]")
     sys.exit(1)
+
+if len(sys.argv) == 2:
+    filename = sys.argv[1]
+    mode = "image"
+else:
+    filename = sys.argv[2]
+    mode = "video"
 
 
 window_name = "JeVois Emulator"
 
-#read the image
-image = cv2.imread(sys.argv[1], cv2.IMREAD_UNCHANGED)
 
 # create the output object for the Jevois-targeted code and give it the
 # name we'll use to reference the window to display any output it
 jv_out = jevois.Jevois_out(window_name)
 
+
 # create the named window
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+
 
 # create an instance of the class we plan to run on the Jevois camera
 #
@@ -44,7 +46,7 @@ cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 #    this line should be commented out as we pass an image right into the
 #    "process" method
 #
-#    comment out the line below (whihc is usually the first line in the
+#    comment out the line below (which is usually the first line in the
 #    "process" method:
 #
 #               img = inframe.getCvBGR()
@@ -72,14 +74,42 @@ cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
 reflector = rf.Reflectors()
 
-while True:
-    reflector.process(image, jv_out)
 
-# the code below isn't really needed; the only way to exit the emulator right now
-# is to interrupt it such as by using a ^C or similar keyboard press
-#
-# the cleanup done in cv2.destroyAllWindows() will happen automatically in that
-# case so not calling it isn't a big deal
+if mode == "image":
+
+    #read the image
+    image = cv2.imread(sys.argv[1], cv2.IMREAD_UNCHANGED)
+
+    reflector.process(image, jv_out)    # we only need to call it once
+
+    cv2.waitKey(0)
+
+else:   # video mode
+
+    video = cv2.VideoCapture(sys.argv[2])
+
+    count = 0
+
+    ret = True
+
+    while (ret == True):
+
+        ret, frame = video.read()
+
+        if ret != True:
+            break;
+
+        print(sys.argv[2] + ": frame " + str(count) + " read")
+
+        count += 1
+
+        reflector.process(frame, jv_out)
+
+
+if mode == "video":
+
+    video.release()
+
 
 cv2.destroyAllWindows()
 
