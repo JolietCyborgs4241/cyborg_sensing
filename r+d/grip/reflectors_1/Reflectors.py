@@ -147,7 +147,7 @@ class Reflectors:
       # - the top inside corner, the lower corner, is 0.5" below the top edge
       # - the top edge is 12.5" above the center of the hatch hole (this
       #   was derived from the game field specs) so the center of the hatch
-      #   hole is 12" below the top inside corner of the reflector
+      #   hole is 13" below the top inside corner of the reflector
       #
       # working the math gives:
       #
@@ -156,13 +156,13 @@ class Reflectors:
       #  2) we take the difference between the Y values at and divide
       #     that by 5.325 - that gives us a pixel per inch value at that
       #     distance from the target
-      #  3) we take that value and multiply it by 12 to give the number of
-      #     pixels covering 12" at our current distance from the target
+      #  3) we take that value and multiply it by 13 to give the number of
+      #     pixels covering 13" at our current distance from the target
       #  4) we add that to the Y pixel value of the top end of the line and
       #     we've established the centerline of the hatch
       #
       # We could combine the constants in steps 2) and 3) into one operation
-      # by multiplying the pixel difference by 12/5.325 or 2.253 which
+      # by multiplying the pixel difference by 13/5.325 or 2.441 which
       # will get us the pixel offset from the top Y value of the line in
       # one step.
       #
@@ -180,7 +180,7 @@ class Reflectors:
       # second entry is the corresponing right-side reflector)
 
       if (len(filter_lines_output) > 1):
-          hatchCoorY = int((filter_lines_output[0].y2 - filter_lines_output[0].y1) * 2.253 +
+          hatchCoorY = int((filter_lines_output[0].y2 - filter_lines_output[0].y1) * 2.441 +
                             filter_lines_output[0].y1)
 
           hatchCoorX = int((filter_lines_output[0].x1 + filter_lines_output[1].x1) / 2)
