@@ -223,11 +223,14 @@ class Reflectors:
 
           cv2.line(img, (hatchCoorX - crosshairSize, hatchCoorY),
                         (hatchCoorX + crosshairSize, hatchCoorY),
-                        (255, 75, 75), int(float(width) * 0.010), 8, 0)
+                        (50, 255, 255), int(float(width) * 0.010), 8, 0)
 
           cv2.line(img, (hatchCoorX, hatchCoorY - crosshairSize),
                         (hatchCoorX, hatchCoorY + crosshairSize),
-                        (255, 75, 75), int(float(width) * 0.010), 8, 0)
+                        (50, 255, 255), int(float(width) * 0.010), 8, 0)
+
+          cv2.circle(img, (hatchCoorX, hatchCoorY), int(crosshairSize/2),
+                     (50, 255, 255), int(float(width) * 0.010))
 
       # more debug - give a warning we couldn't even find a pair of reflectors
       # else:
