@@ -133,7 +133,10 @@ elif mode == MODE_VIDEO_FILE or mode == MODE_CAMERA:   # video file processing
         if ret != True:
             break;
 
-        print(sys.argv[2] + ": frame " + str(count) + " read")
+        # uncomment the line below if you want to see a running video
+        # frame count
+        
+        # print(sys.argv[2] + ": frame " + str(count) + " read")
 
         count += 1
 
