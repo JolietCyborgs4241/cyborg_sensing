@@ -13,6 +13,14 @@ RIGHT_REFLECTOR_ANG = (VERTICAL_ANG + REFLECTOR_ANG)
 
 REFLECTOR_TOLERANCE = 4.0
 
+# orientation: camera mount at bottom
+MODE_LANDSCAPE = 0
+
+#orientation: camera rotated 90 CCW when viewed from rear (mount at right)
+MODE_PORTRAIT  = 1
+
+ORIENTATION    = MODE_PORTRAIT
+
 
 class Reflectors:
     
@@ -57,11 +65,26 @@ class Reflectors:
     def process(self, inframe, outframe):
 
 
-      img = inframe.getCvBGR()
+      initial_img = inframe.getCvBGR()
 
       # get image attributes
 
-      (height, width, ndims) = img.shape
+      (height, width, ndims) = initial_img.shape
+
+      if (ORIENTATION == MODE_PORTRAIT):
+
+          img = numpy.zeros((width, height, ndims), dtype=numpy.uint8)
+
+          for column in range(0, width):
+              img[width-column-1,:] = initial_img[:,column]
+
+          temp = height
+          height = width
+          width = temp
+
+      else:
+
+          img = initial_img
 
 
       # blur the image to reduce the noise
@@ -223,11 +246,11 @@ class Reflectors:
 
           cv2.line(img, (hatchCoorX - crosshairSize, hatchCoorY),
                         (hatchCoorX + crosshairSize, hatchCoorY),
-                        (50, 255, 255), int(float(width) * 0.010), 8, 0)
+                        (50, 255, 255), int(float(width) * 0.010))
 
           cv2.line(img, (hatchCoorX, hatchCoorY - crosshairSize),
                         (hatchCoorX, hatchCoorY + crosshairSize),
-                        (50, 255, 255), int(float(width) * 0.010), 8, 0)
+                        (50, 255, 255), int(float(width) * 0.010))
 
           cv2.circle(img, (hatchCoorX, hatchCoorY), int(crosshairSize/2),
                      (50, 255, 255), int(float(width) * 0.010))
