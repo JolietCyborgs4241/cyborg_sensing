@@ -2,6 +2,11 @@ import sys
 import numpy as np
 import cv2
 import libjevois as jevois
+
+# this is the import of your custom vision processing class
+#
+# change this as needed and update the line that instantiates your
+# class later in the code
 import Reflectors as rf
 
 
@@ -106,7 +111,11 @@ cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 # any output sent using the jevois.sendSerial() call will be printed to
 # standard output 
 
-reflector = rf.Reflectors()
+
+# instantiate your class - don't change the "target_class" part
+# as that's used in code
+
+target_class = rf.Reflectors()
 
 
 if mode == MODE_STATIC_FILE:    # static file processing
@@ -114,7 +123,7 @@ if mode == MODE_STATIC_FILE:    # static file processing
     #read the image
     image = cv2.imread(static_file, cv2.IMREAD_UNCHANGED)
 
-    reflector.process(image, jv_out)    # we only need to call it once
+    target_class.process(image, jv_out)    # we only need to call it once
 
     cv2.waitKey(0)
 
@@ -140,7 +149,7 @@ elif mode == MODE_VIDEO_FILE or mode == MODE_CAMERA:   # video file processing
 
         count += 1
 
-        reflector.process(frame, jv_out)
+        target_class.process(frame, jv_out)
 
 else:   # what mode is this???
 
