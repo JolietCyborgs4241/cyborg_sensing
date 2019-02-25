@@ -1,0 +1,204 @@
+<grip:Pipeline>
+  <sources>
+    <grip:ImageFile>
+      <property name="path" value="/home/zog/cyborgs/cyborg_sensing/r+d/images/red_cargo_hatch_adjusted_w_green_illum.png"/>
+    </grip:ImageFile>
+    <grip:ImageFile>
+      <property name="path" value="/home/zog/cyborgs/cyborg_sensing/r+d/images/red_cargo_hatch_adjusted_w_green_illum_and_ball.png"/>
+    </grip:ImageFile>
+    <grip:ImageFile>
+      <property name="path" value="/home/zog/cyborgs/cyborg_sensing/r+d/images/red_cargo_hatch_adjusted_w_green_illum_and_hatch.png"/>
+    </grip:ImageFile>
+    <grip:ImageFile>
+      <property name="path" value="/home/zog/cyborgs/cyborg_sensing/r+d/images/red_cargo_hatch_adjusted_w_green_illum_and_hatch_and_ball.png"/>
+    </grip:ImageFile>
+  </sources>
+  <steps>
+    <grip:Step name="Blur">
+      <grip:Input step="0" socket="0"/>
+      <grip:Input step="0" socket="1">
+        <value>BOX</value>
+      </grip:Input>
+      <grip:Input step="0" socket="2">
+        <value>5.838660578386605</value>
+      </grip:Input>
+      <grip:Output step="0" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="HSV Threshold">
+      <grip:Input step="1" socket="0"/>
+      <grip:Input step="1" socket="1">
+        <value>
+          <double>49.511978704525276</double>
+          <double>69.82758620689656</double>
+        </value>
+      </grip:Input>
+      <grip:Input step="1" socket="2">
+        <value>
+          <double>90.50576752440105</double>
+          <double>129.69827586206895</double>
+        </value>
+      </grip:Input>
+      <grip:Input step="1" socket="3">
+        <value>
+          <double>121.05146406388641</double>
+          <double>190.15086206896552</double>
+        </value>
+      </grip:Input>
+      <grip:Output step="1" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="Find Lines">
+      <grip:Input step="2" socket="0"/>
+      <grip:Output step="2" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="Filter Lines">
+      <grip:Input step="3" socket="0"/>
+      <grip:Input step="3" socket="1">
+        <value>20.0</value>
+      </grip:Input>
+      <grip:Input step="3" socket="2">
+        <value>
+          <double>6.388642413487134</double>
+          <double>360.0</double>
+        </value>
+      </grip:Input>
+      <grip:Output step="3" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="HSV Threshold">
+      <grip:Input step="4" socket="0"/>
+      <grip:Input step="4" socket="1">
+        <value>
+          <double>15.173025732031942</double>
+          <double>20.172413793103456</double>
+        </value>
+      </grip:Input>
+      <grip:Input step="4" socket="2">
+        <value>
+          <double>179.33303085299454</double>
+          <double>255.0</double>
+        </value>
+      </grip:Input>
+      <grip:Input step="4" socket="3">
+        <value>
+          <double>185.92385466772524</double>
+          <double>255.0</double>
+        </value>
+      </grip:Input>
+      <grip:Output step="4" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="Blur">
+      <grip:Input step="5" socket="0"/>
+      <grip:Input step="5" socket="1">
+        <value>MEDIAN</value>
+      </grip:Input>
+      <grip:Input step="5" socket="2">
+        <value>10.909090909090908</value>
+      </grip:Input>
+      <grip:Output step="5" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="Find Contours">
+      <grip:Input step="6" socket="0"/>
+      <grip:Input step="6" socket="1">
+        <value>false</value>
+      </grip:Input>
+      <grip:Output step="6" socket="0" previewed="false"/>
+    </grip:Step>
+    <grip:Step name="HSV Threshold">
+      <grip:Input step="7" socket="0"/>
+      <grip:Input step="7" socket="1">
+        <value>
+          <double>24.39024390243902</double>
+          <double>37.105263157894754</double>
+        </value>
+      </grip:Input>
+      <grip:Input step="7" socket="2">
+        <value>
+          <double>198.10298102981028</double>
+          <double>255.0</double>
+        </value>
+      </grip:Input>
+      <grip:Input step="7" socket="3">
+        <value>
+          <double>195.41085991928335</double>
+          <double>255.0</double>
+        </value>
+      </grip:Input>
+      <grip:Output step="7" socket="0" previewed="true"/>
+    </grip:Step>
+    <grip:Step name="Blur">
+      <grip:Input step="8" socket="0"/>
+      <grip:Input step="8" socket="1">
+        <value>BOX</value>
+      </grip:Input>
+      <grip:Input step="8" socket="2">
+        <value>14.553990610328638</value>
+      </grip:Input>
+      <grip:Output step="8" socket="0" previewed="true"/>
+    </grip:Step>
+    <grip:Step name="Find Contours">
+      <grip:Input step="9" socket="0"/>
+      <grip:Input step="9" socket="1">
+        <value>false</value>
+      </grip:Input>
+      <grip:Output step="9" socket="0" previewed="true"/>
+    </grip:Step>
+  </steps>
+  <connections>
+    <grip:Connection>
+      <grip:Output step="0" socket="0" previewed="false"/>
+      <grip:Input step="1" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="4" socket="0" previewed="false"/>
+      <grip:Input step="5" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="4" socket="0" previewed="false"/>
+      <grip:Input step="6" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="1" socket="0" previewed="false"/>
+      <grip:Input step="2" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="8" socket="0" previewed="true"/>
+      <grip:Input step="9" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="0" socket="0" previewed="false"/>
+      <grip:Input step="4" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="7" socket="0" previewed="true"/>
+      <grip:Input step="8" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="2" socket="0" previewed="false"/>
+      <grip:Input step="3" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output step="0" socket="0" previewed="false"/>
+      <grip:Input step="7" socket="0"/>
+    </grip:Connection>
+    <grip:Connection>
+      <grip:Output source="3" socket="0" previewed="true"/>
+      <grip:Input step="0" socket="0"/>
+    </grip:Connection>
+  </connections>
+  <settings>
+    <teamNumber>0</teamNumber>
+    <publishAddress>roboRIO-0-FRC.local</publishAddress>
+    <deployAddress>roboRIO-0-FRC.local</deployAddress>
+    <deployDir>/home/lvuser</deployDir>
+    <deployUser>lvuser</deployUser>
+    <deployJavaHome>/usr/local/frc/JRE/</deployJavaHome>
+    <deployJvmOptions>-Xmx50m -XX:-OmitStackTraceInFastThrow -XX:+HeapDumpOnOutOfMemoryError -XX:MaxNewSize=16m</deployJvmOptions>
+  </settings>
+  <codeGenerationSettings>
+    <language>Java</language>
+    <className>GripPipeline</className>
+    <implementWpilibPipeline>false</implementWpilibPipeline>
+    <saveDir>/home/zog/GRIP</saveDir>
+    <packageName></packageName>
+    <moduleName>grip</moduleName>
+  </codeGenerationSettings>
+</grip:Pipeline>
